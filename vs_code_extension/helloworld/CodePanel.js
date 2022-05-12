@@ -113,10 +113,11 @@ class CodePanel {
     var child1 = body.children[0];
     var child2 = body.children[1];
     //print the child2's text seperated by <br> and joined by " | "
-    var text = child2.innerHTML.split("<br>").join(" | ");
+    
 
     //check if child1 is a rect
     if(child1.tagName === "RECT"){
+      var text = child2.innerHTML.split("<br>").join(" | ");
       vscode.window.showInformationMessage(text);
     }
     else{
