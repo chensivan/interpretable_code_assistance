@@ -22,9 +22,22 @@
 			},
 			{
 				"command": "visual.openVisual",
-				"title": "Open Visual"
+				"title": "Open Visual",
+				"icon": {
+                    "dark": "./media/icon.png",
+                    "light": "./media/icon.png"
+                }
 			}
-		]
+		],
+		"menus": {
+			"editor/title": [
+			  {
+				"when": "resourceExtname == .html",
+				"command": "visual.openVisual",
+				"group": "navigation"
+			  }
+			]
+		}
 	},
 	"scripts": {
 		"lint": "eslint .",

@@ -110,11 +110,18 @@ class CodePanel {
     //print the html element
     var body = dom.window.document.querySelector("body");
     //get the only child of the body
+    var child1 = body.children[0];
     var child2 = body.children[1];
     //print the child2's text seperated by <br> and joined by " | "
     var text = child2.innerHTML.split("<br>").join(" | ");
 
-    vscode.window.showInformationMessage(text);
+    //check if child1 is a rect
+    if(child1.tagName === "RECT"){
+      vscode.window.showInformationMessage(text);
+    }
+    else{
+      vscode.window.showInformationMessage(htmlString);
+    }
   }
 
    _getHtmlForWebview(webview) {
@@ -135,12 +142,13 @@ class CodePanel {
     //Get the file path for d3_example.html
 
     //join the current file path with test/d3_example.html
-    const filePath = path.join(__dirname,'test', 'd3_example.html');
+    //console.log(vscode.window.activeTextEditor.document.fileName);
+    const filePath = vscode.window.activeTextEditor.document.fileName//path.join(__dirname,'test', 'd3_example.html');
     //Read the file
     const file = fs.readFileSync(filePath, "utf8");
     //Parse the file into a string
     CodePanel.nonce = nonce;
-    const html = file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
+    var html = file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     document.addEventListener("click", function(event){
@@ -152,7 +160,6 @@ class CodePanel {
         })
       });
     </script>`;
-
     return html;//dom.window.document.querySelector("html").innerHTML;
   }
 }
