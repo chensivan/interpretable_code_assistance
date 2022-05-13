@@ -92,7 +92,19 @@
   }
 </style>
 <body>
-  <h3>Clicking any bar in this chart will send their value back to VS code</h3>
+  <h3>
+    Feature 1: Clicking any bar in this chartsudo will send their value back to
+    VS code
+  </h3>
+  <h3>
+    Feature 2: after clicking this button <button>move</button>, elements in the
+    bar chart become draggable. Note that when hovering each element, add a
+    dashed border to the element so that users can see what element can be
+    selected. When finished, click this button <button>done</button>, and the
+    element's starting and ending coordinations (x1,y1) and (x2,y2) will be sent
+    back to VS code as an comment.
+  </h3>
+
   <script src="https://d3js.org/d3.v3.min.js"></script>
   <script>
     (function (window, d3) {
@@ -305,5 +317,7 @@
     })(window, d3);
 
     barchart.init({});
+
+    // move <selector> from (x1, y1) to (x2, y2)
   </script>
 </body>
