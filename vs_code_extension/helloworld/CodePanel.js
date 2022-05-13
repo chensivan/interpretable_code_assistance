@@ -47,6 +47,7 @@ class CodePanel {
    static kill() {
     CodePanel.currentPanel?.dispose();
     CodePanel.currentPanel = undefined;
+    CodePanel.filePath = undefined;
   }
 
    static revive(panel, extensionUri) {
@@ -67,6 +68,7 @@ class CodePanel {
 
    dispose() {
     CodePanel.currentPanel = undefined;
+    CodePanel.filePath = undefined;
 
     // Clean up our resources
     this._panel.dispose();
@@ -125,6 +127,21 @@ class CodePanel {
     }
   }
 
+  //Print comment to the top of editor
+  _printCommentToEditor(comment){
+    const file = CodePanel.filePath;
+
+		if (file) {
+      var data = fs.readFileSync(file); //read existing contents into data 
+    var fd = fs.openSync(file, 'w+');
+    var buffer = Buffer.from(`${comment}\n`);
+
+    fs.writeSync(fd, buffer, 0, buffer.length, 0); //write new data
+    fs.writeSync(fd, data, 0, data.length, buffer.length); //append old data
+      fs.close(fd);
+		}
+  }
+
    _getHtmlForWebview(webview) {
     // // And the uri we use to load this script in the webview
     const scriptUri = webview.asWebviewUri(
@@ -138,15 +155,9 @@ class CodePanel {
     // // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
     
-    //Read from a html file and parse the content into a string
-    //Read from a file
-    //Get the file path for d3_example.html
-
-    //join the current file path with test/d3_example.html
-    //console.log(vscode.window.activeTextEditor.document.fileName);
-    const filePath = vscode.window.activeTextEditor.document.fileName//path.join(__dirname,'test', 'd3_example.html');
+    CodePanel.filePath = vscode.window.activeTextEditor.document.fileName;
     //Read the file
-    const file = fs.readFileSync(filePath, "utf8");
+    const file = fs.readFileSync(CodePanel.filePath, "utf8");
     //Parse the file into a string
     CodePanel.nonce = nonce;
     var html = file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
