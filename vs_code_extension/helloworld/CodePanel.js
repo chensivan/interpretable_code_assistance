@@ -152,6 +152,14 @@ class CodePanel {
       vscode.Uri.joinPath(this._extensionUri, "media", "reset.css")
     );
 
+    const selectIcon = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "media", "select.png")
+    );
+
+    const dragIcon = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, "media", "drag.jpg")
+    );
+
     // // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
     
@@ -160,7 +168,10 @@ class CodePanel {
     const file = fs.readFileSync(CodePanel.filePath, "utf8");
     //Parse the file into a string
     CodePanel.nonce = nonce;
-    var html = file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
+    var html = `<div class="navbar">Tools
+    <img class="icon" src="${selectIcon}"/>
+    <img class="icon" src="${dragIcon}"/>
+    </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     document.addEventListener("click", function(event){

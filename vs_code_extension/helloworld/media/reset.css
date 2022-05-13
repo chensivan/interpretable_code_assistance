@@ -39,3 +39,21 @@ html {
     height: auto;
   }
 
+  .navbar {
+    padding: 2px;
+    width: 100px;
+    background: lightblue;
+    color: black;
+  }
+
+  .navbar .icon{
+    margin: 1px;
+    margin-top: 4px;
+    width:20px;
+    height:20px;
+  }
+
+  .navbar .icon:hover{
+    background: lightskyblue;
+  }
+
