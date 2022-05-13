@@ -24,7 +24,7 @@
 				"command": "visual.openVisual",
 				"title": "Open Visual",
 				"icon": {
-                    "dark": "./media/icon.png",
+                    "dark": "./media/view.png",
                     "light": "./media/icon.png"
                 }
 			}
