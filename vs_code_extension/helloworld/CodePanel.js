@@ -168,7 +168,7 @@ class CodePanel {
     const file = fs.readFileSync(CodePanel.filePath, "utf8");
     //Parse the file into a string
     CodePanel.nonce = nonce;
-    var html = `<div class="navbar">Tools
+    var html = `<div class="navbar" id="navbar">Tools
     <img class="icon" src="${selectIcon}"/>
     <img class="icon" src="${dragIcon}"/>
     </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
@@ -176,12 +176,71 @@ class CodePanel {
     const vscode = acquireVsCodeApi();
     document.addEventListener("click", function(event){
       var tooltip = document.getElementsByClassName("toolTip")[0];
-          vscode.postMessage({
-            type: 'onClicked',
-            value: event.target.outerHTML,
-            info: tooltip.outerHTML,
-        })
-      });
+      vscode.postMessage({
+        type: 'onClicked',
+        value: event.target.outerHTML,
+        info: tooltip.outerHTML,
+    })
+    });
+
+    var svg = document.querySelectorAll("svg")[0];
+    svg.setAttribute("onload", "makeDraggable(event)");
+
+    
+    function makeDraggable(event){
+      var svg = event.target;
+      svg.addEventListener('mousedown', startDrag);
+      svg.addEventListener('mousemove', drag);
+      svg.addEventListener('mouseup', endDrag);
+      svg.addEventListener('mouseleave', endDrag);
+
+      var selectedElement, offset, transform;
+      function startDrag(evt){
+        selectedElement = evt.target;
+        /*set dragging unit to 'g'*/
+        while (selectedElement.tagName !== "g"){
+          selectedElement = selectedElement.parentNode;
+        };
+        offset = getMousePosition(evt);
+        /*Get all the transforms currently on this element*/
+        var transforms = selectedElement.transform.baseVal;
+        if (transforms.length === 0 ||
+          transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+            var translate = svg.createSVGTransform();
+            translate.setTranslate(0, 0);
+            selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+
+          };
+          transform = transforms.getItem(0);
+          offset.x -= transform.matrix.e;
+          offset.y -= transform.matrix.f;
+        
+      };
+    
+      function drag(evt){
+        if (selectedElement) {
+          evt.preventDefault();
+          var coord = getMousePosition(evt);
+          transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
+        }
+      };
+      function endDrag(evt){
+        selectedElement = null;
+      };
+      /*Get relevant coordinates of SVG space*/
+      function getMousePosition(evt) {
+        var CTM = svg.getScreenCTM();
+        return {
+          x: (evt.clientX - CTM.e) / CTM.a,
+          y: (evt.clientY - CTM.f) / CTM.d
+        };
+      }
+    }
+
+
+
+
+    
     </script>`;
     return html;//dom.window.document.querySelector("html").innerHTML;
   }
@@ -189,7 +248,9 @@ class CodePanel {
 module.exports = CodePanel;
 
 
-
+function hellp(){
+  console.log("hello");
+}
 
 function getNonce() {
   let text = "";

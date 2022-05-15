@@ -136,19 +136,27 @@
         var divTooltip = d3
           .select("body")
           .append("div")
+          .attr("id", "divTooltip")
           .attr("class", "toolTip");
 
+        // var divSvg = d3
+        //   .select("body")
+        //   .append("div")
+        //   .attr("id", "divSvg")
+        //   .attr("class", "divSvg");
+
+        //wrap 'svg' in a div
         var svg = d3
           .select("body")
+          .append("div")
+          .attr("class", "divSvg")
+          .attr("id", "divSvg")
           .append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .append("g")
-          .attr(
-            "transform",
-            "translate(" + margin.left + "," + margin.top + ")"
-          );
-
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          
         dataset = JSON.parse(
           '[{"Frequency":"63Hz","Data":[{"Name":"Noise power Lw db(A)","Value":46},{"Name":"Noise pressure Lw db(A)","Value":32}]},{"Frequency":"125Hz","Data":[{"Name":"Noise power Lw db(A)","Value":48},{"Name":"Noise pressure Lw db(A)","Value":34}]},{"Frequency":"250Hz","Data":[{"Name":"Noise power Lw db(A)","Value":57},{"Name":"Noise pressure Lw db(A)","Value":42}]},{"Frequency":"500Hz","Data":[{"Name":"Noise power Lw db(A)","Value":59},{"Name":"Noise pressure Lw db(A)","Value":44}]},{"Frequency":"1000Hz","Data":[{"Name":"Noise power Lw db(A)","Value":62},{"Name":"Noise pressure Lw db(A)","Value":48}]},{"Frequency":"2000Hz","Data":[{"Name":"Noise power Lw db(A)","Value":62},{"Name":"Noise pressure Lw db(A)","Value":47}]},{"Frequency":"4000Hz","Data":[{"Name":"Noise power Lw db(A)","Value":58},{"Name":"Noise pressure Lw db(A)","Value":43}]},{"Frequency":"8000Hz","Data":[{"Name":"Noise power Lw db(A)","Value":48},{"Name":"Noise pressure Lw db(A)","Value":34}]},{"Frequency":"Total","Data":[{"Name":"Noise power Lw db(A)","Value":67},{"Name":"Noise pressure Lw db(A)","Value":53}]}]'
         );
