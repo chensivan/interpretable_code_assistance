@@ -184,10 +184,10 @@ class CodePanel {
     });
 
     var svg = document.querySelectorAll("svg")[0];
-    svg.setAttribute("onload", "makeDraggable(event)");
+    svg.setAttribute("onload", "makeSvgDraggable(event)");
 
     
-    function makeDraggable(event){
+    function makeSvgDraggable(event){
       var svg = event.target;
       svg.addEventListener('mousedown', startDrag);
       svg.addEventListener('mousemove', drag);
@@ -198,22 +198,25 @@ class CodePanel {
       function startDrag(evt){
         selectedElement = evt.target;
         /*set dragging unit to 'g'*/
-        while (selectedElement.tagName !== "g"){
-          selectedElement = selectedElement.parentNode;
-        };
-        offset = getMousePosition(evt);
-        /*Get all the transforms currently on this element*/
-        var transforms = selectedElement.transform.baseVal;
-        if (transforms.length === 0 ||
-          transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-            var translate = svg.createSVGTransform();
-            translate.setTranslate(0, 0);
-            selectedElement.transform.baseVal.insertItemBefore(translate, 0);
-
+        if (selectedElement){
+          while (selectedElement.tagName !== "g"){
+            selectedElement = selectedElement.parentNode;
           };
-          transform = transforms.getItem(0);
-          offset.x -= transform.matrix.e;
-          offset.y -= transform.matrix.f;
+          offset = getMousePosition(evt);
+          /*Get all the transforms currently on this element*/
+          var transforms = selectedElement.transform.baseVal;
+          if (transforms.length === 0 ||
+            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+              var translate = svg.createSVGTransform();
+              translate.setTranslate(0, 0);
+              selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+  
+            };
+            transform = transforms.getItem(0);
+            offset.x -= transform.matrix.e;
+            offset.y -= transform.matrix.f;
+        };
+
         
       };
     
@@ -236,6 +239,63 @@ class CodePanel {
         };
       }
     }
+    
+    var divs = document.querySelectorAll("div");
+
+    divs.forEach(div => {      
+      div.setAttribute("draggable", "true");
+      div.addEventListener("mousedown", dragStart);
+    });
+
+    var moving = false;
+    var lastX = null, lastY = null;
+    var translateX = 0, translateY = 0;
+    var div;
+
+    function dragStart(e) {
+      e = e || window.event;
+      e.preventDefault();
+      div = e.target;
+      while (div.tagName !== "DIV"){
+        div = div.parentNode;
+      };
+      div.addEventListener("mousemove", drag);
+      div.addEventListener("mouseup", dragEnd);
+      moving = true;
+    }
+
+    function drag(e) {
+      e = e || window.event;
+      e.preventDefault();
+      if (moving) {
+        if (lastX&&lastY){
+          var pX = e.clientX - lastX;
+          var pY = e.clientY - lastY;
+          translateX += pX;
+          translateY += pY;
+          div.style.transform = "translate(" + translateX + "px, " + translateY + "px)";
+        }
+
+        lastX = e.clientX;
+        lastY = e.clientY;
+        
+      }
+    }
+
+    function dragEnd(e) {
+      if (moving) {
+        moving = false;
+        lastX = null;
+        lastY = null;
+      }
+    }
+  
+
+
+
+
+
+    
 
 
 
