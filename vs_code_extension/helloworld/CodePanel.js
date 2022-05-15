@@ -169,20 +169,42 @@ class CodePanel {
     //Parse the file into a string
     CodePanel.nonce = nonce;
     var html = `<div class="navbar" id="navbar">Tools
-    <img class="icon" src="${selectIcon}"/>
-    <img class="icon" src="${dragIcon}"/>
+    <img class="icon" id="icon-tip" src="${selectIcon}"/>
+    <img class="icon" id="icon-drag" src="${dragIcon}"/>
     </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
+    
+    var dragEnable = false, tipEnable = false;
+
+    var icons = document.getElementsByClassName('icon');
+    for (var i = 0; i < icons.length; i++) {
+      icons[i].addEventListener('click', handleSelectIcon);
+    }
+
+
+    function handleSelectIcon(event){
+      var icon = event.target;
+      if (icon.id === "icon-tip"){
+        tipEnable = true;
+        dragEnable = false;
+      } else if (icon.id === "icon-drag"){
+        dragEnable = true;
+        tipEnable = false;
+      }
+    }
+
     const vscode = acquireVsCodeApi();
     document.addEventListener("click", function(event){
-      var tooltip = document.getElementsByClassName("toolTip")[0];
-      vscode.postMessage({
-        type: 'onClicked',
-        value: event.target.outerHTML,
-        info: tooltip.outerHTML,
-    })
+      if (tipEnable){
+        var tooltip = document.getElementsByClassName("toolTip")[0];
+        vscode.postMessage({
+          type: 'onClicked',
+          value: event.target.outerHTML,
+          info: tooltip.outerHTML,
+        })
+      }
     });
-
+    
     var svg = document.querySelectorAll("svg")[0];
     svg.setAttribute("onload", "makeSvgDraggable(event)");
 
@@ -192,9 +214,6 @@ class CodePanel {
     function makeSvgDraggable(event){
       var svg = event.target;
       svg.addEventListener('mousedown', startDrag);
-      svg.addEventListener('mousemove', drag);
-      svg.addEventListener('mouseup', endDrag);
-      svg.addEventListener('mouseleave', endDrag);
 
       var selectedElement, offset, transform;
       function startDrag(evt){
@@ -205,22 +224,26 @@ class CodePanel {
           while (selectedElement.tagName !== "g" && selectedElement.tagName !== "DIV"){
             selectedElement = selectedElement.parentNode;
           };
-          if (selectedElement.tagName === "g"){
-            svgMoving = true;
-            offset = getMousePosition(evt);
-            /*Get all the transforms currently on this element*/
-            var transforms = selectedElement.transform.baseVal;
-            if (transforms.length === 0 ||
-              transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-                var translate = svg.createSVGTransform();
-                translate.setTranslate(0, 0);
-                selectedElement.transform.baseVal.insertItemBefore(translate, 0);
-    
-              };
-              transform = transforms.getItem(0);
-              offset.x -= transform.matrix.e;
-              offset.y -= transform.matrix.f;
-          };
+        if (selectedElement.tagName === "g" && dragEnable){
+          svgMoving = true;
+          selectedElement.addEventListener('mousemove', drag);
+          selectedElement.addEventListener('mouseup', endDrag);
+          selectedElement.addEventListener('mouseleave', endDrag);
+
+          offset = getMousePosition(evt);
+          /*Get all the transforms currently on this element*/
+          var transforms = selectedElement.transform.baseVal;
+          if (transforms.length === 0 ||
+            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+              var translate = svg.createSVGTransform();
+              translate.setTranslate(0, 0);
+              selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+  
+            };
+            transform = transforms.getItem(0);
+            offset.x -= transform.matrix.e;
+            offset.y -= transform.matrix.f;
+        };
         };
 
         
@@ -263,7 +286,7 @@ class CodePanel {
 
     function dragStart(e) {
       // if not svg moving then
-      if (!svgMoving){
+      if (!svgMoving && dragEnable){
         e = e || window.event;
         e.preventDefault();
         div = e.target;
