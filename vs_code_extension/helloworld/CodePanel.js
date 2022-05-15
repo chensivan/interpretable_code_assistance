@@ -205,77 +205,81 @@ class CodePanel {
       }
     });
     
-    var svg = document.querySelectorAll("svg")[0];
-    svg.setAttribute("onload", "makeSvgDraggable(event)");
+    var svgs = document.querySelectorAll("svg");
+    if (svgs.length > 0){
+      var svg = svgs[0];
+      svg.setAttribute("onload", "makeSvgDraggable(event)");
 
-    var svgMoving = false;
-
-    
-    function makeSvgDraggable(event){
-      var svg = event.target;
-      svg.addEventListener('mousedown', startDrag);
-
-      var selectedElement, offset, transform;
-      function startDrag(evt){
-        evt.preventDefault();
-        selectedElement = evt.target;
-        /*set dragging unit to 'g'*/
-        if (selectedElement){
-          while (selectedElement.tagName !== "g" && selectedElement.tagName !== "DIV"){
-            selectedElement = selectedElement.parentNode;
-          };
-        if (selectedElement.tagName === "g" && dragEnable){
-          svgMoving = true;
-          selectedElement.addEventListener('mousemove', drag);
-          selectedElement.addEventListener('mouseup', endDrag);
-          selectedElement.addEventListener('mouseleave', endDrag);
-
-          offset = getMousePosition(evt);
-          /*Get all the transforms currently on this element*/
-          var transforms = selectedElement.transform.baseVal;
-          if (transforms.length === 0 ||
-            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-              var translate = svg.createSVGTransform();
-              translate.setTranslate(0, 0);
-              selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+      var svgMoving = false;
   
-            };
-            transform = transforms.getItem(0);
-            offset.x -= transform.matrix.e;
-            offset.y -= transform.matrix.f;
-        };
-        };
-
-        
-      };
-    
-      function drag(evt){
-        if (selectedElement && svgMoving) {
+      
+      function makeSvgDraggable(event){
+        var svg = event.target;
+        svg.addEventListener('mousedown', startDrag);
+  
+        var selectedElement, offset, transform;
+        function startDrag(evt){
           evt.preventDefault();
-          var coord = getMousePosition(evt);
-          transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
-        }
-      };
-      function endDrag(evt){
-        if (svgMoving) {
-          selectedElement = null;
-          svgMoving = false;
-        }
-      };
-      /*Get relevant coordinates of SVG space*/
-      function getMousePosition(evt) {
-        var CTM = svg.getScreenCTM();
-        return {
-          x: (evt.clientX - CTM.e) / CTM.a,
-          y: (evt.clientY - CTM.f) / CTM.d
+          selectedElement = evt.target;
+          /*set dragging unit to 'g'*/
+          if (selectedElement){
+            while (selectedElement.tagName !== "g" && selectedElement.tagName !== "DIV"){
+              selectedElement = selectedElement.parentNode;
+            };
+          if (selectedElement.tagName === "g" && dragEnable){
+            svgMoving = true;
+            selectedElement.addEventListener('mousemove', drag);
+            selectedElement.addEventListener('mouseup', endDrag);
+            selectedElement.addEventListener('mouseleave', endDrag);
+  
+            offset = getMousePosition(evt);
+            /*Get all the transforms currently on this element*/
+            var transforms = selectedElement.transform.baseVal;
+            if (transforms.length === 0 ||
+              transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+                var translate = svg.createSVGTransform();
+                translate.setTranslate(0, 0);
+                selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+    
+              };
+              transform = transforms.getItem(0);
+              offset.x -= transform.matrix.e;
+              offset.y -= transform.matrix.f;
+          };
+          };
+  
+          
         };
+      
+        function drag(evt){
+          if (selectedElement && svgMoving) {
+            evt.preventDefault();
+            var coord = getMousePosition(evt);
+            transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
+          }
+        };
+        function endDrag(evt){
+          if (svgMoving) {
+            selectedElement = null;
+            svgMoving = false;
+          }
+        };
+        /*Get relevant coordinates of SVG space*/
+        function getMousePosition(evt) {
+          var CTM = svg.getScreenCTM();
+          return {
+            x: (evt.clientX - CTM.e) / CTM.a,
+            y: (evt.clientY - CTM.f) / CTM.d
+          };
+        }
       }
     }
+      
+
     
     var divs = document.querySelectorAll("div");
 
     divs.forEach(div => {      
-      div.setAttribute("draggable", "true");
       div.addEventListener("mousedown", dragStart);
     });
 
@@ -290,11 +294,12 @@ class CodePanel {
         e = e || window.event;
         e.preventDefault();
         div = e.target;
-        while (div.tagName !== "DIV"){
-          div = div.parentNode;
-        };
+        // while (div.tagName !== "DIV"){
+        //   div = div.parentNode;
+        // };
         div.addEventListener("mousemove", drag);
         div.addEventListener("mouseup", dragEnd);
+        div.addEventListener('mouseleave', dragEnd);
         moving = true;
       }
 
