@@ -174,14 +174,13 @@ class CodePanel {
     </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
     
-    var dragEnable = false;
+    var dragEnable = false; // flag: true to enable drag; false to show tooltip
 
     var icons = document.getElementsByClassName('icon');
     for (var i = 0; i < icons.length; i++) {
       icons[i].addEventListener('click', handleSelectIcon);
     }
-
-
+    // set navbar icon handler
     function handleSelectIcon(event){
       var icon = event.target;
       if (icon.id === "icon-tip"){
@@ -191,6 +190,7 @@ class CodePanel {
       }
     }
 
+    // show tooltip
     const vscode = acquireVsCodeApi();
     document.addEventListener("click", function(event){
       if (!dragEnable){
@@ -203,14 +203,14 @@ class CodePanel {
       }
     });
     
+    // set drag event to svg element
     var svgs = document.querySelectorAll("svg");
     if (svgs.length > 0){
       var svg = svgs[0];
       svg.setAttribute("onload", "makeSvgDraggable(event)");
 
-      var svgMoving = false;
+      var svgMoving = false; // flag: true indicating dragging on svg element
   
-      
       function makeSvgDraggable(event){
         var svg = event.target;
         svg.addEventListener('mousedown', startDrag);
@@ -221,7 +221,7 @@ class CodePanel {
           selectedElement = evt.target;
           /*set dragging unit to 'g'*/
           if (selectedElement){
-            while (selectedElement.tagName !== "g" && selectedElement.tagName !== "DIV"){
+            while (selectedElement.tagName !== "g" && selectedElement){
               selectedElement = selectedElement.parentNode;
             };
           if (selectedElement.tagName === "g" && dragEnable){
@@ -231,7 +231,7 @@ class CodePanel {
             selectedElement.addEventListener('mouseleave', endDrag);
   
             offset = getMousePosition(evt);
-            /*Get all the transforms currently on this element*/
+            //Get all the transforms currently on this element
             var transforms = selectedElement.transform.baseVal;
             if (transforms.length === 0 ||
               transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
@@ -262,7 +262,7 @@ class CodePanel {
             svgMoving = false;
           }
         };
-        /*Get relevant coordinates of SVG space*/
+        //Get relevant coordinates of SVG space
         function getMousePosition(evt) {
           var CTM = svg.getScreenCTM();
           return {
@@ -274,7 +274,7 @@ class CodePanel {
     }
       
 
-    
+    // set drag event for non-svg element
     var divs = document.querySelectorAll("div");
 
     divs.forEach(div => {      
@@ -291,9 +291,11 @@ class CodePanel {
       if (!svgMoving && dragEnable){
         div = e.target;
 
-        while (div.tagName !== "DIV"){
-          div = div.parentNode;
-        };
+        // set minimum dragging unit to 'DIV"
+        // while (div.tagName !== "DIV"){
+        //   div = div.parentNode;
+        // };
+        
         div.addEventListener("mousemove", drag);
         div.addEventListener("mouseup", dragEnd);
         div.addEventListener('mouseleave', dragEnd);
