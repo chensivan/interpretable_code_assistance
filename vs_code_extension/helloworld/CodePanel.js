@@ -186,6 +186,8 @@ class CodePanel {
     var svg = document.querySelectorAll("svg")[0];
     svg.setAttribute("onload", "makeSvgDraggable(event)");
 
+    var svgMoving = false;
+
     
     function makeSvgDraggable(event){
       var svg = event.target;
@@ -196,39 +198,47 @@ class CodePanel {
 
       var selectedElement, offset, transform;
       function startDrag(evt){
+        evt.preventDefault();
         selectedElement = evt.target;
         /*set dragging unit to 'g'*/
         if (selectedElement){
-          while (selectedElement.tagName !== "g"){
+          while (selectedElement.tagName !== "g" && selectedElement.tagName !== "DIV"){
+            console.log(selectedElement.tagName);
             selectedElement = selectedElement.parentNode;
           };
-          offset = getMousePosition(evt);
-          /*Get all the transforms currently on this element*/
-          var transforms = selectedElement.transform.baseVal;
-          if (transforms.length === 0 ||
-            transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-              var translate = svg.createSVGTransform();
-              translate.setTranslate(0, 0);
-              selectedElement.transform.baseVal.insertItemBefore(translate, 0);
-  
-            };
-            transform = transforms.getItem(0);
-            offset.x -= transform.matrix.e;
-            offset.y -= transform.matrix.f;
+          if (selectedElement.tagName === "g"){
+            svgMoving = true;
+            offset = getMousePosition(evt);
+            /*Get all the transforms currently on this element*/
+            var transforms = selectedElement.transform.baseVal;
+            if (transforms.length === 0 ||
+              transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+                var translate = svg.createSVGTransform();
+                translate.setTranslate(0, 0);
+                selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+    
+              };
+              transform = transforms.getItem(0);
+              offset.x -= transform.matrix.e;
+              offset.y -= transform.matrix.f;
+          };
         };
 
         
       };
     
       function drag(evt){
-        if (selectedElement) {
+        if (selectedElement && svgMoving) {
           evt.preventDefault();
           var coord = getMousePosition(evt);
           transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
         }
       };
       function endDrag(evt){
-        selectedElement = null;
+        if (svgMoving) {
+          selectedElement = null;
+          svgMoving = false;
+        }
       };
       /*Get relevant coordinates of SVG space*/
       function getMousePosition(evt) {
@@ -253,15 +263,19 @@ class CodePanel {
     var div;
 
     function dragStart(e) {
-      e = e || window.event;
-      e.preventDefault();
-      div = e.target;
-      while (div.tagName !== "DIV"){
-        div = div.parentNode;
-      };
-      div.addEventListener("mousemove", drag);
-      div.addEventListener("mouseup", dragEnd);
-      moving = true;
+      // if not svg moving then
+      if (!svgMoving){
+        e = e || window.event;
+        e.preventDefault();
+        div = e.target;
+        while (div.tagName !== "DIV"){
+          div = div.parentNode;
+        };
+        div.addEventListener("mousemove", drag);
+        div.addEventListener("mouseup", dragEnd);
+        moving = true;
+      }
+
     }
 
     function drag(e) {
@@ -289,18 +303,6 @@ class CodePanel {
         lastY = null;
       }
     }
-  
-
-
-
-
-
-    
-
-
-
-
-    
     </script>`;
     return html;//dom.window.document.querySelector("html").innerHTML;
   }
