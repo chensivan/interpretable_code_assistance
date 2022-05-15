@@ -174,7 +174,7 @@ class CodePanel {
     </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
     
-    var dragEnable = false, tipEnable = false;
+    var dragEnable = false;
 
     var icons = document.getElementsByClassName('icon');
     for (var i = 0; i < icons.length; i++) {
@@ -185,17 +185,15 @@ class CodePanel {
     function handleSelectIcon(event){
       var icon = event.target;
       if (icon.id === "icon-tip"){
-        tipEnable = true;
         dragEnable = false;
       } else if (icon.id === "icon-drag"){
         dragEnable = true;
-        tipEnable = false;
       }
     }
 
     const vscode = acquireVsCodeApi();
     document.addEventListener("click", function(event){
-      if (tipEnable){
+      if (!dragEnable){
         var tooltip = document.getElementsByClassName("toolTip")[0];
         vscode.postMessage({
           type: 'onClicked',
@@ -291,12 +289,11 @@ class CodePanel {
     function dragStart(e) {
       // if not svg moving then
       if (!svgMoving && dragEnable){
-        e = e || window.event;
-        e.preventDefault();
         div = e.target;
-        // while (div.tagName !== "DIV"){
-        //   div = div.parentNode;
-        // };
+
+        while (div.tagName !== "DIV"){
+          div = div.parentNode;
+        };
         div.addEventListener("mousemove", drag);
         div.addEventListener("mouseup", dragEnd);
         div.addEventListener('mouseleave', dragEnd);
@@ -306,8 +303,8 @@ class CodePanel {
     }
 
     function drag(e) {
-      e = e || window.event;
-      e.preventDefault();
+      // e = e || window.event;
+      // e.preventDefault();
       if (moving) {
         if (lastX&&lastY){
           var pX = e.clientX - lastX;
@@ -324,6 +321,7 @@ class CodePanel {
     }
 
     function dragEnd(e) {
+      e.preventDefault();
       if (moving) {
         moving = false;
         lastX = null;
