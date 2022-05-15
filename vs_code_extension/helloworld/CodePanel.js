@@ -203,7 +203,6 @@ class CodePanel {
         /*set dragging unit to 'g'*/
         if (selectedElement){
           while (selectedElement.tagName !== "g" && selectedElement.tagName !== "DIV"){
-            console.log(selectedElement.tagName);
             selectedElement = selectedElement.parentNode;
           };
           if (selectedElement.tagName === "g"){
