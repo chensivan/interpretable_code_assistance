@@ -219,6 +219,10 @@ class CodePanel {
     document.addEventListener("click", function(event){
       if (!dragEnable){
         var tooltip = document.getElementsByClassName("toolTip")[0];
+        //if the event source's id is not inputbox
+        if (event.target.id !== "inputbox"){
+        createInputBox(event.pageX, event.pageY);
+        }
         vscode.postMessage({
           type: 'onClicked',
           value: event.target.outerHTML,
@@ -226,6 +230,20 @@ class CodePanel {
         })
       }
     });
+
+    function createInputBox(x, y){
+      var inputBox = document.getElementById("inputbox");
+      if (inputBox){
+        inputBox.parentNode.removeChild(inputBox);
+      }
+        inputbox = document.createElement("input");
+        inputbox.style.position = "absolute";
+        inputbox.style.top = y+"px";
+        inputbox.style.left = x+"px";
+        inputbox.style.margin = '0px';
+        inputbox.id = "inputbox";
+        document.body.appendChild(inputbox);
+    }
     
     // set drag event to svg element
     var svgs = document.querySelectorAll("svg");
