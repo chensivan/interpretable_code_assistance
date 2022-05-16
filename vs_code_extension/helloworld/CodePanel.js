@@ -167,11 +167,11 @@ class CodePanel {
     );
 
     const selectIcon = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "select.png")
+      vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png")
     );
 
     const dragIcon = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "drag.jpg")
+      vscode.Uri.joinPath(this._extensionUri, "media", "dragw.png")
     );
 
     // // Use a nonce to only allow specific scripts to be run
@@ -184,13 +184,16 @@ class CodePanel {
     // this._printCommentToEditor("//This is not a comment");
     //Parse the file into a string
     CodePanel.nonce = nonce;
-    var html = `<div class="navbar" id="navbar">Tools
+    var html = 
+    `
+    <div class="navbar" id="navbar">Tools
     <img class="icon" id="icon-tip" src="${selectIcon}"/>
     <img class="icon" id="icon-drag" src="${dragIcon}"/>
     </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
     var dragEnable = false; // flag: true to enable drag; false to show tooltip
     var icons = document.getElementsByClassName('icon');
+    document.getElementById("icon-tip").classList.add("selected");
     for (var i = 0; i < icons.length; i++) {
       icons[i].addEventListener('click', handleSelectIcon);
     }
@@ -199,8 +202,13 @@ class CodePanel {
       var icon = event.target;
       if (icon.id === "icon-tip"){
         dragEnable = false;
+        document.getElementById("icon-tip").classList.add("selected");
+        document.getElementById("icon-drag").classList.remove("selected");
+        console.log(document.getElementById("icon-tip").classList);
       } else if (icon.id === "icon-drag"){
         dragEnable = true;
+        document.getElementById("icon-tip").classList.remove("selected");
+        document.getElementById("icon-drag").classList.add("selected");
       }
     }
 
@@ -209,6 +217,10 @@ class CodePanel {
     document.addEventListener("click", function(event){
       if (!dragEnable){
         var tooltip = document.getElementsByClassName("toolTip")[0];
+        //if the event source's id is not inputbox
+        if (event.target.id !== "inputbox"){
+        createInputBox(event.pageX, event.pageY);
+        }
         vscode.postMessage({
           type: 'onClicked',
           value: event.target.outerHTML,
@@ -216,6 +228,21 @@ class CodePanel {
         })
       }
     });
+
+    function createInputBox(x, y){
+      var inputBox = document.getElementById("inputbox");
+      if (inputBox){
+        inputBox.parentNode.removeChild(inputBox);
+      }
+        inputbox = document.createElement("input");
+        inputbox.style.position = "absolute";
+        inputbox.style.top = y+"px";
+        inputbox.style.left = x+"px";
+        inputbox.style.margin = '0px';
+        inputbox.id = "inputbox";
+        document.body.appendChild(inputbox);
+    }
+    
 
     function defineSelector(element){
       var selector = element.outerHTML;

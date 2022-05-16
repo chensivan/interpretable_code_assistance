@@ -1,20 +1,22 @@
-# helloworld README
+# copilot++ README
 
-This is the README for your extension "helloworld". After writing up a brief description, we recommend including the following sections.
-
-## Features
-
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+This is the README for the extension "copilot". 
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+```
+cd vs_code_extension/helloworld
+npm install
+````
+
+Press `F5` to open a new window with your extension loaded.
+Open a file with a .html extension or by pressing (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and use the command `openVisual`.
+A webview will open displaying the content of the .html file.
+
+
+## Features
+
+
 
 ## Extension Settings
 
