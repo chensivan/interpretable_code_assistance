@@ -239,6 +239,7 @@ class CodePanel {
     var lastX = null, lastY = null;
     var translateX = 0, translateY = 0;
     var div;
+    var rectX, rectY;
 
     function dragStart(e) {
       if (dragEnable){
@@ -248,6 +249,8 @@ class CodePanel {
         // while (div.tagName !== "DIV"){
         //   div = div.parentNode;
         // };
+        rectX = div.getBoundingClientRect()['x'];
+        rectY = div.getBoundingClientRect()['y'];
         
         transformValue = window.getComputedStyle(div).transform;
         if (transformValue){
@@ -286,7 +289,7 @@ class CodePanel {
         var selector = defineSelector(div);
         vscode.postMessage({
           type: 'passPosition',
-          value: [lastX, lastY, lastX + translateX, lastY + translateY],
+          value: [rectX, rectY, rectX + translateX, rectY + translateY],
           info: selector,
         })
   
