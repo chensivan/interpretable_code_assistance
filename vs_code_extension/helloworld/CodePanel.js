@@ -16,7 +16,6 @@ class CodePanel {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
-
     // If we already have a panel, show it.
     if (CodePanel.currentPanel) {
         CodePanel.currentPanel._panel.reveal(column);
@@ -79,11 +78,11 @@ class CodePanel {
         x.dispose();
       }
     }
-  }
-
+  };
    async _update() {
     const webview = this._panel.webview;
 
+    
     this._panel.webview.html = this._getHtmlForWebview(webview);
     webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
@@ -95,6 +94,16 @@ class CodePanel {
           break;
 
         }
+        case "passPosition":{
+          if (!data.value) {
+            return;
+          }
+          var allNotNull = data.value.every(function(i) { return i !== null; });
+          if (allNotNull){
+            var comment = this.generateComment(data.value, data.info);
+            this._printCommentToEditor(comment);
+          }
+        }
         case "onError": {
           if (!data.value) {
             return;
@@ -102,6 +111,7 @@ class CodePanel {
           vscode.window.showErrorMessage(data.value);
           break;
         }
+        
       }
     });
   }
@@ -127,10 +137,15 @@ class CodePanel {
     }
   }
 
+  // Generate comment for printing to the editor
+  generateComment(position, info){
+    return "// Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").";
+  };
+
   //Print comment to the top of editor
   _printCommentToEditor(comment){
     const file = CodePanel.filePath;
-
+    console.log(file);
 		if (file) {
       var data = fs.readFileSync(file); //read existing contents into data 
     var fd = fs.openSync(file, 'w+');
@@ -164,8 +179,11 @@ class CodePanel {
     const nonce = getNonce();
     
     CodePanel.filePath = vscode.window.activeTextEditor.document.fileName;
+    this._printCommentToEditor('//Start generating code');
+    
     //Read the file
     const file = fs.readFileSync(CodePanel.filePath, "utf8");
+    // this._printCommentToEditor("//This is not a comment");
     //Parse the file into a string
     CodePanel.nonce = nonce;
     var html = `<div class="navbar" id="navbar">Tools
@@ -173,9 +191,7 @@ class CodePanel {
     <img class="icon" id="icon-drag" src="${dragIcon}"/>
     </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
     <script nonce="${nonce}">
-    
     var dragEnable = false; // flag: true to enable drag; false to show tooltip
-
     var icons = document.getElementsByClassName('icon');
     for (var i = 0; i < icons.length; i++) {
       icons[i].addEventListener('click', handleSelectIcon);
@@ -220,30 +236,30 @@ class CodePanel {
           evt.preventDefault();
           selectedElement = evt.target;
           /*set dragging unit to 'g'*/
-          if (selectedElement){
-            while (selectedElement.tagName !== "g" && selectedElement){
-              selectedElement = selectedElement.parentNode;
-            };
-          if (selectedElement.tagName === "g" && dragEnable){
-            svgMoving = true;
-            selectedElement.addEventListener('mousemove', drag);
-            selectedElement.addEventListener('mouseup', endDrag);
-            selectedElement.addEventListener('mouseleave', endDrag);
-  
-            offset = getMousePosition(evt);
-            //Get all the transforms currently on this element
-            var transforms = selectedElement.transform.baseVal;
-            if (transforms.length === 0 ||
-              transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-                var translate = svg.createSVGTransform();
-                translate.setTranslate(0, 0);
-                selectedElement.transform.baseVal.insertItemBefore(translate, 0);
-    
-              };
-              transform = transforms.getItem(0);
-              offset.x -= transform.matrix.e;
-              offset.y -= transform.matrix.f;
+          while (selectedElement.tagName !== "g" && selectedElement){
+            selectedElement = selectedElement.parentNode;
           };
+          if (selectedElement){
+            if (selectedElement.tagName === "g" && dragEnable){
+              svgMoving = true;
+              selectedElement.addEventListener('mousemove', drag);
+              selectedElement.addEventListener('mouseup', endDrag);
+              selectedElement.addEventListener('mouseleave', endDrag);
+    
+              offset = getMousePosition(evt);
+              //Get all the transforms currently on this element
+              var transforms = selectedElement.transform.baseVal;
+              if (transforms.length === 0 ||
+                transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+                  var translate = svg.createSVGTransform();
+                  translate.setTranslate(0, 0);
+                  selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+      
+                };
+                transform = transforms.getItem(0);
+                offset.x -= transform.matrix.e;
+                offset.y -= transform.matrix.f;
+            };
           };
   
           
@@ -258,6 +274,13 @@ class CodePanel {
         };
         function endDrag(evt){
           if (svgMoving) {
+            var coord = getMousePosition(evt);
+            var selector = defineSelector(selectedElement);
+            vscode.postMessage({
+              type: 'passPosition',
+              value: [offset.x, offset.y, coord.x, coord.y],
+              info: selector,
+            })
             selectedElement = null;
             svgMoving = false;
           }
@@ -271,6 +294,16 @@ class CodePanel {
           };
         }
       }
+    }
+
+    function defineSelector(element){
+      var selector = "selector";
+      if (element.id !== ''){
+        selector = "#"+element.id;
+      }else if(element.className !== ''){
+        selector = "."+element.className;
+      }
+      return selector;
     }
       
 
@@ -295,7 +328,7 @@ class CodePanel {
         // while (div.tagName !== "DIV"){
         //   div = div.parentNode;
         // };
-        
+
         div.addEventListener("mousemove", drag);
         div.addEventListener("mouseup", dragEnd);
         div.addEventListener('mouseleave', dragEnd);
@@ -315,7 +348,6 @@ class CodePanel {
           translateY += pY;
           div.style.transform = "translate(" + translateX + "px, " + translateY + "px)";
         }
-
         lastX = e.clientX;
         lastY = e.clientY;
         
@@ -326,6 +358,13 @@ class CodePanel {
       e.preventDefault();
       if (moving) {
         moving = false;
+        var selector = defineSelector(div);
+        vscode.postMessage({
+          type: 'passPosition',
+          value: [lastX, lastY, lastX + translateX, lastY + translateY],
+          info: selector,
+        })
+  
         lastX = null;
         lastY = null;
       }
@@ -335,11 +374,6 @@ class CodePanel {
   }
 }
 module.exports = CodePanel;
-
-
-function hellp(){
-  console.log("hello");
-}
 
 function getNonce() {
   let text = "";
