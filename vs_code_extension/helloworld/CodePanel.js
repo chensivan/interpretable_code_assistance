@@ -297,7 +297,7 @@ class CodePanel {
     }
 
     function defineSelector(element){
-      var selector = "selector";
+      var selector = element.outerHTML;
       if (element.id !== ''){
         selector = "#"+element.id;
       }else if(element.className !== ''){
@@ -308,7 +308,7 @@ class CodePanel {
       
 
     // set drag event for non-svg element
-    var divs = document.querySelectorAll("div");
+    var divs = document.querySelectorAll('*');
 
     divs.forEach(div => {      
       div.addEventListener("mousedown", dragStart);
