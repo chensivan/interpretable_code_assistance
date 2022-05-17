@@ -24,18 +24,18 @@
 				"command": "visual.openVisual",
 				"title": "Open Visual",
 				"icon": {
-                    "dark": "./media/view.png",
-                    "light": "./media/icon.png"
-                }
+					"dark": "./media/view.png",
+					"light": "./media/icon.png"
+				}
 			}
 		],
 		"menus": {
 			"editor/title": [
-			  {
-				"when": "resourceExtname == .html",
-				"command": "visual.openVisual",
-				"group": "navigation"
-			  }
+				{
+					"when": "resourceExtname == .html",
+					"command": "visual.openVisual",
+					"group": "navigation"
+				}
 			]
 		}
 	},
@@ -56,6 +56,7 @@
 		"typescript": "^4.6.4"
 	},
 	"dependencies": {
-		"jsdom": "^19.0.0"
+		"jsdom": "^19.0.0",
+		"node-fetch": "^2.6.7"
 	}
 }

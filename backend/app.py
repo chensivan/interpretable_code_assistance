@@ -1,5 +1,6 @@
 # import numpy as np
-from flask import Flask
+from flask import Flask, request
+import json
 # import pickle
 
 # pip install --upgrade openai
@@ -10,7 +11,9 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/paraphrase", methods = ["POST"])
 def paraphrase():
-    return "done"
+    body = request.json
+    text = body["text"]
+    return json.dumps(text)
 
 
 if __name__ == "__main__":

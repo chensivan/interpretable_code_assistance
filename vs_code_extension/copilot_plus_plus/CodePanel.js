@@ -2,6 +2,8 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const jsdom = require("jsdom");
+const fetch = require('node-fetch');
+
 //import { getNonce } from "./getNonce";
 
 class CodePanel {
@@ -90,6 +92,7 @@ class CodePanel {
           if (!data.value) {
             return;
           }
+          //this.callParaphraseAPI();
           this.handleOnClicked(data.value, data.info);
           break;
 
@@ -113,6 +116,20 @@ class CodePanel {
         }
         
       }
+    });
+  }
+
+  callParaphraseAPI(){
+    fetch("http://127.0.0.1:5000/paraphrase", {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({text: "hihi"}) 
+    })
+    .then(ret => ret.json())
+    .then(result => {
+      console.log(result)
     });
   }
 
