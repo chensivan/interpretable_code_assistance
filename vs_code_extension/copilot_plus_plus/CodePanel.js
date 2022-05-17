@@ -92,7 +92,6 @@ class CodePanel {
           if (!data.value) {
             return;
           }
-          //this.callParaphraseAPI();
           this.handleOnClicked(data.value, data.info);
           break;
 
@@ -106,6 +105,14 @@ class CodePanel {
             var comment = this.generateComment(data.value, data.info);
             this._printCommentToEditor(comment);
           }
+          break;
+        }
+        case "onInput": {
+          if (!data.value) {
+            return;
+          } 
+          this.callParaphraseAPI(data.value);
+          break;
         }
         case "onError": {
           if (!data.value) {
@@ -119,17 +126,17 @@ class CodePanel {
     });
   }
 
-  callParaphraseAPI(){
+  callParaphraseAPI(input){
     fetch("http://127.0.0.1:5000/paraphrase", {
       method: 'POST', 
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({text: "hihi"}) 
+      body: JSON.stringify({text: input}) 
     })
     .then(ret => ret.json())
     .then(result => {
-      console.log(result)
+      this._printCommentToEditor("<!--"+result.paraphrased_text+"-->");
     });
   }
 
@@ -226,6 +233,7 @@ class CodePanel {
         dragEnable = true;
         document.getElementById("icon-tip").classList.remove("selected");
         document.getElementById("icon-drag").classList.add("selected");
+        closeInputBox();
       }
     }
 
@@ -235,7 +243,8 @@ class CodePanel {
       if (!dragEnable){
         var tooltip = document.getElementsByClassName("toolTip")[0];
         //if the event source's id is not inputbox
-        if (event.target.id !== "inputbox"){
+        if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
+        && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
         createInputBox(event.pageX, event.pageY);
         }
         vscode.postMessage({
@@ -246,19 +255,46 @@ class CodePanel {
       }
     });
 
-    function createInputBox(x, y){
+    function closeInputBox(){
       var inputBox = document.getElementById("inputbox");
       if (inputBox){
         inputBox.parentNode.removeChild(inputBox);
       }
-        inputbox = document.createElement("input");
+    }
+
+    function createInputBox(x, y){
+      closeInputBox();
+        inputbox = document.createElement("div");
         inputbox.style.position = "absolute";
         inputbox.style.top = y+"px";
         inputbox.style.left = x+"px";
         inputbox.style.margin = '0px';
         inputbox.id = "inputbox";
+        inputbox.innerHTML = "<input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+
         document.body.appendChild(inputbox);
+
+        var submit = document.getElementById("inputbox-submit");
+        submit.addEventListener("click", function() {
+          var text = document.getElementById("inputbox-input");
+          if(text.value){
+          vscode.postMessage({
+            type: 'onInput',
+            value: text.value
+          })
+        }
+        else{
+          text.setAttribute("placeholder", "Please enter a value");
+        }
+        });
+
+        var close = document.getElementById("inputbox-close");
+        close.addEventListener("click", function() {
+          closeInputBox();
+        });
     }
+
+   
     
 
     function defineSelector(element){
