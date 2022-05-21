@@ -15,9 +15,9 @@ class CodePanel {
   static viewType = "code-panel";
   
   static createOrShow(extensionUri) {
-    const column = vscode.window.activeTextEditor
+    const column = vscode.ViewColumn.Two;/*vscode.window.activeTextEditor
     ? vscode.window.activeTextEditor.viewColumn
-    : undefined;
+    : undefined;*/
     // If we already have a panel, show it.
     if (CodePanel.currentPanel) {
       CodePanel.currentPanel._panel.reveal(column);
@@ -74,7 +74,7 @@ class CodePanel {
       // Clean up our resources
       this._panel.dispose();
       
-      while (this._disposables.length) {
+      while (this._disposables && this._disposables.length) {
         const x = this._disposables.pop();
         if (x) {
           x.dispose();
@@ -112,6 +112,14 @@ class CodePanel {
                   return;
                 } 
                 this.callParaphraseAPI(data.value);
+                break;
+              }
+              case "onInsert": {
+                if (!data.value) {
+                  return;
+                }
+                var comment = "<!--"+data.value + " "+data.style+"-->"
+                this._printCommentToEditor(comment);
                 break;
               }
               case "onError": {
@@ -210,9 +218,11 @@ class CodePanel {
                 <div class="navbar" id="navbar">Tools
                 <img class="icon" id="icon-tip" src="${selectIcon}"/>
                 <img class="icon" id="icon-drag" src="${dragIcon}"/>
+                <img class="icon" id="icon-insert" src="${selectIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
-                var dragEnable = false; // flag: true to enable drag; false to show tooltip
+
+                var mode = 0; // 0: select; 1: drag, 2: draw and insert
                 var icons = document.getElementsByClassName('icon');
                 document.getElementById("icon-tip").classList.add("selected");
                 for (var i = 0; i < icons.length; i++) {
@@ -222,24 +232,31 @@ class CodePanel {
                 function handleSelectIcon(event){
                   var icon = event.target;
                   if (icon.id === "icon-tip"){
-                    dragEnable = false;
+                    mode = 0; 
                     document.getElementById("icon-tip").classList.add("selected");
                     document.getElementById("icon-drag").classList.remove("selected");
-                    console.log(document.getElementById("icon-tip").classList);
+                    document.getElementById("icon-insert").classList.remove("selected");
+                    closeInputBox();closeWidget();
                   } else if (icon.id === "icon-drag"){
-                    dragEnable = true;
+                    mode = 1;
                     document.getElementById("icon-tip").classList.remove("selected");
                     document.getElementById("icon-drag").classList.add("selected");
-                    closeInputBox();
+                    document.getElementById("icon-insert").classList.remove("selected");
+                    closeInputBox();closeWidget();
+                  }
+                  else if (icon.id === "icon-insert"){
+                    mode = 2;
+                    document.getElementById("icon-tip").classList.remove("selected");
+                    document.getElementById("icon-drag").classList.remove("selected");
+                    document.getElementById("icon-insert").classList.add("selected");
+                    closeInputBox();closeWidget();
                   }
                 }
                 
                 // show tooltip
                 const vscode = acquireVsCodeApi();
                 document.addEventListener("click", function(event){
-                  if (!dragEnable){
-                    //var tooltip = document.getElementsByClassName("toolTip")[0];
-                    //if the event source's id is not inputbox
+                  if (mode == 0){
                     if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
                     && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
                       createInputBox(event.pageX, event.pageY);
@@ -256,9 +273,18 @@ class CodePanel {
                   if (inputBox){
                     inputBox.parentNode.removeChild(inputBox);
                   }
+
+                  
+                }
+
+                function closeWidget(){
+                  old = document.getElementById("widget");
+      if(old){
+        document.body.removeChild(old);
+      }
                 }
                 
-                function createInputBox(x, y){
+                function createInputBox(x, y, style){
                   closeInputBox();
                   inputbox = document.createElement("div");
                   inputbox.style.position = "absolute";
@@ -271,12 +297,20 @@ class CodePanel {
                   document.body.appendChild(inputbox);
                   
                   var submit = document.getElementById("inputbox-submit");
+                  var type;
+                  if(mode == 0){
+                    type = "onInput";
+                  }
+                  else if (mode == 2){
+                    type = "onInsert";
+                  }
                   submit.addEventListener("click", function() {
                     var text = document.getElementById("inputbox-input");
                     if(text.value){
                       vscode.postMessage({
-                        type: 'onInput',
-                        value: text.value
+                        type: type,
+                        value: text.value,
+                        style: style
                       })
                     }
                     else{
@@ -289,9 +323,6 @@ class CodePanel {
                     closeInputBox();
                   });
                 }
-                
-                
-                
                 
                 function defineSelector(element){
                   var selector = element.outerHTML;
@@ -318,13 +349,9 @@ class CodePanel {
                 var rectX, rectY;
                 
                 function dragStart(e) {
-                  if (dragEnable){
+                  if (mode == 1){
                     div = e.target;
                     
-                    // set minimum dragging unit(i.e to 'DIV')
-                    // while (div.tagName !== "DIV"){
-                    //   div = div.parentNode;
-                    // };
                     rectX = div.getBoundingClientRect()['x'];
                     rectY = div.getBoundingClientRect()['y'];
                     
@@ -376,8 +403,60 @@ class CodePanel {
                     translateY = 0;
                   }
                 }
-                </script>`;
-                return html;//dom.window.document.querySelector("html").innerHTML;
+
+  var widget;
+  var x;
+  var y;
+  var finX;
+  var finY;
+  var ismousedown = false;
+  document.addEventListener("mousedown", function(event) {
+    if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
+    event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+      //get element with id widget and remove from body
+      closeInputBox();
+      closeWidget();
+
+      ismousedown = true;
+        x = event.pageX;
+        y = event.pageY;
+        //create div element
+        widget = document.createElement("div");
+        widget.style.position = "absolute";
+        widget.style.top = y+"px";
+        widget.style.left = x+"px";
+        widget.classList.add("widget");
+        widget.id = "widget";
+      //append to body
+      document.body.appendChild(widget);
+        ismousedown = true;
+    }
+      });
+     document.addEventListener("mousemove", function(event) {
+      if (ismousedown) {
+        finX = event.pageX;
+        finY = event.pageY;
+        widget.style.width = finX - x + "px";
+        widget.style.height = finY - y + "px";
+        widget.style.display = "block";
+        widget.style.border = '2px dashed #ccc';
+      }
+    });
+    document.addEventListener("mouseup", function(event) {
+      if(ismousedown){
+      ismousedown = false;
+      var style = "absolute position, position at top "+y+"px, left "+x+"px with width "+(finX-x)+"px and height "+(finY-y)+"px";
+      createInputBox(x, finY, style);
+      }
+    }
+);
+
+  function initDraggable(element) {
+    element.setAttribute("draggable", "true");
+  }
+  
+ </script>`;
+                return html;
               }
             }
             module.exports = CodePanel;
