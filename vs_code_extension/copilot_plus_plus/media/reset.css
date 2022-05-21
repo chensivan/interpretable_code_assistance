@@ -2,6 +2,7 @@ html {
     box-sizing: border-box;
     font-size: 13px;
     background: white;
+    position: relative;
   }
 
   body.vscode-light {
@@ -64,3 +65,14 @@ html {
     border: 2px solid rgb(25, 25, 25);
   }
 
+  
+.wrapper {
+  position: relative;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.widget {
+  display: block;
+  position: absolute;
+}
