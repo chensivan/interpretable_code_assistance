@@ -122,6 +122,13 @@ class CodePanel {
             this._printCommentToEditor(comment);
             break;
           }
+          case "changeAttr": {
+            if (!data.old || !data.new) {
+              return;
+            }
+            this._replaceInEditor(data.new,data.old);
+            break;
+          }
           case "onError": {
             if (!data.value) {
               return;
@@ -156,7 +163,7 @@ class CodePanel {
   generateComment(position, info){
     return "// Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").";
   };
-  //Print comment to the top of editor
+  //Print comment to the editor
   _printCommentToEditor(comment){
     
     var openPath = vscode.Uri.file(CodePanel.filePath);
@@ -195,6 +202,42 @@ class CodePanel {
           });
         }
       }
+
+      _replaceInEditor(newText, oldText){
+        var openPath = vscode.Uri.file(CodePanel.filePath);
+    
+        if(openPath){
+          vscode.workspace.openTextDocument(openPath).then(doc => {
+              vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
+                  var text = editor.document.getText();
+                  var index = text.indexOf(oldText);
+                  let temp = text;
+                  if(index > 0){
+                    temp = text.substring(0, index);
+                  }
+                  var lineNumber = temp.split('\n').length;
+                  var pos = new vscode.Position(lineNumber-1,newText.length-1);
+                  let newDoc = text.replace(oldText, newText);
+
+                  var firstLine = editor.document.lineAt(0);
+                  var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+                  var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+                  
+                  var range = new vscode.Range(pos, pos);
+                  // Line added - by having a selection at the same position twice, the cursor jumps there
+                  editor.edit(editBuilder => {
+                    //editBuilder.replace(pos, newText);
+                    editBuilder.replace(textRange, newDoc);
+                  });
+
+                  editor.revealRange(range);
+                  editor.selections = [new vscode.Selection(pos,pos)]; 
+                  //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+                });
+              });
+            }
+          }
+    
       
       _getHtmlForWebview(webview) {
         // // And the uri we use to load this script in the webview
@@ -230,6 +273,7 @@ class CodePanel {
                 <img class="icon" id="icon-tip" src="${selectIcon}"/>
                 <img class="icon" id="icon-drag" src="${dragIcon}"/>
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
+                <img class="icon" id="icon-edit" src="${selectIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
                 var mode = 0; // 0: select; 1: drag, 2: draw and insert
@@ -243,39 +287,50 @@ class CodePanel {
                   var icon = event.target;
                   if (icon.id === "icon-tip"){
                     mode = 0; 
-                    document.getElementById("icon-tip").classList.add("selected");
-                    document.getElementById("icon-drag").classList.remove("selected");
-                    document.getElementById("icon-insert").classList.remove("selected");
-                    closeInputBox();closeWidget();
+                    selectIcon("icon-tip");
                   } else if (icon.id === "icon-drag"){
                     mode = 1;
-                    document.getElementById("icon-tip").classList.remove("selected");
-                    document.getElementById("icon-drag").classList.add("selected");
-                    document.getElementById("icon-insert").classList.remove("selected");
-                    closeInputBox();closeWidget();
+                    selectIcon("icon-drag");
                   }
                   else if (icon.id === "icon-insert"){
                     mode = 2;
-                    document.getElementById("icon-tip").classList.remove("selected");
-                    document.getElementById("icon-drag").classList.remove("selected");
-                    document.getElementById("icon-insert").classList.add("selected");
-                    closeInputBox();closeWidget();
+                    selectIcon("icon-insert");
                   }
+                  else if (icon.id === "icon-edit"){
+                    mode = 3;
+                    selectIcon("icon-edit");
+                  }
+                }
+
+                function selectIcon(iconName){
+                  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit"]
+                  iconIds.map(name => {
+                    document.getElementById(name).classList.remove("selected");
+                    if(name === iconName){
+                      document.getElementById(name).classList.add("selected");
+                    }
+                  });
+                  closeInputBox();closeWidget();
+
                 }
                 
                 // show tooltip
                 const vscode = acquireVsCodeApi();
                 document.addEventListener("click", function(event){
-                  if (mode == 0){
-                    if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
+                  if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
                     && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
-                      createInputBox(event.pageX, event.pageY);
-                    }
+                      
+                  if (mode == 0){
+                    createInputBox(event.pageX, event.pageY);
                     vscode.postMessage({
                       type: 'onClicked',
                       value: event.target.outerHTML
                     })
                   }
+                  else if (mode == 3){
+                    createInputBoxAttr(event.pageX, event.pageY, event.target)
+                  }
+                }
                 });
                 
                 function closeInputBox(){
@@ -293,7 +348,78 @@ class CodePanel {
                     document.body.removeChild(old);
                   }
                 }
-                
+                function createInputBoxAttr(x, y, element){
+                  closeInputBox();
+                  inputbox = document.createElement("div");
+                  inputbox.style.position = "absolute";
+                  inputbox.style.top = y+"px";
+                  inputbox.style.left = x+"px";
+                  inputbox.style.margin = '0px';
+                  inputbox.id = "inputbox";
+                 // var text = "";
+                  const attrs = element.getAttributeNames().reduce((acc, name) => {
+                    //text = text + "<input type='text' value='"+name+"' /><input type='text' value='"+element.getAttribute(name)+"' />";
+                    return {...acc, [name]: element.getAttribute(name)};
+                  }, {});
+                  //parse attrs to json
+                  var json = JSON.stringify(attrs);
+                  //inputbox.innerHTML = text+"<button id='inputbox-add'>+</button><button id='inputbox-sub'>-</button><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+                  inputbox.innerHTML = "<textarea rows='7' id='inputbox-text'>"+json+"</textarea><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+                  document.body.appendChild(inputbox);
+
+                  /*var add = document.getElementById("inputbox-add");
+                  add.addEventListener("click", function() {
+                    let box = document.getElementById("inputbox");
+                    let input1 = document.createElement("input");
+                    let input2 = document.createElement("input");
+                    let br = document.createElement("br");
+                    box.insertBefore(br, box.firstChild);
+                    box.insertBefore(input2, box.firstChild);
+                    box.insertBefore(input1, box.firstChild);
+                  });
+
+                  var sub = document.getElementById("inputbox-sub");
+                  sub.addEventListener("click", function() {
+                    let box = document.getElementById("inputbox");
+                    //check if the first child is an input
+                    if (box.firstChild.tagName === "INPUT"){
+                      //remove first 2 childs
+                      box.removeChild(box.firstChild);
+                      box.removeChild(box.firstChild);
+                      box.removeChild(box.firstChild);
+                    }
+                  });*/
+
+                  var submit = document.getElementById("inputbox-submit");
+                  submit.addEventListener("click", function() {
+                    let text = document.getElementById("inputbox-text");
+                    if(text.value){
+                      
+                      let newEle = document.createElement(element.tagName);
+                      let attrs = JSON.parse(text.value);
+                      for (var key in attrs) {
+                        newEle.setAttribute(key, attrs[key]);
+                      }
+                      vscode.postMessage({
+                        type: "changeAttr",
+                        old: element.outerHTML,
+                        new: newEle.outerHTML
+                      })
+                      document.body.replaceChild(newEle, element);
+                      element = newEle;
+                      
+                    }
+                    else{
+                      text.setAttribute("placeholder", "Please enter a value");
+                    }
+                  });
+                  
+                  var close = document.getElementById("inputbox-close");
+                  close.addEventListener("click", function() {
+                    closeInputBox();
+                  });
+                }
+
                 function createInputBox(x, y, style){
                   closeInputBox();
                   inputbox = document.createElement("div");
