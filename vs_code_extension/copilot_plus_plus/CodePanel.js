@@ -93,107 +93,107 @@ class CodePanel {
               return;
             }
             this.handleOnClicked(data.value);
-                break;
-                
-              }
-              case "passPosition":{
-                if (!data.value) {
-                  return;
-                }
-                var allNotNull = data.value.every(function(i) { return i !== null; });
-                if (allNotNull){
-                  var comment = this.generateComment(data.value, data.info);
-                  this._printCommentToEditor(comment);
-                }
-                break;
-              }
-              case "onInput": {
-                if (!data.value) {
-                  return;
-                } 
-                this.callParaphraseAPI(data.value);
-                break;
-              }
-              case "onInsert": {
-                if (!data.value) {
-                  return;
-                }
-                var comment = "// "+data.value + "\n//"+data.style
-                this._printCommentToEditor(comment);
-                break;
-              }
-              case "onError": {
-                if (!data.value) {
-                  return;
-                }
-                vscode.window.showErrorMessage(data.value);
-                break;
-              }
-              
+            break;
+            
+          }
+          case "passPosition":{
+            if (!data.value) {
+              return;
             }
+            var allNotNull = data.value.every(function(i) { return i !== null; });
+            if (allNotNull){
+              var comment = this.generateComment(data.value, data.info);
+              this._printCommentToEditor(comment);
+            }
+            break;
+          }
+          case "onInput": {
+            if (!data.value) {
+              return;
+            } 
+            this.callParaphraseAPI(data.value);
+            break;
+          }
+          case "onInsert": {
+            if (!data.value) {
+              return;
+            }
+            var comment = "// "+data.value + "\n//"+data.style
+            this._printCommentToEditor(comment);
+            break;
+          }
+          case "onError": {
+            if (!data.value) {
+              return;
+            }
+            vscode.window.showErrorMessage(data.value);
+            break;
+          }
+          
+        }
+      });
+    }
+    
+    callParaphraseAPI(input){
+      fetch("http://127.0.0.1:5000/paraphrase", {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({text: input}) 
+    })
+    .then(ret => ret.json())
+    .then(result => {
+      this._printCommentToEditor("// "+result.paraphrased_text+"");
+    });
+  }
+  
+  handleOnClicked(htmlString){
+    vscode.window.showInformationMessage(htmlString);
+  }
+  
+  // Generate comment for printing to the editor
+  generateComment(position, info){
+    return "// Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").";
+  };
+  //Print comment to the top of editor
+  _printCommentToEditor(comment){
+    
+    var openPath = vscode.Uri.file(CodePanel.filePath);
+    
+    if(openPath){
+      
+      vscode.workspace.openTextDocument(openPath).then(doc => 
+        {
+          vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => 
+            {          
+              var text = editor.document.getText();
+              var index = text.lastIndexOf('</html>');
+              
+              if(index > 0){
+                text = text.substring(0, index);
+              }
+              var lineNumber = text.split('\n').length;
+              // var tempString = str.substring(0, index);
+              comment = "<script> \n "+ comment + "\n</script>" 
+              var pos = new vscode.Position(lineNumber-1,0);
+              var pos1 = new vscode.Position(lineNumber-1,comment.length);
+              
+              var range = new vscode.Range(pos1, pos1);
+              // Line added - by having a selection at the same position twice, the cursor jumps there
+              editor.revealRange(range);
+              editor.edit(editBuilder => {
+                editBuilder.insert(pos, comment+"\n");
+              });
+              
+              editor.selections = [new vscode.Selection(pos1,pos1)]; 
+              
+              // And the visible range jumps there too
+              
+              //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            });
           });
         }
-        
-        callParaphraseAPI(input){
-          fetch("http://127.0.0.1:5000/paraphrase", {
-          method: 'POST', 
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({text: input}) 
-        })
-        .then(ret => ret.json())
-        .then(result => {
-          this._printCommentToEditor("// "+result.paraphrased_text+"");
-        });
-      }
-      
-      handleOnClicked(htmlString){
-        vscode.window.showInformationMessage(htmlString);
-      }
-      
-      // Generate comment for printing to the editor
-      generateComment(position, info){
-        return "// Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").";
-      };
-      //Print comment to the top of editor
-      _printCommentToEditor(comment){
-        
-        var openPath = vscode.Uri.file(CodePanel.filePath);
-
-        if(openPath){
-
-            vscode.workspace.openTextDocument(openPath).then(doc => 
-              {
-                vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => 
-                  {          
-                    var text = editor.document.getText();
-                    var index = text.lastIndexOf('</html>');
-          
-                    if(index > 0){
-                      text = text.substring(0, index);
-                    }
-                    var lineNumber = text.split('\n').length;
-                   // var tempString = str.substring(0, index);
-                   comment = "<script> \n "+ comment + "\n</script>" 
-                    var pos = new vscode.Position(lineNumber-1,0);
-                    var pos1 = new vscode.Position(lineNumber-1,comment.length);
-                    
-                    var range = new vscode.Range(pos1, pos1);
-                    // Line added - by having a selection at the same position twice, the cursor jumps there
-                    editor.revealRange(range);
-                    editor.edit(editBuilder => {
-                      editBuilder.insert(pos, comment+"\n");
-                    });
-
-                    editor.selections = [new vscode.Selection(pos1,pos1)]; 
-                    
-                    // And the visible range jumps there too
-                    
-                    //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-                  });
-                });
-              }
       }
       
       _getHtmlForWebview(webview) {
@@ -232,7 +232,6 @@ class CodePanel {
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
-
                 var mode = 0; // 0: select; 1: drag, 2: draw and insert
                 var icons = document.getElementsByClassName('icon');
                 document.getElementById("icon-tip").classList.add("selected");
@@ -284,15 +283,15 @@ class CodePanel {
                   if (inputBox){
                     inputBox.parentNode.removeChild(inputBox);
                   }
-
+                  
                   
                 }
-
+                
                 function closeWidget(){
                   old = document.getElementById("widget");
-      if(old){
-        document.body.removeChild(old);
-      }
+                  if(old){
+                    document.body.removeChild(old);
+                  }
                 }
                 
                 function createInputBox(x, y, style){
@@ -414,59 +413,58 @@ class CodePanel {
                     translateY = 0;
                   }
                 }
-
-  var widget;
-  var x;
-  var y;
-  var finX;
-  var finY;
-  var ismousedown = false;
-  document.addEventListener("mousedown", function(event) {
-    if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
-    event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
-      //get element with id widget and remove from body
-      closeInputBox();
-      closeWidget();
-
-      ismousedown = true;
-        x = event.pageX;
-        y = event.pageY;
-        //create div element
-        widget = document.createElement("div");
-        widget.style.position = "absolute";
-        widget.style.top = y+"px";
-        widget.style.left = x+"px";
-        widget.classList.add("widget");
-        widget.id = "widget";
-      //append to body
-      document.body.appendChild(widget);
-        ismousedown = true;
-    }
-      });
-     document.addEventListener("mousemove", function(event) {
-      if (ismousedown) {
-        finX = event.pageX;
-        finY = event.pageY;
-        widget.style.width = finX - x + "px";
-        widget.style.height = finY - y + "px";
-        widget.style.display = "block";
-        widget.style.border = '2px dashed #ccc';
-      }
-    });
-    document.addEventListener("mouseup", function(event) {
-      if(ismousedown){
-      ismousedown = false;
-      var style = "absolute position, position at top "+y+"px, left "+x+"px with width "+(finX-x)+"px and height "+(finY-y)+"px";
-      createInputBox(x, finY, style);
-      }
-    }
-);
-
-  function initDraggable(element) {
-    element.setAttribute("draggable", "true");
-  }
-  
- </script>`;
+                
+                var widget;
+                var x;
+                var y;
+                var finX;
+                var finY;
+                var ismousedown = false;
+                document.addEventListener("mousedown", function(event) {
+                  if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
+                  event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+                    //get element with id widget and remove from body
+                    closeInputBox();
+                    closeWidget();
+                    
+                    ismousedown = true;
+                    x = event.pageX;
+                    y = event.pageY;
+                    //create div element
+                    widget = document.createElement("div");
+                    widget.style.position = "absolute";
+                    widget.style.top = y+"px";
+                    widget.style.left = x+"px";
+                    widget.classList.add("widget");
+                    widget.id = "widget";
+                    //append to body
+                    document.body.appendChild(widget);
+                    ismousedown = true;
+                  }
+                });
+                document.addEventListener("mousemove", function(event) {
+                  if (ismousedown) {
+                    finX = event.pageX;
+                    finY = event.pageY;
+                    widget.style.width = finX - x + "px";
+                    widget.style.height = finY - y + "px";
+                    widget.style.display = "block";
+                    widget.style.border = '2px dashed #ccc';
+                  }
+                });
+                document.addEventListener("mouseup", function(event) {
+                  if(ismousedown){
+                    ismousedown = false;
+                    var style = "absolute position, position at top "+y+"px, left "+x+"px with width "+(finX-x)+"px and height "+(finY-y)+"px";
+                    createInputBox(x, finY, style);
+                  }
+                }
+                );
+                
+                function initDraggable(element) {
+                  element.setAttribute("draggable", "true");
+                }
+                </script>`;
                 return html;
                 
               }
