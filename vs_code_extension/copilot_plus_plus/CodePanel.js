@@ -118,7 +118,7 @@ class CodePanel {
                 if (!data.value) {
                   return;
                 }
-                var comment = "<!--"+data.value + " "+data.style+"-->"
+                var comment = "// "+data.value + "\n//"+data.style
                 this._printCommentToEditor(comment);
                 break;
               }
@@ -144,7 +144,7 @@ class CodePanel {
         })
         .then(ret => ret.json())
         .then(result => {
-          this._printCommentToEditor("<!--"+result.paraphrased_text+"-->");
+          this._printCommentToEditor("// "+result.paraphrased_text+"");
         });
       }
       
@@ -154,7 +154,7 @@ class CodePanel {
       
       // Generate comment for printing to the editor
       generateComment(position, info){
-        return "<!-- Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").-->";
+        return "// Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").";
       };
       //Print comment to the top of editor
       _printCommentToEditor(comment){
@@ -166,9 +166,20 @@ class CodePanel {
             vscode.workspace.openTextDocument(openPath).then(doc => 
               {
                 vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => 
-                  {
-                    var pos = new vscode.Position(0,0);
-                    var pos1 = new vscode.Position(0,comment.length);
+                  {          
+                    var text = editor.document.getText();
+                    var index = text.lastIndexOf('</html>');
+          
+                    if(index > 0){
+                      text = text.substring(0, index);
+                    }
+                    var lineNumber = text.split('\n').length;
+                   // var tempString = str.substring(0, index);
+                   comment = "<script> \n "+ comment + "\n</script>" 
+                    var pos = new vscode.Position(lineNumber-1,0);
+                    var pos1 = new vscode.Position(lineNumber-1,comment.length);
+                    
+                    var range = new vscode.Range(pos1, pos1);
                     // Line added - by having a selection at the same position twice, the cursor jumps there
                     editor.revealRange(range);
                     editor.edit(editBuilder => {
@@ -178,7 +189,7 @@ class CodePanel {
                     editor.selections = [new vscode.Selection(pos1,pos1)]; 
                     
                     // And the visible range jumps there too
-                    var range = new vscode.Range(pos1, pos1);
+                    
                     //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
                   });
                 });
@@ -457,6 +468,7 @@ class CodePanel {
   
  </script>`;
                 return html;
+                
               }
             }
             module.exports = CodePanel;
