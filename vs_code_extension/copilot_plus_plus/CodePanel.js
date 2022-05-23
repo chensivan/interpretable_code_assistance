@@ -161,7 +161,7 @@ class CodePanel {
   
   // Generate comment for printing to the editor
   generateComment(position, info){
-    return "// Move the <"+ info + "> from (" + position[0] + "," + position[1] + ") to (" + position[2] + "," + position[3] + ").";
+    return "// From \"document\" select element " + info + ";\n //set absolute position to (" + position[0] + "," + position[1] + ")";
   };
   //Print comment to the editor
   _printCommentToEditor(comment){
@@ -462,11 +462,16 @@ class CodePanel {
                 
                 function defineSelector(element){
                   var selector = element.outerHTML;
-                  if (element.id !== ''){
-                    selector = "#"+element.id;
-                  }else if(element.className !== ''){
-                    selector = "."+element.className;
+                  // if (element.id !== ''){
+                  //   selector = "#"+element.id;
+                  // }else if(element.className !== ''){
+                  //   selector = "."+element.className;
+                  // }
+                  selector = selector.slice(1).split(/>(.*)/s)[0]
+                  if (selector.includes(' ')){
+                    selector = selector.replace(' ', '[') + ']';
                   }
+                  
                   return selector;
                 }
                 
@@ -481,7 +486,7 @@ class CodePanel {
                 var moving = false;
                 var lastX = null, lastY = null;
                 var translateX = 0, translateY = 0;
-                var div;
+                var div, selector;
                 var rectX, rectY;
                 
                 function dragStart(e) {
@@ -498,6 +503,7 @@ class CodePanel {
                       translateY = matrix.m42;
                     }
                     
+                    selector = defineSelector(div);
                     div.addEventListener("mousemove", drag);
                     div.addEventListener("mouseup", dragEnd);
                     div.addEventListener('mouseleave', dragEnd);
@@ -525,10 +531,10 @@ class CodePanel {
                   e.preventDefault();
                   if (moving) {
                     moving = false;
-                    var selector = defineSelector(div);
                     vscode.postMessage({
                       type: 'passPosition',
-                      value: [rectX, rectY, rectX + translateX, rectY + translateY],
+                      // value: [rectX, rectY, rectX + translateX, rectY + translateY],
+                      value: [rectX + translateX, rectY + translateY],
                       info: selector,
                     })
                     
