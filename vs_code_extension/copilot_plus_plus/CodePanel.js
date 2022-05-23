@@ -118,8 +118,8 @@ class CodePanel {
             if (!data.value) {
               return;
             }
-            var comment = "// "+data.value + "\n//"+data.style
-            this._printCommentToEditor(comment);
+            var comment = "<!-- "+data.value + "-->\n<!--"+data.style+"-->"
+            this._replaceInEditor(comment+"\n</body>", "</body>");
             break;
           }
           case "changeAttr": {
