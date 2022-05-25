@@ -252,10 +252,20 @@ class CodePanel {
             const selectIcon = webview.asWebviewUri(
               vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png")
               );
+
+            const inlineIcon = webview.asWebviewUri(
+              vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png")
+              );
               
-              const dragIcon = webview.asWebviewUri(
-                vscode.Uri.joinPath(this._extensionUri, "media", "dragw.png")
-                );
+            const dragIcon = webview.asWebviewUri(
+              vscode.Uri.joinPath(this._extensionUri, "media", "dragIcon.png")
+              );
+            
+            const showIcon = webview.asWebviewUri(
+              vscode.Uri.joinPath(this._extensionUri, "media", "showw.png")
+              );
+
+              
                 
                 // // Use a nonce to only allow specific scripts to be run
                 const nonce = getNonce();
@@ -270,10 +280,10 @@ class CodePanel {
                 var html = 
                 `
                 <div class="navbar" id="navbar">Tools
-                <img class="icon" id="icon-tip" src="${selectIcon}"/>
+                <img class="icon" id="icon-tip" src="${inlineIcon}"/>
                 <img class="icon" id="icon-drag" src="${dragIcon}"/>
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
-                <img class="icon" id="icon-edit" src="${selectIcon}"/>
+                <img class="icon" id="icon-edit" src="${showIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
                 var mode = 0; // 0: select; 1: drag, 2: draw and insert
