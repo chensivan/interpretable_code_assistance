@@ -125,6 +125,13 @@ class CodePanel {
             this._replaceInEditor(data.new,data.old);
             break;
           }
+          case "delete":{
+            if (!data.value) {
+              return;
+            }
+            this._replaceInEditor(" ",data.value);
+            break;
+          }
           case "onError": {
             if (!data.value) {
               return;
@@ -284,6 +291,7 @@ class CodePanel {
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
                 <img class="icon" id="icon-edit" src="${showIcon}"/>
                 <img class="icon" id="icon-resize" src="${resizeIcon}"/>
+                <img class="icon" id="icon-delete" src="${resizeIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
                 var mode = 0; // 0: select; 1: drag, 2: draw and insert
@@ -314,10 +322,14 @@ class CodePanel {
                     mode = 4;
                     selectIcon("icon-resize");
                   }
+                  else if (icon.id === "icon-delete"){
+                    mode = 5;
+                    selectIcon("icon-delete");
+                  }
                 }
 
                 function selectIcon(iconName){
-                  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize"];
+                  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete"];
                   iconIds.map(name => {
                     document.getElementById(name).classList.remove("selected");
                     if(name === iconName){
@@ -335,7 +347,7 @@ class CodePanel {
                     && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
                       
                   if (mode == 0){
-                    createInputBox(event.pageX, event.pageY);
+                    //createInputBox(event.pageX, event.pageY);
                     vscode.postMessage({
                       type: 'onClicked',
                       value: event.target.outerHTML
@@ -343,6 +355,9 @@ class CodePanel {
                   }
                   else if (mode == 3){
                     createInputBoxAttr(event.pageX, event.pageY, event.target)
+                  }
+                  else if (mode == 5){
+                    createDeleteBox(event.pageX, event.pageY, event.target)
                   }
                 }
                 });
@@ -361,6 +376,24 @@ class CodePanel {
                   if(old){
                     document.body.removeChild(old);
                   }
+                }
+
+                function createDeleteBox(x, y, element){
+                  closeInputBox();
+                  inputbox = document.createElement("button");
+                  inputbox.style.position = "absolute";
+                  inputbox.style.top = y+"px";
+                  inputbox.style.left = x+"px";
+                  inputbox.style.margin = '0px';
+                  inputbox.id = "inputbox";
+                  inputbox.innerText = "delete "+element.tagName;
+                  inputbox.addEventListener("click", function() {
+                    vscode.postMessage({
+                      type: "delete",
+                      value: element.outerHTML
+                    })
+                  });
+                  document.body.appendChild(inputbox);
                 }
                 function createInputBoxAttr(x, y, element){
                   closeInputBox();
@@ -410,6 +443,7 @@ class CodePanel {
                     if(text.value){
                       
                       let newEle = document.createElement(element.tagName);
+                      newEle.innerHTML = element.innerHTML;
                       let attrs = JSON.parse(text.value);
                       for (var key in attrs) {
                         newEle.setAttribute(key, attrs[key]);
