@@ -96,15 +96,11 @@ class CodePanel {
             break;
             
           }
-          case "passPosition":{
-            if (!data.value) {
+          case "makeDrag":{
+            if (!data.new) {
               return;
             }
-            var allNotNull = data.value.every(function(i) { return i !== null; });
-            if (allNotNull){
-              var comment = this.generateComment(data.value, data.info);
-              this._printCommentToEditor(comment);
-            }
+            this._replaceInEditor(data.new, data.old);
             break;
           }
           case "onInput": {
@@ -477,10 +473,10 @@ class CodePanel {
                   // }else if(element.className !== ''){
                   //   selector = "."+element.className;
                   // }
-                  selector = selector.slice(1).split(/>(.*)/s)[0]
-                  if (selector.includes(' ')){
-                    selector = selector.replace(' ', '[') + ']';
-                  }
+                  // selector = selector.slice(1).split(/>(.*)/s)[0]
+                  // if (selector.includes(' ')){
+                  //   selector = selector.replace(' ', '[') + ']';
+                  // }
                   
                   return selector;
                 }
@@ -541,11 +537,13 @@ class CodePanel {
                   e.preventDefault();
                   if (moving) {
                     moving = false;
+                    div.style.position = "absolute";
+                    div.style.left = rectX + translateX;
+                    div.style.top = rectY + translateY;
                     vscode.postMessage({
-                      type: 'passPosition',
-                      // value: [rectX, rectY, rectX + translateX, rectY + translateY],
-                      value: [rectX + translateX, rectY + translateY],
-                      info: selector,
+                      type: 'makeDrag',
+                      new: defineSelector(div),
+                      old: selector,
                     })
                     
                     lastX = null;
