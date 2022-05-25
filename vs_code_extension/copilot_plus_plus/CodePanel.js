@@ -261,6 +261,9 @@ class CodePanel {
               vscode.Uri.joinPath(this._extensionUri, "media", "showw.png")
               );
 
+            const resizeIcon = webview.asWebviewUri(
+              vscode.Uri.joinPath(this._extensionUri, "media", "resize.png")
+              );
               
                 
                 // // Use a nonce to only allow specific scripts to be run
@@ -280,6 +283,7 @@ class CodePanel {
                 <img class="icon" id="icon-drag" src="${dragIcon}"/>
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
                 <img class="icon" id="icon-edit" src="${showIcon}"/>
+                <img class="icon" id="icon-resize" src="${resizeIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
                 var mode = 0; // 0: select; 1: drag, 2: draw and insert
@@ -306,10 +310,14 @@ class CodePanel {
                     mode = 3;
                     selectIcon("icon-edit");
                   }
+                  else if (icon.id === "icon-resize"){
+                    mode = 4;
+                    selectIcon("icon-resize");
+                  }
                 }
 
                 function selectIcon(iconName){
-                  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit"]
+                  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize"];
                   iconIds.map(name => {
                     document.getElementById(name).classList.remove("selected");
                     if(name === iconName){
@@ -468,16 +476,6 @@ class CodePanel {
                 
                 function defineSelector(element){
                   var selector = element.outerHTML;
-                  // if (element.id !== ''){
-                  //   selector = "#"+element.id;
-                  // }else if(element.className !== ''){
-                  //   selector = "."+element.className;
-                  // }
-                  // selector = selector.slice(1).split(/>(.*)/s)[0]
-                  // if (selector.includes(' ')){
-                  //   selector = selector.replace(' ', '[') + ']';
-                  // }
-                  
                   return selector;
                 }
                 
@@ -600,10 +598,12 @@ class CodePanel {
                   }
                 }
                 );
-                
+
                 function initDraggable(element) {
                   element.setAttribute("draggable", "true");
                 }
+
+
                 </script>`;
                 return html;
                 
