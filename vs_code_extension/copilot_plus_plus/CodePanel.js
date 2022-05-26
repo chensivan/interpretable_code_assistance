@@ -390,6 +390,7 @@ class CodePanel {
                 });
 
                 var elmnt;
+
                 var resizeAble = false; var onResize = false;
                 var rect;
                 var startWidth, startHeight, startX, startY;
@@ -400,6 +401,7 @@ class CodePanel {
                 }
 
                 function initResize(e) {
+                  e.preventDefault();
                   if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
                     startX = e.clientX;
                     startY = e.clientY;
@@ -413,6 +415,7 @@ class CodePanel {
 
                 function doResize(e){
                   var delta = 5;
+
                   if (!onResize && elmnt){
                     rect = elmnt.getBoundingClientRect();
                     var x = e.clientX - rect.left,  
@@ -440,7 +443,7 @@ class CodePanel {
                 }
 
                 function stopResize(e){
-                  if (onResize && mode == 4 && elmnt){
+                  if (onResize && mode === 4 && elmnt){
                     elmnt.style.cursor = 'default';
                     onResize = false;
                     resizeAble = false;
@@ -651,6 +654,7 @@ class CodePanel {
                 var rectX, rectY;
                 
                 function dragStart(e) {
+                  e.preventDefault();
                   if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
                     div = e.target;
                     
@@ -689,7 +693,7 @@ class CodePanel {
                 }
                 
                 function dragEnd(e) {
-                  e.preventDefault();
+                  
                   if (moving) {
                     moving = false;
                     div.style.position = "absolute";
