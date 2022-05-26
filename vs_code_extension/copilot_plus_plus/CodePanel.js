@@ -348,14 +348,17 @@ class CodePanel {
                 const vscode = acquireVsCodeApi();
                 document.addEventListener("click", function(event){
                   if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
-                    && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+                    && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
+                    && (event.target.tagName !== "HTML" && event.target.tagName !== "BODY")){
                       
                   if (mode == 0){
                     //createInputBox(event.pageX, event.pageY);
-                    vscode.postMessage({
+                    /*vscode.postMessage({
                       type: 'onClicked',
                       value: event.target.outerHTML
-                    })
+                    })*/
+                    createInfoBox(event.pageX, event.pageY, event.target);
+
                   }
                   else if (mode == 3){
                     createInputBoxAttr(event.pageX, event.pageY, event.target)
@@ -381,17 +384,30 @@ class CodePanel {
                     document.body.removeChild(old);
                   }
                 }
-
-                function createDeleteBox(x, y, element){
+                function createInfoBox(x, y, element){
                   closeInputBox();
-                  inputbox = document.createElement("button");
+                  inputbox = document.createElement("div");
                   inputbox.style.position = "absolute";
                   inputbox.style.top = y+"px";
                   inputbox.style.left = x+"px";
                   inputbox.style.margin = '0px';
+                  inputbox.style.backgroundColor = 'white';
+                  inputbox.style.border = '1px solid black';
                   inputbox.id = "inputbox";
-                  inputbox.innerText = "delete "+element.tagName;
-                  inputbox.addEventListener("click", function() {
+                  inputbox.innerText = element.outerHTML;
+                  document.body.appendChild(inputbox);
+                }
+                function createDeleteBox(x, y, element){
+                  closeInputBox();
+                  createInfoBox(x, y, element);
+                  inputbutton = document.createElement("button");
+                  inputbutton.style.position = "absolute";
+                  inputbutton.style.bottom = "-20px";
+                  inputbutton.style.left = "0px";
+                  inputbutton.style.margin = '0px';
+                  inputbutton.id = "inputbox-button";
+                  inputbutton.innerText = "delete "+element.tagName;
+                  inputbutton.addEventListener("click", function() {
                     vscode.postMessage({
                       type: "delete",
                       value: element.outerHTML
@@ -400,7 +416,7 @@ class CodePanel {
                     element.parentNode.removeChild(element);
                     inputbox.parentNode.removeChild(inputbox);
                   });
-                  document.body.appendChild(inputbox);
+                  document.querySelector("#inputbox").appendChild(inputbutton);
                 }
                 function createInputBoxAttr(x, y, element){
                   closeInputBox();
