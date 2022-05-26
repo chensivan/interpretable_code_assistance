@@ -535,7 +535,7 @@ class CodePanel {
                 var rectX, rectY;
                 
                 function dragStart(e) {
-                  if (mode == 1){
+                  if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
                     div = e.target;
                     
                     rectX = div.getBoundingClientRect()['x'];
