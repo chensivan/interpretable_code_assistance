@@ -261,11 +261,11 @@ class CodePanel {
               );
               
             const dragIcon = webview.asWebviewUri(
-              vscode.Uri.joinPath(this._extensionUri, "media", "dragIcon.png")
+              vscode.Uri.joinPath(this._extensionUri, "media", "move.png")
               );
             
             const showIcon = webview.asWebviewUri(
-              vscode.Uri.joinPath(this._extensionUri, "media", "showw.png")
+              vscode.Uri.joinPath(this._extensionUri, "media", "text.png")
               );
 
             const resizeIcon = webview.asWebviewUri(
@@ -291,10 +291,10 @@ class CodePanel {
                 `
                 <div class="navbar" id="navbar">Tools
                 <img class="icon" id="icon-tip" src="${inlineIcon}"/>
-                <img class="icon" id="icon-drag" src="${dragIcon}"/>
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
-                <img class="icon" id="icon-edit" src="${showIcon}"/>
+                <img class="icon" id="icon-drag" src="${dragIcon}"/>
                 <img class="icon" id="icon-resize" src="${resizeIcon}"/>
+                <img class="icon" id="icon-edit" src="${showIcon}"/>
                 <img class="icon" id="icon-delete" src="${deleteIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
