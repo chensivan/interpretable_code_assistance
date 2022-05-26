@@ -377,7 +377,7 @@ class CodePanel {
                     target.style.border = '2px dashed #ccc';
                     resizeStart();
                 
-
+                  }
                   else if (mode == 5){
                     createDeleteBox(event.pageX, event.pageY, event.target)
 
