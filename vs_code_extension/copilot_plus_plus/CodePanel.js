@@ -324,15 +324,16 @@ class CodePanel {
                       document.getElementById(name).classList.add("selected");
                     }
                   });
-                  closeInputBox();closeWidget();closeBorder();
+                  closeInputBox();closeWidget();closeBorder(oldElmnt);
 
                 }
                 
+                var oldElmnt; var resizer;
                 // show tooltip
                 const vscode = acquireVsCodeApi();
                 document.addEventListener("click", function(event){
                   if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
-                    && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+                    && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar" && event.target.id !== "resizer"){
                       
                   if (mode == 0){
                     createInputBox(event.pageX, event.pageY);
@@ -345,51 +346,83 @@ class CodePanel {
                     createInputBoxAttr(event.pageX, event.pageY, event.target)
                   }
                   else if (mode == 4){
-                    closeBorder();
-                    event.target.style.border = '2px dashed #ccc';
-                    event.target.classList.add("border");
-                    event.target.addEventListener("mousedown", resizeStart);
-                    event.target.addEventListener("mousemove", resizeEvent);
-                    event.target.addEventListener("mouseup", resizeEnd);
-                    // resizeEvent();
+                    closeBorder(oldElmnt);
+                    var target = event.target;
+                    oldElmnt = target.outerHTML;
+                    target.classList.add('border');
+                    target.style.border = '2px dashed #ccc';
+                    resizeStart();
+                
                   }
                 }
                 });
 
-                var resizeAble = false;
-                var onResize = false;
                 var elmnt;
-                var c = "";
-                function resizeStart(e){
-                  console.log("resizeStart")
-                  elmnt = document.querySelector(".border");
-                  if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
-                    onResize = true;
-                    rect = elmnt.getBoundingClientRect();
-                    elmnt.style.position = 'absolute';
-                    if (c.includes('w')){
-                      elmnt.style.right = rect.right + 'px';
-                    }else{
-                      elmnt.style.left = rect.left + 'px';
-                    }
-                    if (c.includes('n')){
-                      elmnt.style.bottom = rect.bottom + 'px';
-                    }else{
-                      elmnt.style.top = rect.top + 'px';
-                    }
-                  }
+                var resizeAble = false; var onResize = false;
+                var rect;
+                var startWidth, startHeight, startX, startY;
+
+                function resizeStart(){
+                  elmnt = document.getElementsByClassName("border")[0];
+                  elmnt.addEventListener('mousemove', doResize, false);
                 }
-                function resizeEvent(e){
+
+                function initResize(e) {
+                  if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = rect.width;
+                    startHeight = rect.height;
+                    onResize = true;
+                    resizeAble = false;
+                  }
 
                 }
-                function resizeEnd(e){
-                  
+
+                function doResize(e){
+                  var delta = 5;
+                  if (!onResize && elmnt){
+                    rect = elmnt.getBoundingClientRect();
+                    var x = e.clientX - rect.left,  
+                    y = e.clientY - rect.top,     
+                    w = rect.right - rect.left,
+                    h = rect.bottom - rect.top;
+                    
+                    c = "";
+                    if( y > h - delta) c += "s";
+                    if(x > w - delta) c += "e";
+                    
+                    if(c === 'se'){                         // if we are hovering at the border area (c is not empty)
+                      elmnt.style.cursor = c + "-resize"; // set the according cursor
+                      resizeAble = true;
+                    }else{
+                      elmnt.style.cursor = 'default';
+                      resizeAble = false;
+                    }
+                    elmnt.addEventListener("mousedown",initResize, false);
+                    elmnt.addEventListener("mouseup", stopResize, false);
+                  }else if (onResize && elmnt){
+                    elmnt.style.width = (startWidth + e.clientX - startX) + 'px';
+                    elmnt.style.height = (startHeight + e.clientY - startY) + 'px';
+                  }
                 }
-                
+
+                function stopResize(e){
+                  if (onResize && mode == 4 && elmnt){
+                    elmnt.style.cursor = 'default';
+                    onResize = false;
+                    resizeAble = false;
+                    closeBorder(oldElmnt);
+                    elmnt.removeEventListener('mousemove', doResize, false);
+                    elmnt.removeEventListener('mouseup', stopResize, false);
+                  }
+
+                }
+
                 function closeInputBox(){
                   var inputBox = document.getElementById("inputbox");
                   if (inputBox){
-                    inputBox.parentNode.removeChild(inputBox);
+                    inputBox.parentElement.removeChild(inputBox);
                   }
                   
                   
@@ -402,11 +435,18 @@ class CodePanel {
                   }
                 }
 
-                function closeBorder(){
+                function closeBorder(ele){
                   old = document.getElementsByClassName("border")[0];
-                  if (old){
-                    old.style.border = "none";
+                  
+                  if (old && ele){
+                    old.style.border = null;
+                    old.style.cursor = null;
                     old.classList.remove("border");
+                    vscode.postMessage({
+                      type: 'makeDrag',
+                      new: old.outerHTML,
+                      old: ele,
+                    })
                   }
                 }
 
@@ -612,7 +652,7 @@ class CodePanel {
                     //get element with id widget and remove from body
                     closeInputBox();
                     closeWidget();
-                    closeBorder();
+                    closeBorder(oldElmnt);
 
                     ismousedown = true;
                     x = event.pageX;
