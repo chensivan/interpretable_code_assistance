@@ -356,33 +356,37 @@ class CodePanel {
                     && (event.target.tagName !== "HTML" && event.target.tagName !== "BODY")){
 
                       
-                  if (mode == 0){
-                    //createInputBox(event.pageX, event.pageY);
-                    /*vscode.postMessage({
-                      type: 'onClicked',
-                      value: event.target.outerHTML
-                    })*/
-                    createInfoBox(event.pageX, event.pageY, event.target);
+                    if (mode == 0){
+                      //createInputBox(event.pageX, event.pageY);
+                      /*vscode.postMessage({
+                        type: 'onClicked',
+                        value: event.target.outerHTML
+                      })*/
+                      createInfoBox(event.pageX, event.pageY, event.target);
 
-                  }
-                  else if (mode == 3){
-                    createInputBoxAttr(event.pageX, event.pageY, event.target)
-                  }
+                    }
+                    else if (mode == 3){
+                      createInputBoxAttr(event.pageX, event.pageY, event.target)
+                    }
 
-                  else if (mode == 4){
+                    else if (mode == 4){
+                      closeBorder(oldElmnt);
+                      var target = event.target;
+                      oldElmnt = target.outerHTML;
+                      target.classList.add('border');
+                      target.style.border = '2px dashed #ccc';
+                      resizeStart();
+                  
+                    }
+                    else if (mode == 5){
+                      createDeleteBox(event.pageX, event.pageY, event.target)
+
+                    }
+                  
+
+                  }else if (event.target.tagName !== "HTML"){
                     closeBorder(oldElmnt);
-                    var target = event.target;
-                    oldElmnt = target.outerHTML;
-                    target.classList.add('border');
-                    target.style.border = '2px dashed #ccc';
-                    resizeStart();
-                
                   }
-                  else if (mode == 5){
-                    createDeleteBox(event.pageX, event.pageY, event.target)
-
-                  }
-                }
                 });
 
                 var elmnt;
