@@ -324,7 +324,7 @@ class CodePanel {
                       document.getElementById(name).classList.add("selected");
                     }
                   });
-                  closeInputBox();closeWidget();
+                  closeInputBox();closeWidget();closeBorder();
 
                 }
                 
@@ -344,8 +344,47 @@ class CodePanel {
                   else if (mode == 3){
                     createInputBoxAttr(event.pageX, event.pageY, event.target)
                   }
+                  else if (mode == 4){
+                    closeBorder();
+                    event.target.style.border = '2px dashed #ccc';
+                    event.target.classList.add("border");
+                    event.target.addEventListener("mousedown", resizeStart);
+                    event.target.addEventListener("mousemove", resizeEvent);
+                    event.target.addEventListener("mouseup", resizeEnd);
+                    // resizeEvent();
+                  }
                 }
                 });
+
+                var resizeAble = false;
+                var onResize = false;
+                var elmnt;
+                var c = "";
+                function resizeStart(e){
+                  console.log("resizeStart")
+                  elmnt = document.querySelector(".border");
+                  if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
+                    onResize = true;
+                    rect = elmnt.getBoundingClientRect();
+                    elmnt.style.position = 'absolute';
+                    if (c.includes('w')){
+                      elmnt.style.right = rect.right + 'px';
+                    }else{
+                      elmnt.style.left = rect.left + 'px';
+                    }
+                    if (c.includes('n')){
+                      elmnt.style.bottom = rect.bottom + 'px';
+                    }else{
+                      elmnt.style.top = rect.top + 'px';
+                    }
+                  }
+                }
+                function resizeEvent(e){
+
+                }
+                function resizeEnd(e){
+                  
+                }
                 
                 function closeInputBox(){
                   var inputBox = document.getElementById("inputbox");
@@ -362,6 +401,15 @@ class CodePanel {
                     document.body.removeChild(old);
                   }
                 }
+
+                function closeBorder(){
+                  old = document.getElementsByClassName("border")[0];
+                  if (old){
+                    old.style.border = "none";
+                    old.classList.remove("border");
+                  }
+                }
+
                 function createInputBoxAttr(x, y, element){
                   closeInputBox();
                   inputbox = document.createElement("div");
@@ -564,7 +612,8 @@ class CodePanel {
                     //get element with id widget and remove from body
                     closeInputBox();
                     closeWidget();
-                    
+                    closeBorder();
+
                     ismousedown = true;
                     x = event.pageX;
                     y = event.pageY;
