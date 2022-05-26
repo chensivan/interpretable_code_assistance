@@ -271,6 +271,10 @@ class CodePanel {
             const resizeIcon = webview.asWebviewUri(
               vscode.Uri.joinPath(this._extensionUri, "media", "resize.png")
               );
+
+              const deleteIcon = webview.asWebviewUri(
+                vscode.Uri.joinPath(this._extensionUri, "media", "delete.png")
+                );
               
                 
                 // // Use a nonce to only allow specific scripts to be run
@@ -291,7 +295,7 @@ class CodePanel {
                 <img class="icon" id="icon-insert" src="${selectIcon}"/>
                 <img class="icon" id="icon-edit" src="${showIcon}"/>
                 <img class="icon" id="icon-resize" src="${resizeIcon}"/>
-                <img class="icon" id="icon-delete" src="${resizeIcon}"/>
+                <img class="icon" id="icon-delete" src="${deleteIcon}"/>
                 </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
                 <script nonce="${nonce}">
                 var mode = 0; // 0: select; 1: drag, 2: draw and insert
@@ -392,6 +396,9 @@ class CodePanel {
                       type: "delete",
                       value: element.outerHTML
                     })
+                    //remove child from body
+                    element.parentNode.removeChild(element);
+                    inputbox.parentNode.removeChild(inputbox);
                   });
                   document.body.appendChild(inputbox);
                 }
