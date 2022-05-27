@@ -344,7 +344,7 @@ class CodePanel {
 
                 }
                 
-                var oldElmnt; var resizer;
+                var oldElmnt;
                 // show tooltip
                 const vscode = acquireVsCodeApi();
                 document.addEventListener("click", function(event){
@@ -390,7 +390,7 @@ class CodePanel {
                 });
 
                 var elmnt;
-
+                var c;
                 var resizeAble = false; var onResize = false;
                 var rect;
                 var startWidth, startHeight, startX, startY;
@@ -424,10 +424,19 @@ class CodePanel {
                     h = rect.bottom - rect.top;
                     
                     c = "";
-                    if( y > h - delta) c += "s";
-                    if(x > w - delta) c += "e";
+                    // if( y > h - delta) c += "s";
+                    // if(x > w - delta) c += "e";
+                    if( y > h - delta){
+                      c += "s";
+                      widthChange = 1;
+                    }
+                    if(x > w - delta){
+                      c += "e";
+                      heightChange = 1;
+                    }         
+                     
                     
-                    if(c === 'se'){                         // if we are hovering at the border area (c is not empty)
+                    if(c.includes("e") || c.includes("s")){                         // if we are hovering at the border area (c is not empty)
                       elmnt.style.cursor = c + "-resize"; // set the according cursor
                       resizeAble = true;
                     }else{
@@ -437,8 +446,13 @@ class CodePanel {
                     elmnt.addEventListener("mousedown",initResize, false);
                     elmnt.addEventListener("mouseup", stopResize, false);
                   }else if (onResize && elmnt){
-                    elmnt.style.width = (startWidth + e.clientX - startX) + 'px';
-                    elmnt.style.height = (startHeight + e.clientY - startY) + 'px';
+                    if (c.includes("e")){
+                      elmnt.style.width = (startWidth + e.clientX - startX) + 'px';
+                    }
+                    if (c.includes("s")){
+                      elmnt.style.height = (startHeight + e.clientY - startY) + 'px';
+                    }
+                    
                   }
                 }
 
