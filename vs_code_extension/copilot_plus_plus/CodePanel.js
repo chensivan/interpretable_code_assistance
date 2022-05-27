@@ -205,42 +205,42 @@ class CodePanel {
           });
         }
       }
-
+      
       _replaceInEditor(newText, oldText){
         var openPath = vscode.Uri.file(CodePanel.filePath);
-    
+        
         if(openPath){
           vscode.workspace.openTextDocument(openPath).then(doc => {
-              vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
-                  var text = editor.document.getText();
-                  var index = text.indexOf(oldText);
-                  let temp = text;
-                  if(index > 0){
-                    temp = text.substring(0, index);
-                  }
-                  var lineNumber = temp.split('\n').length;
-                  var pos = new vscode.Position(lineNumber-1,newText.length-1);
-                  let newDoc = text.replace(oldText, newText);
-
-                  var firstLine = editor.document.lineAt(0);
-                  var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-                  var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
-                  
-                  var range = new vscode.Range(pos, pos);
-                  // Line added - by having a selection at the same position twice, the cursor jumps there
-                  editor.edit(editBuilder => {
-                    //editBuilder.replace(pos, newText);
-                    editBuilder.replace(textRange, newDoc);
-                  });
-
-                  editor.revealRange(range);
-                  editor.selections = [new vscode.Selection(pos,pos)]; 
-                  //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-                });
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
+              var text = editor.document.getText();
+              var index = text.indexOf(oldText);
+              let temp = text;
+              if(index > 0){
+                temp = text.substring(0, index);
+              }
+              var lineNumber = temp.split('\n').length;
+              var pos = new vscode.Position(lineNumber-1,newText.length-1);
+              let newDoc = text.replace(oldText, newText);
+              
+              var firstLine = editor.document.lineAt(0);
+              var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+              var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+              
+              var range = new vscode.Range(pos, pos);
+              // Line added - by having a selection at the same position twice, the cursor jumps there
+              editor.edit(editBuilder => {
+                //editBuilder.replace(pos, newText);
+                editBuilder.replace(textRange, newDoc);
               });
-            }
-          }
-    
+              
+              editor.revealRange(range);
+              editor.selections = [new vscode.Selection(pos,pos)]; 
+              //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            });
+          });
+        }
+      }
+      
       
       _getHtmlForWebview(webview) {
         // // And the uri we use to load this script in the webview
@@ -255,544 +255,544 @@ class CodePanel {
             const selectIcon = webview.asWebviewUri(
               vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png")
               );
-
-            const inlineIcon = webview.asWebviewUri(
-              vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png")
-              );
               
-            const dragIcon = webview.asWebviewUri(
-              vscode.Uri.joinPath(this._extensionUri, "media", "move.png")
-              );
-            
-            const showIcon = webview.asWebviewUri(
-              vscode.Uri.joinPath(this._extensionUri, "media", "text.png")
-              );
-
-            const resizeIcon = webview.asWebviewUri(
-              vscode.Uri.joinPath(this._extensionUri, "media", "resize.png")
-              );
-
-              const deleteIcon = webview.asWebviewUri(
-                vscode.Uri.joinPath(this._extensionUri, "media", "delete.png")
+              const inlineIcon = webview.asWebviewUri(
+                vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png")
                 );
-              
                 
-                // // Use a nonce to only allow specific scripts to be run
-                const nonce = getNonce();
-                
-                CodePanel.filePath = vscode.window.activeTextEditor.document.fileName;
-                
-                //Read the file
-                const file = fs.readFileSync(CodePanel.filePath, "utf8");
-                // this._printCommentToEditor("//This is not a comment");
-                //Parse the file into a string
-                CodePanel.nonce = nonce;
-                var html = 
-                `
-                <div class="navbar" id="navbar">Tools
-                <img class="icon" id="icon-tip" src="${inlineIcon}"/>
-                <img class="icon" id="icon-insert" src="${selectIcon}"/>
-                <img class="icon" id="icon-drag" src="${dragIcon}"/>
-                <img class="icon" id="icon-resize" src="${resizeIcon}"/>
-                <img class="icon" id="icon-edit" src="${showIcon}"/>
-                <img class="icon" id="icon-delete" src="${deleteIcon}"/>
-                </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
-                <script nonce="${nonce}">
-                var mode = 0; // 0: select; 1: drag, 2: draw and insert
-                var icons = document.getElementsByClassName('icon');
-                document.getElementById("icon-tip").classList.add("selected");
-                for (var i = 0; i < icons.length; i++) {
-                  icons[i].addEventListener('click', handleSelectIcon);
-                }
-                // set navbar icon handler
-                function handleSelectIcon(event){
-                  var icon = event.target;
-                  if (icon.id === "icon-tip"){
-                    mode = 0; 
-                    selectIcon("icon-tip");
-                  } else if (icon.id === "icon-drag"){
-                    mode = 1;
-                    selectIcon("icon-drag");
-                  }
-                  else if (icon.id === "icon-insert"){
-                    mode = 2;
-                    selectIcon("icon-insert");
-                  }
-                  else if (icon.id === "icon-edit"){
-                    mode = 3;
-                    selectIcon("icon-edit");
-                  }
-                  else if (icon.id === "icon-resize"){
-                    mode = 4;
-                    selectIcon("icon-resize");
-                  }
-                  else if (icon.id === "icon-delete"){
-                    mode = 5;
-                    selectIcon("icon-delete");
-                  }
-                }
-
-                function selectIcon(iconName){
-                  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete"];
-                  iconIds.map(name => {
-                    document.getElementById(name).classList.remove("selected");
-                    if(name === iconName){
-                      document.getElementById(name).classList.add("selected");
-                    }
-                  });
-                  closeInputBox();closeWidget();closeBorder(oldElmnt);
-
-                }
-                
-                var oldElmnt;
-                // show tooltip
-                const vscode = acquireVsCodeApi();
-                document.addEventListener("click", function(event){
-                  if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
-
-              
-
-                    && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
-                    && (event.target.tagName !== "HTML" && event.target.tagName !== "BODY")){
-
+                const dragIcon = webview.asWebviewUri(
+                  vscode.Uri.joinPath(this._extensionUri, "media", "move.png")
+                  );
+                  
+                  const showIcon = webview.asWebviewUri(
+                    vscode.Uri.joinPath(this._extensionUri, "media", "text.png")
+                    );
+                    
+                    const resizeIcon = webview.asWebviewUri(
+                      vscode.Uri.joinPath(this._extensionUri, "media", "resize.png")
+                      );
                       
-                    if (mode == 0){
-                      //createInputBox(event.pageX, event.pageY);
-                      /*vscode.postMessage({
-                        type: 'onClicked',
-                        value: event.target.outerHTML
-                      })*/
-                      createInfoBox(event.pageX, event.pageY, event.target);
-
-                    }
-                    else if (mode == 3){
-                      createInputBoxAttr(event.pageX, event.pageY, event.target)
-                    }
-
-                    else if (mode == 4){
-                      closeBorder(oldElmnt);
-                      var target = event.target;
-                      oldElmnt = target.outerHTML;
-                      target.classList.add('border');
-                      target.style.border = '2px dashed #ccc';
-                      resizeStart();
-                  
-                    }
-                    else if (mode == 5){
-                      createDeleteBox(event.pageX, event.pageY, event.target)
-
-                    }
-                  
-
-                  }else if (event.target.tagName !== "HTML"){
-                    closeBorder(oldElmnt);
-                  }
-                });
-
-                var elmnt;
-                var c;
-                var resizeAble = false; var onResize = false;
-                var rect;
-                var startWidth, startHeight, startX, startY;
-
-                function resizeStart(){
-                  elmnt = document.getElementsByClassName("border")[0];
-                  elmnt.addEventListener('mousemove', doResize, false);
-                }
-
-                function initResize(e) {
-                  e.preventDefault();
-                  if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    startWidth = rect.width;
-                    startHeight = rect.height;
-                    onResize = true;
-                    resizeAble = false;
-                  }
-
-                }
-
-                function doResize(e){
-                  var delta = 5;
-
-                  if (!onResize && elmnt){
-                    rect = elmnt.getBoundingClientRect();
-                    var x = e.clientX - rect.left,  
-                    y = e.clientY - rect.top,     
-                    w = rect.right - rect.left,
-                    h = rect.bottom - rect.top;
-                    
-                    c = "";
-                    // if( y > h - delta) c += "s";
-                    // if(x > w - delta) c += "e";
-                    if( y > h - delta){
-                      c += "s";
-                      widthChange = 1;
-                    }
-                    if(x > w - delta){
-                      c += "e";
-                      heightChange = 1;
-                    }         
-                     
-                    
-                    if(c.includes("e") || c.includes("s")){                         // if we are hovering at the border area (c is not empty)
-                      elmnt.style.cursor = c + "-resize"; // set the according cursor
-                      resizeAble = true;
-                    }else{
-                      elmnt.style.cursor = 'default';
-                      resizeAble = false;
-                    }
-                    elmnt.addEventListener("mousedown",initResize, false);
-                    elmnt.addEventListener("mouseup", stopResize, false);
-                  }else if (onResize && elmnt){
-                    if (c.includes("e")){
-                      elmnt.style.width = (startWidth + e.clientX - startX) + 'px';
-                    }
-                    if (c.includes("s")){
-                      elmnt.style.height = (startHeight + e.clientY - startY) + 'px';
-                    }
-                    
-                  }
-                }
-
-                function stopResize(e){
-                  if (onResize && mode === 4 && elmnt){
-                    elmnt.style.cursor = 'default';
-                    onResize = false;
-                    resizeAble = false;
-                    closeBorder(oldElmnt);
-                    elmnt.removeEventListener('mousemove', doResize, false);
-                    elmnt.removeEventListener('mouseup', stopResize, false);
-                  }
-
-                }
-
-                function closeInputBox(){
-                  var inputBox = document.getElementById("inputbox");
-                  if (inputBox){
-                    inputBox.parentElement.removeChild(inputBox);
-                  }
-                  
-                  
-                }
-                
-                function closeWidget(){
-                  old = document.getElementById("widget");
-                  if(old){
-                    document.body.removeChild(old);
-                  }
-                }
-
-
-                function closeBorder(ele){
-                  old = document.getElementsByClassName("border")[0];
-                  
-                  if (old && ele){
-                    old.style.border = null;
-                    old.style.cursor = null;
-                    old.classList.remove("border");
-                    vscode.postMessage({
-                      type: 'makeDrag',
-                      new: old.outerHTML,
-                      old: ele,
-                    })
-                  }
-                }
-
-                function createInfoBox(x, y, element){
-                  closeInputBox();
-                  inputbox = document.createElement("div");
-                  inputbox.style.position = "absolute";
-                  inputbox.style.top = y+"px";
-                  inputbox.style.left = x+"px";
-                  inputbox.style.margin = '0px';
-                  inputbox.style.backgroundColor = 'white';
-                  inputbox.style.border = '1px solid black';
-                  inputbox.id = "inputbox";
-                  inputbox.innerText = element.outerHTML;
-                  document.body.appendChild(inputbox);
-                }
-                function createDeleteBox(x, y, element){
-                  closeInputBox();
-                  createInfoBox(x, y, element);
-                  inputbutton = document.createElement("button");
-                  inputbutton.style.position = "absolute";
-                  inputbutton.style.bottom = "-20px";
-                  inputbutton.style.left = "0px";
-                  inputbutton.style.margin = '0px';
-                  inputbutton.id = "inputbox-button";
-                  inputbutton.innerText = "delete "+element.tagName;
-                  inputbutton.addEventListener("click", function() {
-                    vscode.postMessage({
-                      type: "delete",
-                      value: element.outerHTML
-                    })
-                    //remove child from body
-                    element.parentNode.removeChild(element);
-                    inputbox.parentNode.removeChild(inputbox);
-                  });
-                  document.querySelector("#inputbox").appendChild(inputbutton);
-                }
-
-                function createInputBoxAttr(x, y, element){
-                  closeInputBox();
-                  inputbox = document.createElement("div");
-                  inputbox.style.position = "absolute";
-                  inputbox.style.top = y+"px";
-                  inputbox.style.left = x+"px";
-                  inputbox.style.margin = '0px';
-                  inputbox.id = "inputbox";
-                 // var text = "";
-                  const attrs = element.getAttributeNames().reduce((acc, name) => {
-                    //text = text + "<input type='text' value='"+name+"' /><input type='text' value='"+element.getAttribute(name)+"' />";
-                    return {...acc, [name]: element.getAttribute(name)};
-                  }, {});
-                  //parse attrs to json
-                  var json = JSON.stringify(attrs);
-                  //inputbox.innerHTML = text+"<button id='inputbox-add'>+</button><button id='inputbox-sub'>-</button><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
-                  inputbox.innerHTML = "<textarea rows='7' id='inputbox-text'>"+json+"</textarea><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
-                  document.body.appendChild(inputbox);
-
-                  /*var add = document.getElementById("inputbox-add");
-                  add.addEventListener("click", function() {
-                    let box = document.getElementById("inputbox");
-                    let input1 = document.createElement("input");
-                    let input2 = document.createElement("input");
-                    let br = document.createElement("br");
-                    box.insertBefore(br, box.firstChild);
-                    box.insertBefore(input2, box.firstChild);
-                    box.insertBefore(input1, box.firstChild);
-                  });
-
-                  var sub = document.getElementById("inputbox-sub");
-                  sub.addEventListener("click", function() {
-                    let box = document.getElementById("inputbox");
-                    //check if the first child is an input
-                    if (box.firstChild.tagName === "INPUT"){
-                      //remove first 2 childs
-                      box.removeChild(box.firstChild);
-                      box.removeChild(box.firstChild);
-                      box.removeChild(box.firstChild);
-                    }
-                  });*/
-
-                  var submit = document.getElementById("inputbox-submit");
-                  submit.addEventListener("click", function() {
-                    let text = document.getElementById("inputbox-text");
-                    if(text.value){
-                      
-                      let newEle = document.createElement(element.tagName);
-                      newEle.innerHTML = element.innerHTML;
-                      let attrs = JSON.parse(text.value);
-                      for (var key in attrs) {
-                        newEle.setAttribute(key, attrs[key]);
+                      const deleteIcon = webview.asWebviewUri(
+                        vscode.Uri.joinPath(this._extensionUri, "media", "delete.png")
+                        );
+                        
+                        
+                        // // Use a nonce to only allow specific scripts to be run
+                        const nonce = getNonce();
+                        
+                        CodePanel.filePath = vscode.window.activeTextEditor.document.fileName;
+                        
+                        //Read the file
+                        const file = fs.readFileSync(CodePanel.filePath, "utf8");
+                        // this._printCommentToEditor("//This is not a comment");
+                        //Parse the file into a string
+                        CodePanel.nonce = nonce;
+                        var html = 
+                        `
+                        <div class="navbar" id="navbar">Tools
+                        <img class="icon" id="icon-tip" src="${inlineIcon}"/>
+                        <img class="icon" id="icon-insert" src="${selectIcon}"/>
+                        <img class="icon" id="icon-drag" src="${dragIcon}"/>
+                        <img class="icon" id="icon-resize" src="${resizeIcon}"/>
+                        <img class="icon" id="icon-edit" src="${showIcon}"/>
+                        <img class="icon" id="icon-delete" src="${deleteIcon}"/>
+                        </div>`+file.toString()+` <link href="${stylesResetUri}" rel="stylesheet">
+                        <script nonce="${nonce}">
+                        var mode = 0; // 0: select; 1: drag, 2: draw and insert
+                        var icons = document.getElementsByClassName('icon');
+                        document.getElementById("icon-tip").classList.add("selected");
+                        for (var i = 0; i < icons.length; i++) {
+                          icons[i].addEventListener('click', handleSelectIcon);
+                        }
+                        // set navbar icon handler
+                        function handleSelectIcon(event){
+                          var icon = event.target;
+                          if (icon.id === "icon-tip"){
+                            mode = 0; 
+                            selectIcon("icon-tip");
+                          } else if (icon.id === "icon-drag"){
+                            mode = 1;
+                            selectIcon("icon-drag");
+                          }
+                          else if (icon.id === "icon-insert"){
+                            mode = 2;
+                            selectIcon("icon-insert");
+                          }
+                          else if (icon.id === "icon-edit"){
+                            mode = 3;
+                            selectIcon("icon-edit");
+                          }
+                          else if (icon.id === "icon-resize"){
+                            mode = 4;
+                            selectIcon("icon-resize");
+                          }
+                          else if (icon.id === "icon-delete"){
+                            mode = 5;
+                            selectIcon("icon-delete");
+                          }
+                        }
+                        
+                        function selectIcon(iconName){
+                          const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete"];
+                          iconIds.map(name => {
+                            document.getElementById(name).classList.remove("selected");
+                            if(name === iconName){
+                              document.getElementById(name).classList.add("selected");
+                            }
+                          });
+                          closeInputBox();closeWidget();closeBorder(oldElmnt);
+                          
+                        }
+                        
+                        var oldElmnt;
+                        // show tooltip
+                        const vscode = acquireVsCodeApi();
+                        document.addEventListener("click", function(event){
+                          if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
+                          
+                          
+                          
+                          && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
+                          && (event.target.tagName !== "HTML")){
+                            
+                            if(event.target.tagName !== "BODY"){
+                              if (mode == 0){
+                                //createInputBox(event.pageX, event.pageY);
+                                /*vscode.postMessage({
+                                  type: 'onClicked',
+                                  value: event.target.outerHTML
+                                })*/
+                                createInfoBox(event.pageX, event.pageY, event.target);
+                                
+                              }
+                              else if (mode == 5){
+                                createDeleteBox(event.pageX, event.pageY, event.target)
+                                
+                              }
+                              else if (mode == 4){
+                                closeBorder(oldElmnt);
+                                var target = event.target;
+                                oldElmnt = target.outerHTML;
+                                target.classList.add('border');
+                                target.style.border = '2px dashed #ccc';
+                                resizeStart();
+                                
+                              }
+                            }
+                            if (mode == 3){
+                              createInputBoxAttr(event.pageX, event.pageY, event.target)
+                            }
+                          }
+                          else if (event.target.tagName !== "HTML"){
+                            closeBorder(oldElmnt);
+                          }
+                          
+                        });
+                        
+                        var elmnt;
+                        var c;
+                        var resizeAble = false; var onResize = false;
+                        var rect;
+                        var startWidth, startHeight, startX, startY;
+                        
+                        function resizeStart(){
+                          elmnt = document.getElementsByClassName("border")[0];
+                          elmnt.addEventListener('mousemove', doResize, false);
+                        }
+                        
+                        function initResize(e) {
+                          e.preventDefault();
+                          if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
+                            startX = e.clientX;
+                            startY = e.clientY;
+                            startWidth = rect.width;
+                            startHeight = rect.height;
+                            onResize = true;
+                            resizeAble = false;
+                          }
+                          
+                        }
+                        
+                        function doResize(e){
+                          var delta = 5;
+                          
+                          if (!onResize && elmnt){
+                            rect = elmnt.getBoundingClientRect();
+                            var x = e.clientX - rect.left,  
+                            y = e.clientY - rect.top,     
+                            w = rect.right - rect.left,
+                            h = rect.bottom - rect.top;
+                            
+                            c = "";
+                            // if( y > h - delta) c += "s";
+                            // if(x > w - delta) c += "e";
+                            if( y > h - delta){
+                              c += "s";
+                              widthChange = 1;
+                            }
+                            if(x > w - delta){
+                              c += "e";
+                              heightChange = 1;
+                            }         
+                            
+                            
+                            if(c.includes("e") || c.includes("s")){                         // if we are hovering at the border area (c is not empty)
+                              elmnt.style.cursor = c + "-resize"; // set the according cursor
+                              resizeAble = true;
+                            }else{
+                              elmnt.style.cursor = 'default';
+                              resizeAble = false;
+                            }
+                            elmnt.addEventListener("mousedown",initResize, false);
+                            elmnt.addEventListener("mouseup", stopResize, false);
+                          }else if (onResize && elmnt){
+                            if (c.includes("e")){
+                              elmnt.style.width = (startWidth + e.clientX - startX) + 'px';
+                            }
+                            if (c.includes("s")){
+                              elmnt.style.height = (startHeight + e.clientY - startY) + 'px';
+                            }
+                            
+                          }
+                        }
+                        
+                        function stopResize(e){
+                          if (onResize && mode === 4 && elmnt){
+                            elmnt.style.cursor = 'default';
+                            onResize = false;
+                            resizeAble = false;
+                            closeBorder(oldElmnt);
+                            elmnt.removeEventListener('mousemove', doResize, false);
+                            elmnt.removeEventListener('mouseup', stopResize, false);
+                          }
+                          
+                        }
+                        
+                        function closeInputBox(){
+                          var inputBox = document.getElementById("inputbox");
+                          if (inputBox){
+                            inputBox.parentElement.removeChild(inputBox);
+                          }
+                          
+                          
+                        }
+                        
+                        function closeWidget(){
+                          old = document.getElementById("widget");
+                          if(old){
+                            document.body.removeChild(old);
+                          }
+                        }
+                        
+                        
+                        function closeBorder(ele){
+                          old = document.getElementsByClassName("border")[0];
+                          
+                          if (old && ele){
+                            old.style.border = null;
+                            old.style.cursor = null;
+                            old.classList.remove("border");
+                            vscode.postMessage({
+                              type: 'makeDrag',
+                              new: old.outerHTML,
+                              old: ele,
+                            })
+                          }
+                        }
+                        
+                        function createInfoBox(x, y, element){
+                          closeInputBox();
+                          inputbox = document.createElement("div");
+                          inputbox.style.position = "absolute";
+                          inputbox.style.top = y+"px";
+                          inputbox.style.left = x+"px";
+                          inputbox.style.margin = '0px';
+                          inputbox.style.backgroundColor = 'white';
+                          inputbox.style.border = '1px solid black';
+                          inputbox.id = "inputbox";
+                          inputbox.innerText = element.outerHTML;
+                          document.body.appendChild(inputbox);
+                        }
+                        function createDeleteBox(x, y, element){
+                          closeInputBox();
+                          createInfoBox(x, y, element);
+                          inputbutton = document.createElement("button");
+                          inputbutton.style.position = "absolute";
+                          inputbutton.style.bottom = "-20px";
+                          inputbutton.style.left = "0px";
+                          inputbutton.style.margin = '0px';
+                          inputbutton.id = "inputbox-button";
+                          inputbutton.innerText = "delete "+element.tagName;
+                          inputbutton.addEventListener("click", function() {
+                            vscode.postMessage({
+                              type: "delete",
+                              value: element.outerHTML
+                            })
+                            //remove child from body
+                            element.parentNode.removeChild(element);
+                            inputbox.parentNode.removeChild(inputbox);
+                          });
+                          document.querySelector("#inputbox").appendChild(inputbutton);
+                        }
+                        
+                        function createInputBoxAttr(x, y, element){
+                          closeInputBox();
+                          inputbox = document.createElement("div");
+                          inputbox.style.position = "absolute";
+                          inputbox.style.top = y+"px";
+                          inputbox.style.left = x+"px";
+                          inputbox.style.margin = '0px';
+                          inputbox.id = "inputbox";
+                          // var text = "";
+                          const attrs = element.getAttributeNames().reduce((acc, name) => {
+                            //text = text + "<input type='text' value='"+name+"' /><input type='text' value='"+element.getAttribute(name)+"' />";
+                            return {...acc, [name]: element.getAttribute(name)};
+                          }, {});
+                          //parse attrs to json
+                          var json = JSON.stringify(attrs);
+                          //inputbox.innerHTML = text+"<button id='inputbox-add'>+</button><button id='inputbox-sub'>-</button><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+                          inputbox.innerHTML = "<textarea rows='7' id='inputbox-text'>"+json+"</textarea><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+                          document.body.appendChild(inputbox);
+                          
+                          /*var add = document.getElementById("inputbox-add");
+                          add.addEventListener("click", function() {
+                            let box = document.getElementById("inputbox");
+                            let input1 = document.createElement("input");
+                            let input2 = document.createElement("input");
+                            let br = document.createElement("br");
+                            box.insertBefore(br, box.firstChild);
+                            box.insertBefore(input2, box.firstChild);
+                            box.insertBefore(input1, box.firstChild);
+                          });
+                          
+                          var sub = document.getElementById("inputbox-sub");
+                          sub.addEventListener("click", function() {
+                            let box = document.getElementById("inputbox");
+                            //check if the first child is an input
+                            if (box.firstChild.tagName === "INPUT"){
+                              //remove first 2 childs
+                              box.removeChild(box.firstChild);
+                              box.removeChild(box.firstChild);
+                              box.removeChild(box.firstChild);
+                            }
+                          });*/
+                          
+                          var submit = document.getElementById("inputbox-submit");
+                          submit.addEventListener("click", function() {
+                            let text = document.getElementById("inputbox-text");
+                            if(text.value){
+                              
+                              let newEle = document.createElement(element.tagName);
+                              newEle.innerHTML = element.innerHTML;
+                              let attrs = JSON.parse(text.value);
+                              for (var key in attrs) {
+                                newEle.setAttribute(key, attrs[key]);
+                              }
+                              vscode.postMessage({
+                                type: "changeAttr",
+                                old: element.outerHTML,
+                                new: newEle.outerHTML
+                              })
+                              document.body.replaceChild(newEle, element);
+                              element = newEle;
+                              
+                            }
+                            else{
+                              text.setAttribute("placeholder", "Please enter a value");
+                            }
+                          });
+                          
+                          var close = document.getElementById("inputbox-close");
+                          close.addEventListener("click", function() {
+                            closeInputBox();
+                          });
+                        }
+                        
+                        function createInputBox(x, y, style){
+                          closeInputBox();
+                          inputbox = document.createElement("div");
+                          inputbox.style.position = "absolute";
+                          inputbox.style.top = y+"px";
+                          inputbox.style.left = x+"px";
+                          inputbox.style.margin = '0px';
+                          inputbox.id = "inputbox";
+                          inputbox.innerHTML = "<input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+                          
+                          document.body.appendChild(inputbox);
+                          
+                          var submit = document.getElementById("inputbox-submit");
+                          var type;
+                          if(mode == 0){
+                            type = "onInput";
+                          }
+                          else if (mode == 2){
+                            type = "onInsert";
+                          }
+                          submit.addEventListener("click", function() {
+                            var text = document.getElementById("inputbox-input");
+                            if(text.value){
+                              vscode.postMessage({
+                                type: type,
+                                value: text.value,
+                                style: style
+                              })
+                            }
+                            else{
+                              text.setAttribute("placeholder", "Please enter a value");
+                            }
+                          });
+                          
+                          var close = document.getElementById("inputbox-close");
+                          close.addEventListener("click", function() {
+                            closeInputBox();
+                          });
+                        }
+                        
+                        function defineSelector(element){
+                          var selector = element.outerHTML;
+                          return selector;
+                        }
+                        
+                        
+                        // set drag event for non-svg element
+                        var divs = document.querySelectorAll('*');
+                        
+                        divs.forEach(div => {      
+                          div.addEventListener("mousedown", dragStart);
+                        });
+                        
+                        var moving = false;
+                        var lastX = null, lastY = null;
+                        var translateX = 0, translateY = 0;
+                        var div, selector;
+                        var rectX, rectY;
+                        
+                        function dragStart(e) {
+                          e.preventDefault();
+                          if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
+                            div = e.target;
+                            
+                            rectX = div.getBoundingClientRect()['x'];
+                            rectY = div.getBoundingClientRect()['y'];
+                            
+                            transformValue = window.getComputedStyle(div).transform;
+                            if (transformValue){
+                              var matrix = new WebKitCSSMatrix(transformValue);
+                              translateX = matrix.m41;
+                              translateY = matrix.m42;
+                            }
+                            
+                            selector = defineSelector(div);
+                            div.addEventListener("mousemove", drag);
+                            div.addEventListener("mouseup", dragEnd);
+                            div.addEventListener('mouseleave', dragEnd);
+                            moving = true;
+                          }
+                          
+                        }
+                        
+                        function drag(e) {
+                          if (moving) {
+                            if (lastX&&lastY){
+                              var pX = e.clientX - lastX;
+                              var pY = e.clientY - lastY;
+                              translateX += pX;
+                              translateY += pY;
+                              div.style.transform = "translate(" + translateX + "px, " + translateY + "px)";
+                            }
+                            lastX = e.clientX;
+                            lastY = e.clientY;
+                            
+                          }
+                        }
+                        
+                        function dragEnd(e) {
+                          
+                          if (moving) {
+                            moving = false;
+                            div.style.position = "absolute";
+                            div.style.left = rectX + translateX;
+                            div.style.top = rectY + translateY;
+                            vscode.postMessage({
+                              type: 'makeDrag',
+                              new: defineSelector(div),
+                              old: selector,
+                            })
+                            
+                            lastX = null;
+                            lastY = null;
+                            
+                            translateX = 0;
+                            translateY = 0;
+                          }
+                        }
+                        
+                        var widget;
+                        var x;
+                        var y;
+                        var finX;
+                        var finY;
+                        var ismousedown = false;
+                        document.addEventListener("mousedown", function(event) {
+                          if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
+                          event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+                            //get element with id widget and remove from body
+                            closeInputBox();
+                            closeWidget();
+                            closeBorder(oldElmnt);
+                            
+                            ismousedown = true;
+                            x = event.pageX;
+                            y = event.pageY;
+                            //create div element
+                            widget = document.createElement("div");
+                            widget.style.position = "absolute";
+                            widget.style.top = y+"px";
+                            widget.style.left = x+"px";
+                            widget.classList.add("widget");
+                            widget.id = "widget";
+                            //append to body
+                            document.body.appendChild(widget);
+                            ismousedown = true;
+                          }
+                        });
+                        document.addEventListener("mousemove", function(event) {
+                          if (ismousedown) {
+                            finX = event.pageX;
+                            finY = event.pageY;
+                            widget.style.width = finX - x + "px";
+                            widget.style.height = finY - y + "px";
+                            widget.style.display = "block";
+                            widget.style.border = '2px dashed #ccc';
+                          }
+                        });
+                        document.addEventListener("mouseup", function(event) {
+                          if(ismousedown){
+                            ismousedown = false;
+                            var style = "absolute position, position at top "+y+"px, left "+x+"px with width "+(finX-x)+"px and height "+(finY-y)+"px";
+                            createInputBox(x, finY, style);
+                          }
+                        }
+                        );
+                        
+                        function initDraggable(element) {
+                          element.setAttribute("draggable", "true");
+                        }
+                        
+                        
+                        </script>`;
+                        return html;
+                        
                       }
-                      vscode.postMessage({
-                        type: "changeAttr",
-                        old: element.outerHTML,
-                        new: newEle.outerHTML
-                      })
-                      document.body.replaceChild(newEle, element);
-                      element = newEle;
-                      
                     }
-                    else{
-                      text.setAttribute("placeholder", "Please enter a value");
+                    module.exports = CodePanel;
+                    
+                    function getNonce() {
+                      let text = "";
+                      const possible =
+                      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                      for (let i = 0; i < 32; i++) {
+                        text += possible.charAt(Math.floor(Math.random() * possible.length));
+                      }
+                      return text;
                     }
-                  });
-                  
-                  var close = document.getElementById("inputbox-close");
-                  close.addEventListener("click", function() {
-                    closeInputBox();
-                  });
-                }
-
-                function createInputBox(x, y, style){
-                  closeInputBox();
-                  inputbox = document.createElement("div");
-                  inputbox.style.position = "absolute";
-                  inputbox.style.top = y+"px";
-                  inputbox.style.left = x+"px";
-                  inputbox.style.margin = '0px';
-                  inputbox.id = "inputbox";
-                  inputbox.innerHTML = "<input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
-                  
-                  document.body.appendChild(inputbox);
-                  
-                  var submit = document.getElementById("inputbox-submit");
-                  var type;
-                  if(mode == 0){
-                    type = "onInput";
-                  }
-                  else if (mode == 2){
-                    type = "onInsert";
-                  }
-                  submit.addEventListener("click", function() {
-                    var text = document.getElementById("inputbox-input");
-                    if(text.value){
-                      vscode.postMessage({
-                        type: type,
-                        value: text.value,
-                        style: style
-                      })
-                    }
-                    else{
-                      text.setAttribute("placeholder", "Please enter a value");
-                    }
-                  });
-                  
-                  var close = document.getElementById("inputbox-close");
-                  close.addEventListener("click", function() {
-                    closeInputBox();
-                  });
-                }
-                
-                function defineSelector(element){
-                  var selector = element.outerHTML;
-                  return selector;
-                }
-                
-                
-                // set drag event for non-svg element
-                var divs = document.querySelectorAll('*');
-                
-                divs.forEach(div => {      
-                  div.addEventListener("mousedown", dragStart);
-                });
-                
-                var moving = false;
-                var lastX = null, lastY = null;
-                var translateX = 0, translateY = 0;
-                var div, selector;
-                var rectX, rectY;
-                
-                function dragStart(e) {
-                  e.preventDefault();
-                  if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
-                    div = e.target;
-                    
-                    rectX = div.getBoundingClientRect()['x'];
-                    rectY = div.getBoundingClientRect()['y'];
-                    
-                    transformValue = window.getComputedStyle(div).transform;
-                    if (transformValue){
-                      var matrix = new WebKitCSSMatrix(transformValue);
-                      translateX = matrix.m41;
-                      translateY = matrix.m42;
-                    }
-                    
-                    selector = defineSelector(div);
-                    div.addEventListener("mousemove", drag);
-                    div.addEventListener("mouseup", dragEnd);
-                    div.addEventListener('mouseleave', dragEnd);
-                    moving = true;
-                  }
-                  
-                }
-                
-                function drag(e) {
-                  if (moving) {
-                    if (lastX&&lastY){
-                      var pX = e.clientX - lastX;
-                      var pY = e.clientY - lastY;
-                      translateX += pX;
-                      translateY += pY;
-                      div.style.transform = "translate(" + translateX + "px, " + translateY + "px)";
-                    }
-                    lastX = e.clientX;
-                    lastY = e.clientY;
-                    
-                  }
-                }
-                
-                function dragEnd(e) {
-                  
-                  if (moving) {
-                    moving = false;
-                    div.style.position = "absolute";
-                    div.style.left = rectX + translateX;
-                    div.style.top = rectY + translateY;
-                    vscode.postMessage({
-                      type: 'makeDrag',
-                      new: defineSelector(div),
-                      old: selector,
-                    })
-                    
-                    lastX = null;
-                    lastY = null;
-                    
-                    translateX = 0;
-                    translateY = 0;
-                  }
-                }
-                
-                var widget;
-                var x;
-                var y;
-                var finX;
-                var finY;
-                var ismousedown = false;
-                document.addEventListener("mousedown", function(event) {
-                  if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
-                  event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
-                    //get element with id widget and remove from body
-                    closeInputBox();
-                    closeWidget();
-                    closeBorder(oldElmnt);
-
-                    ismousedown = true;
-                    x = event.pageX;
-                    y = event.pageY;
-                    //create div element
-                    widget = document.createElement("div");
-                    widget.style.position = "absolute";
-                    widget.style.top = y+"px";
-                    widget.style.left = x+"px";
-                    widget.classList.add("widget");
-                    widget.id = "widget";
-                    //append to body
-                    document.body.appendChild(widget);
-                    ismousedown = true;
-                  }
-                });
-                document.addEventListener("mousemove", function(event) {
-                  if (ismousedown) {
-                    finX = event.pageX;
-                    finY = event.pageY;
-                    widget.style.width = finX - x + "px";
-                    widget.style.height = finY - y + "px";
-                    widget.style.display = "block";
-                    widget.style.border = '2px dashed #ccc';
-                  }
-                });
-                document.addEventListener("mouseup", function(event) {
-                  if(ismousedown){
-                    ismousedown = false;
-                    var style = "absolute position, position at top "+y+"px, left "+x+"px with width "+(finX-x)+"px and height "+(finY-y)+"px";
-                    createInputBox(x, finY, style);
-                  }
-                }
-                );
-
-                function initDraggable(element) {
-                  element.setAttribute("draggable", "true");
-                }
-
-
-                </script>`;
-                return html;
-                
-              }
-            }
-            module.exports = CodePanel;
-            
-            function getNonce() {
-              let text = "";
-              const possible =
-              "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-              for (let i = 0; i < 32; i++) {
-                text += possible.charAt(Math.floor(Math.random() * possible.length));
-              }
-              return text;
-            }
