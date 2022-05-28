@@ -251,6 +251,7 @@ class CodePanel {
         const showIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "text.png"));
         const resizeIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "resize.png"));
         const deleteIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "delete.png"));
+        const chatIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.png"));
         // Use a nonce to only allow specific scripts to be run
         const nonce = getNonce();
         
@@ -270,6 +271,7 @@ class CodePanel {
         <img class="icon" id="icon-edit" src="${showIcon}"/>
         <img class="icon" id="icon-js" src="${showIcon}"/>
         <img class="icon" id="icon-delete" src="${deleteIcon}"/>
+        <img class="icon" id="icon-chat" src="${chatIcon}"/>
         </div>
         `+file.toString()+` 
         <link href="${stylesResetUri}" rel="stylesheet">
@@ -310,10 +312,15 @@ class CodePanel {
             mode = 6;
             selectIcon("icon-js");
           }
+          else if (icon.id === "icon-chat"){
+            mode = 7;
+            selectIcon("icon-chat");
+            createChatBox();
+          }
         }
         
         function selectIcon(iconName){
-          const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete", "icon-js"];
+          const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete", "icon-js", "icon-chat"];
           iconIds.map(name => {
             document.getElementById(name).classList.remove("selected");
             if(name === iconName){
