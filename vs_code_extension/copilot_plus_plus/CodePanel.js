@@ -245,6 +245,7 @@ class CodePanel {
       _getHtmlForWebview(webview) {
         //icons
         const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
+        const chatBotSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.js"));
         const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
         const inlineIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png"));
         const dragIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "move.png"));
@@ -275,6 +276,7 @@ class CodePanel {
         </div>
         `+file.toString()+` 
         <link href="${stylesResetUri}" rel="stylesheet">
+        <script src="${chatBotSrc}"></script>
         <script nonce="${nonce}">
         var mode = 0; // 0: select; 1: drag, 2: draw and insert
         var icons = document.getElementsByClassName('icon');
@@ -318,6 +320,7 @@ class CodePanel {
             createChatBox();
           }
         }
+        
         
         function selectIcon(iconName){
           const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete", "icon-js", "icon-chat"];
@@ -510,6 +513,49 @@ class CodePanel {
           closeInputBox();
           createInfoBox(x, y, element);
           //TODO
+        }
+
+        function createChatBox(){
+          outer = document.createElement("div");
+          outer.id = "chatBotOuter";
+          document.body.appendChild(outer);
+
+          outer.style.position = "absolute";
+          outer.style.right = "0px";
+          outer.style.top = "0px";
+          outer.style.padding = "20px";
+          
+          chatbox = document.createElement("div");
+          chatbox.id = "chatBotCommandDescription";
+          outer.appendChild(chatbox);
+
+          input = document.createElement("input");
+          input.type = "text";
+          input.id = "humanInput";
+          input.placeholder = "Change the size of the Google image";
+          outer.appendChild(input);
+          input.style = "padding:8px; font-size:14px; border: 1px solid #ddd;";
+
+          submitButton = document.createElement("button");
+          submitButton.id = "submitButton";
+          submitButton.innerHTML = "Submit";
+          outer.appendChild(submitButton);
+          submitButton.style = "border: 1px solid #ddd; background-color: darkcyan; color: #fff; padding: 8px; cursor: pointer; float: right;";
+
+
+
+          chat = document.createElement("div");
+          chat.id = "chatBot";
+          outer.appendChild(chat);
+
+          indicator = document.createElement("div");
+          indicator.id = "chatBotThinkingIndicator";
+          chat.appendChild(indicator);
+
+          hist = document.createElement("div");
+          hist.id = "chatBotHistory";
+          chat.appendChild(hist);
+
         }
         
         function createInputBoxAttr(x, y, element){
