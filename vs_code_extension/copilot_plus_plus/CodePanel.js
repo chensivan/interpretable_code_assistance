@@ -264,6 +264,12 @@ class CodePanel {
         CodePanel.nonce = nonce;
         var html = 
         `
+        <head>
+          <meta charset="UTF-8">
+          <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+        </head>
+        ` + 
+        `
         <div class="navbar" id="navbar">Tools
         <img class="icon" id="icon-tip" src="${inlineIcon}"/>
         <img class="icon" id="icon-insert" src="${selectIcon}"/>
@@ -555,6 +561,27 @@ class CodePanel {
           hist = document.createElement("div");
           hist.id = "chatBotHistory";
           chat.appendChild(hist);
+
+          // var config = {
+          //   botName: 'Copilot_Plus_Plus_Helper',
+          //   inputs: '#humanInput',
+          //   inputCapabilityListing: true,
+          //   addChatEntryCallback: function(entryDiv, text, origin) {
+          //       entryDiv.delay(200).slideDown();
+          //   }
+          // };
+
+          var config = {
+            botName: 'Copilot_PP_Bot',
+            inputs: '#humanInput',
+            inputCapabilityListing: true,
+            engines: [],
+            addChatEntryCallback: function(entryDiv, text, origin) {
+                entryDiv.delay(200).slideDown();
+            }
+          };
+
+          ChatBot.init(config);
 
         }
         
