@@ -330,14 +330,13 @@ class CodePanel {
           if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
           && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
           && (event.target.tagName !== "HTML")){
-            if(event.target.tagName !== "BODY"){
               if (mode == 0){
                 createInfoBox(event.pageX, event.pageY, event.target);
               }
-              else if (mode == 5){
+              else if (mode == 5 && event.target.tagName !== "BODY"){
                 createDeleteBox(event.pageX, event.pageY, event.target)
               }
-              else if (mode == 4){
+              else if (mode == 4 && event.target.tagName !== "BODY"){
                 closeBorder(oldElmnt);
                 var target = event.target;
                 oldElmnt = target.outerHTML;
@@ -345,9 +344,11 @@ class CodePanel {
                 target.style.border = '2px dashed #ccc';
                 resizeStart();
               }
-            }
-            if (mode == 3){
+            else if (mode == 3){
               createInputBoxAttr(event.pageX, event.pageY, event.target)
+            }
+            else if(mode == 6){
+              createInputBoxJs(event.pageX, event.pageY, event.target)
             }
           }
           else if (event.target.tagName !== "HTML"){
@@ -470,17 +471,19 @@ class CodePanel {
           inputbox.style.backgroundColor = 'white';
           inputbox.style.border = '1px solid black';
           inputbox.id = "inputbox";
-          inputbox.innerText = element.outerHTML;
+          if(element.tagName !== "BODY"){
+            inputbox.innerText = element.outerHTML;
+          }
+          else{
+            inputbox.innerText = "document body";
+          }
           document.body.appendChild(inputbox);
         }
+
         function createDeleteBox(x, y, element){
           closeInputBox();
           createInfoBox(x, y, element);
           inputbutton = document.createElement("button");
-          inputbutton.style.position = "absolute";
-          inputbutton.style.bottom = "-20px";
-          inputbutton.style.left = "0px";
-          inputbutton.style.margin = '0px';
           inputbutton.id = "inputbox-button";
           inputbutton.innerText = "delete "+element.tagName;
           inputbutton.addEventListener("click", function() {
@@ -492,7 +495,14 @@ class CodePanel {
             element.parentNode.removeChild(element);
             inputbox.parentNode.removeChild(inputbox);
           });
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
           document.querySelector("#inputbox").appendChild(inputbutton);
+        }
+
+        function createInputBoxJs(x, y, element){
+          closeInputBox();
+          createInfoBox(x, y, element);
+          //TODO
         }
         
         function createInputBoxAttr(x, y, element){
