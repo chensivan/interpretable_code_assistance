@@ -384,7 +384,9 @@ class CodePanel {
         }
         
         function initResize(e) {
-          e.preventDefault();
+            if (e.target.tagName.toLowerCase() === 'img'){
+                e.preventDefault();
+                }
           if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
             startX = e.clientX;
             startY = e.clientY;
@@ -703,7 +705,9 @@ class CodePanel {
         var rectX, rectY;
         
         function dragStart(e) {
-          e.preventDefault();
+            if (e.target.tagName.toLowerCase() === 'img'){
+                e.preventDefault();
+              }
           if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
             div = e.target;
             
