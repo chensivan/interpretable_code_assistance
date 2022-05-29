@@ -327,7 +327,7 @@ class CodePanel {
               document.getElementById(name).classList.add("selected");
             }
           });
-          closeInputBox();closeWidget();closeBorder(oldElmnt); closeChatBox();
+          closeInputBox();closeWidget();closeBorder(oldElmnt);
         }
         
         var oldElmnt;
@@ -445,7 +445,6 @@ class CodePanel {
             inputBox.parentElement.removeChild(inputBox);
           }
         }
-      
         
         function closeWidget(){
           old = document.getElementById("widget");
@@ -468,15 +467,7 @@ class CodePanel {
             })
           }
         }
-
-        function closeChatBox(){
-          old = document.getElementById("chatBotOuter");
-          if(old){
-            document.body.removeChild(old);
-          }
-        }
         
-
         function createInfoBox(x, y, element){
           closeInputBox();
           inputbox = document.createElement("div");
@@ -498,7 +489,6 @@ class CodePanel {
 
         function createDeleteBox(x, y, element){
           closeInputBox();
-          closeChatBox();
           createInfoBox(x, y, element);
           inputbutton = document.createElement("button");
           inputbutton.id = "inputbox-button";
