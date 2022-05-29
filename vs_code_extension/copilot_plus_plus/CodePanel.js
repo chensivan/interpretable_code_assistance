@@ -261,6 +261,7 @@ class CodePanel {
         //icons
         const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
         const chatBotSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.js"));
+        const chatBotUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.css"));
         const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
         const inlineIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png"));
         const dragIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "move.png"));
@@ -297,6 +298,7 @@ class CodePanel {
         </div>
         `+file.toString()+` 
         <link href="${stylesResetUri}" rel="stylesheet">
+        <link href="${chatBotUri}" rel="stylesheet">
         <script src="${chatBotSrc}"></script>
         <script nonce="${nonce}">
         var mode = 0; // 0: select; 1: drag, 2: draw and insert
@@ -593,23 +595,29 @@ class CodePanel {
           outer.style.right = "0px";
           outer.style.top = "0px";
           outer.style.padding = "20px";
+          console.log(outer);
           
-          chatbox = document.createElement("div");
-          chatbox.id = "chatBotCommandDescription";
-          outer.appendChild(chatbox);
+          // chatbox = document.createElement("div");
+          // chatbox.id = "chatBotCommandDescription";
+          // outer.appendChild(chatbox);
+          
+          inputBox = document.createElement("div");
+          inputBox.id = "inputBox";
+          outer.appendChild(inputBox);
+          inputBox.style = "position: relative; display: inline-block";
 
           input = document.createElement("input");
           input.type = "text";
           input.id = "humanInput";
           input.placeholder = "Change the size of the Google image";
-          outer.appendChild(input);
-          input.style = "padding:8px; font-size:14px; border: 1px solid #ddd;";
+          inputBox.appendChild(input);
+          input.style = "font-size:14px; border: 1px solid #ddd;";
 
-          submitButton = document.createElement("button");
-          submitButton.id = "submitButton";
-          submitButton.innerHTML = "Submit";
-          outer.appendChild(submitButton);
-          submitButton.style = "border: 1px solid #ddd; background-color: darkcyan; color: #fff; padding: 8px; cursor: pointer; float: right;";
+          // submitButton = document.createElement("button");
+          // submitButton.id = "submitButton";
+          // submitButton.innerHTML = "Submit";
+          // outer.appendChild(submitButton);
+          // submitButton.style = "border: 1px solid #ddd; background-color: darkcyan; color: #fff; padding: 8px; cursor: pointer; float: right;";
 
 
 
@@ -625,27 +633,18 @@ class CodePanel {
           hist.id = "chatBotHistory";
           chat.appendChild(hist);
 
-          // var config = {
-          //   botName: 'Copilot_Plus_Plus_Helper',
-          //   inputs: '#humanInput',
-          //   inputCapabilityListing: true,
-          //   addChatEntryCallback: function(entryDiv, text, origin) {
-          //       entryDiv.delay(200).slideDown();
-          //   }
-          // };
-
           var config = {
-            botName: 'Copilot_PP_Bot',
+            botName: 'Bot',
             inputs: '#humanInput',
             inputCapabilityListing: true,
-            engines: [],
+            engines: [ChatBot.Engines.cppBot()],
             addChatEntryCallback: function(entryDiv, text, origin) {
                 entryDiv.delay(200).slideDown();
             }
           };
-
           ChatBot.init(config);
-
+          ChatBot.addPattern("^change the size of the image$", "response", "could you specify which image?", undefined);
+          ChatBot.addPattern("^the Google image$", "response", "Please set its width:", undefined);
         }
         
         function createInputBoxAttr(x, y, element){
