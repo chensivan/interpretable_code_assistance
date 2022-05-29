@@ -529,6 +529,28 @@ class CodePanel {
           closeInputBox();
           createInfoBox(x, y, element);
           //TODO
+          //create 2 text inputs and 1 textarea
+          //create a button to send the data to the extension
+          let input1 = document.createElement("input");
+          input1.id = "inputbox-event";
+          let input2 = document.createElement("input");
+          input1.id = "inputbox-name";
+          let script = document.createElement("textarea");
+          script.id = "inputbox-script";
+          script.rows = "3";
+          submitButton = document.createElement("button");
+          submitButton.id = "submitButton";
+          submitButton.innerHTML = "Submit";
+  
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(input1);
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(input2);
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(script);
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(submitButton);
+
         }
 
         function createChatBox(){
