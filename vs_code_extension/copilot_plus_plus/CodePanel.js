@@ -132,6 +132,16 @@ class CodePanel {
             this._replaceInEditor(" ",data.value);
             break;
           }
+          case "createjs":{
+            if (!data.old || !data.new || !data.event || !data.name || !data.script) {
+              return;
+            }
+           // 
+            //this._printCommentToEditor()
+                this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}");
+  
+            break;
+          }
           case "onError": {
             if (!data.value) {
               return;
@@ -190,6 +200,7 @@ class CodePanel {
               var pos1 = new vscode.Position(lineNumber-1,comment.length);
               
               var range = new vscode.Range(pos1, pos1);
+              console.log(comment)
               // Line added - by having a selection at the same position twice, the cursor jumps there
               editor.revealRange(range);
               editor.edit(editBuilder => {
@@ -197,6 +208,7 @@ class CodePanel {
               });
               
               editor.selections = [new vscode.Selection(pos1,pos1)]; 
+              return true;
               
               // And the visible range jumps there too
               
@@ -206,7 +218,7 @@ class CodePanel {
         }
       }
       
-      _replaceInEditor(newText, oldText){
+      _replaceInEditor(newText, oldText, script){
         var openPath = vscode.Uri.file(CodePanel.filePath);
         
         if(openPath){
@@ -235,6 +247,9 @@ class CodePanel {
               
               editor.revealRange(range);
               editor.selections = [new vscode.Selection(pos,pos)]; 
+              if(script){
+                this._printCommentToEditor(script)
+              }
               //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
             });
           });
@@ -531,6 +546,42 @@ class CodePanel {
           closeInputBox();
           createInfoBox(x, y, element);
           //TODO
+          let input1 = document.createElement("input");
+          input1.id = "inputbox-event";
+          input1.placeholder = "action event, ex. onclick";
+          let input2 = document.createElement("input");
+          input1.id = "inputbox-name";
+          input2.placeholder = "function name, ex. sendMessage()";
+          let script = document.createElement("textarea");
+          script.id = "inputbox-script";
+          script.placeholder = "action, ex. log Message to console.log";
+          script.rows = "3";
+          submitButton = document.createElement("button");
+          submitButton.id = "submitButton";
+          submitButton.innerHTML = "Submit";
+
+          submitButton.addEventListener("click", function() {
+            let temp = element.cloneNode(true);
+            temp.setAttribute(input1.value, input2.value);
+            vscode.postMessage({
+              type: "createjs",
+              old: element.outerHTML,
+              new: temp.outerHTML,
+              event: input1.value,
+              name: input2.value,
+              script: script.value
+            })
+          });
+  
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(input1);
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(input2);
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(script);
+          document.querySelector("#inputbox").appendChild(document.createElement("br"));
+          document.querySelector("#inputbox").appendChild(submitButton);
+
         }
 
         function createChatBox(){
