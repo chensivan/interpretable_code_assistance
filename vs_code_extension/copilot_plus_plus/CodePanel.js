@@ -279,12 +279,9 @@ class CodePanel {
         const file = fs.readFileSync(CodePanel.filePath, "utf8");
         console.log(CodePanel.filePath)
         console.log(webviewSrc)
-        console.log(path.resolve(__dirname));
-        const jsFile = fs.readFileSync(path.join(__dirname, "\\media\\webview.js"), "utf8");
-        //consolelog current path__dirname
-        //console.log(__dirname)
-        
-        console.log(jsFile.toString())
+        console.log(path.join(__dirname, "media","webview.js"));
+        const jsFile = fs.readFileSync(path.join(__dirname, "media","webview.js"), "utf8");
+
         //Parse the file into a string
         CodePanel.nonce = nonce;
         var html = 
