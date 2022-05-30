@@ -42,7 +42,6 @@ function handleSelectIcon(event){
   }
 }
 
-
 function selectIcon(iconName){
   const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete", "icon-js", "icon-chat"];
   iconIds.map(name => {

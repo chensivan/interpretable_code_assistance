@@ -1,23 +1,17 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
-const jsdom = require("jsdom");
 const fetch = require('node-fetch');
-
-//import { getNonce } from "./getNonce";
 
 class CodePanel {
   /**
   * Track the currently panel. Only allow a single panel to exist at a time.
   */
   static currentPanel = undefined;
-  
   static viewType = "code-panel";
   
   static createOrShow(extensionUri) {
-    const column = vscode.ViewColumn.Two;/*vscode.window.activeTextEditor
-    ? vscode.window.activeTextEditor.viewColumn
-    : undefined;*/
+    const column = vscode.ViewColumn.Two;
     // If we already have a panel, show it.
     if (CodePanel.currentPanel) {
       CodePanel.currentPanel._panel.reveal(column);
@@ -40,8 +34,7 @@ class CodePanel {
           vscode.Uri.joinPath(extensionUri, "out/compiled"),
         ],
       }
-      );
-      
+      ); 
       CodePanel.currentPanel = new CodePanel(panel, extensionUri);
     }
     
@@ -81,21 +74,14 @@ class CodePanel {
         }
       }
     };
+    
     async _update() {
       const webview = this._panel.webview;
       
-      
       this._panel.webview.html = this._getHtmlForWebview(webview);
+      //Messages passed from the webview to the extension
       webview.onDidReceiveMessage(async (data) => {
         switch (data.type) {
-          case "onClicked": {
-            if (!data.value) {
-              return;
-            }
-            this.handleOnClicked(data.value);
-            break;
-            
-          }
           case "makeDrag":{
             if (!data.new) {
               return;
@@ -133,13 +119,15 @@ class CodePanel {
             break;
           }
           case "createjs":{
-            if (!data.old || !data.new || !data.event || !data.name || !data.script) {
+            if (!data.old || !data.new || !data.event || !data.name) {
               return;
             }
-           // 
-            //this._printCommentToEditor()
-                this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}");
-  
+            if(data.script){
+              this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}");
+            }
+            else{
+              this._replaceInEditor(data.new, data.old);
+            }
             break;
           }
           case "onError": {
@@ -154,7 +142,7 @@ class CodePanel {
       });
     }
     
-    callParaphraseAPI(input){
+  callParaphraseAPI(input){
       fetch("http://127.0.0.1:5000/paraphrase", {
       method: 'POST', 
       headers: {
@@ -168,25 +156,12 @@ class CodePanel {
     });
   }
   
-  handleOnClicked(htmlString){
-    vscode.window.showInformationMessage(htmlString);
-  }
-  
-  // Generate comment for printing to the editor
-  generateComment(position, info){
-    return "// From \"document\" select element " + info + ";\n //set absolute position to (" + position[0] + "," + position[1] + ")";
-  };
   //Print comment to the editor
   _printCommentToEditor(comment){
-    
     var openPath = vscode.Uri.file(CodePanel.filePath);
-    
     if(openPath){
-      
-      vscode.workspace.openTextDocument(openPath).then(doc => 
-        {
-          vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => 
-            {          
+      vscode.workspace.openTextDocument(openPath).then(doc => {
+          vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
               var text = editor.document.getText();
               var index = text.lastIndexOf('</html>');
               
@@ -209,10 +184,6 @@ class CodePanel {
               
               editor.selections = [new vscode.Selection(pos1,pos1)]; 
               return true;
-              
-              // And the visible range jumps there too
-              
-              //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
             });
           });
         }
@@ -220,7 +191,6 @@ class CodePanel {
       
       _replaceInEditor(newText, oldText, script){
         var openPath = vscode.Uri.file(CodePanel.filePath);
-        
         if(openPath){
           vscode.workspace.openTextDocument(openPath).then(doc => {
             vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
@@ -250,12 +220,10 @@ class CodePanel {
               if(script){
                 this._printCommentToEditor(script)
               }
-              //vscode.commands.executeCommand('workbench.action.closeActiveEditor');
             });
           });
         }
       }
-      
       
       _getHtmlForWebview(webview) {
         //icons
@@ -281,14 +249,14 @@ class CodePanel {
         console.log(webviewSrc)
         console.log(path.join(__dirname, "media","webview.js"));
         const jsFile = fs.readFileSync(path.join(__dirname, "media","webview.js"), "utf8");
-
+        
         //Parse the file into a string
         CodePanel.nonce = nonce;
         var html = 
         `
         <head>
-          <meta charset="UTF-8">
-          <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+        <meta charset="UTF-8">
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
         </head>
         ` + 
         `

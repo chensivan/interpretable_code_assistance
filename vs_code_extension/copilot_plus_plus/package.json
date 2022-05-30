@@ -10,16 +10,11 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:helloworld.helloWorld",
 		"onCommand:visual.openVisual"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
-			{
-				"command": "helloworld.helloWorld",
-				"title": "Hello World"
-			},
 			{
 				"command": "visual.openVisual",
 				"title": "Open Visual",
@@ -58,7 +53,6 @@
 	"dependencies": {
 		"jquery": "^3.6.0",
 		"jQuery": "^1.7.4",
-		"jsdom": "^19.0.0",
 		"node-fetch": "^2.6.7"
 	}
 }
