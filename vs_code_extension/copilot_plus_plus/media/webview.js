@@ -1,10 +1,4 @@
 
-console.log("start");
-var icons = document.getElementsByClassName('icon');
-console.log(icons);
-
-
-
 var mode = 0; // 0: select; 1: drag, 2: draw and insert
 var icons = document.getElementsByClassName('icon');
 document.getElementById("icon-tip").classList.add("selected");
