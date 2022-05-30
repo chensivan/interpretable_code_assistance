@@ -34,6 +34,8 @@ var ChatBot = function () {
     // list of normalize human text before check pattern
     var normalizer = [];
 
+    var targetElmnt;
+
     // list all the predefined commands and the commands of each engine
     function updateCommandDescription() {
         var description = '';
@@ -74,16 +76,17 @@ var ChatBot = function () {
         var datalist = $('#chatBotCommands');
         if (datalist.size() == 0) {
             datalist = $('<datalist id="chatBotCommands">');
-            $('body').append(datalist);
+            $('#chatBotOuter').append(datalist);
         } else {
             datalist.html('');
         }
 
         for (i = 0; i < examplePhrases.length; i++) {
             datalist.append($('<option value="'+examplePhrases[i]+'"></option>'));
+            
         }
 
-        //console.log(examplePhrases);
+        console.log(examplePhrases);
 
         $('#chatBotCommandDescription').html(description);
     }
@@ -340,7 +343,55 @@ var ChatBot = function () {
                         return null;
                     }
                 }
+            },
+            cppBot: function() {
+    
+                var capabilities = [
+                    "If you say 'Change size of the image', the bot asks about your desired value",
+                    "If you say 'hop hop', the bot says yay"
+                ]
+             
+                return {
+                    react: function (query) {
+                        
+                        var content = '';
+                        if (query == 'Change size of the image') {
+                            if (targetElmnt) {
+                                if (targetElmnt.tagName === 'img'){
+                                    const attrs = targetElmnt.getAttributeNames().reduce((acc, name) => {
+                                        //text = text + "<input type='text' value='"+name+"' /><input type='text' value='"+element.getAttribute(name)+"' />";
+                                        return {...acc, [name]: targetElmnt.getAttribute(name)};
+                                      }, {});
+                                    //parse attrs to json
+                                    var targetJs = JSON.stringify(attrs);
+                                    content = targetJs;
+                                } else{
+                                    content = "Please select a correct type of element.";
+                                }
+
+
+                            } else{
+                                
+                                content = 'Select your target element by clicking';
+                            }
+                            
+                        }else if(query == 'Hi') {
+                            content = 'Aloha:)';
+                        }
+                        
+                        ChatBot.addChatEntry(content, "bot");
+                        ChatBot.thinking(false);
+              
+                    },
+                    getCapabilities: function() {
+                        return capabilities;
+                    },
+                    getSuggestUrl: function() {
+                        return null;
+                    }
+                }
             }
+
         },
         init: function (options) {
             var settings = jQuery.extend({
@@ -369,7 +420,7 @@ var ChatBot = function () {
             normalizer = settings.normalizer;
 
             // update the command description
-            updateCommandDescription();
+            // updateCommandDescription();
 
             // input capability listing?
             if (inputCapabilityListing) {
@@ -385,6 +436,9 @@ var ChatBot = function () {
                 //console.log($(this).val());
             });
 
+        },
+        setTargetElmnt: function (elmnt) {
+            targetElmnt = elmnt;
         },
         setBotName: function (name) {
             botName = name;

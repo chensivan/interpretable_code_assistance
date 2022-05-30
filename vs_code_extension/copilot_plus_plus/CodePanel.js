@@ -357,12 +357,14 @@ class CodePanel {
         }
         
         var oldElmnt;
+        var chatBotSelector = true;
         // show tooltip
         const vscode = acquireVsCodeApi();
         document.addEventListener("click", function(event){
           if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
           && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
-          && (event.target.tagName !== "HTML")){
+          && (event.target.tagName !== "HTML") 
+          && event.target.id !== "chatBotOuter" && event.target.parentElement.id !== "chatBotOuter"){
               if (mode == 0){
                 createInfoBox(event.pageX, event.pageY, event.target);
               }
@@ -382,6 +384,13 @@ class CodePanel {
             }
             else if(mode == 6){
               createInputBoxJs(event.pageX, event.pageY, event.target)
+            }
+            else if (mode == 7){
+              if (chatBotSelector){
+                ChatBot.setTargetElmnt(event.target);
+                // TODO: set close selector button
+                chatBotSelector = false;
+              }
             }
           }
           else if (event.target.tagName !== "HTML"){
@@ -595,23 +604,23 @@ class CodePanel {
           outer.style.right = "0px";
           outer.style.top = "0px";
           outer.style.padding = "20px";
-          console.log(outer);
+          outer.style.width = "300px";
           
           // chatbox = document.createElement("div");
           // chatbox.id = "chatBotCommandDescription";
           // outer.appendChild(chatbox);
           
-          inputBox = document.createElement("div");
-          inputBox.id = "inputBox";
-          outer.appendChild(inputBox);
-          inputBox.style = "position: relative; display: inline-block";
+          // inputBox = document.createElement("div");
+          // inputBox.id = "inputBox";
+          // outer.appendChild(inputBox);
+          // inputBox.style = "position: relative; display: inline-block";
 
           input = document.createElement("input");
           input.type = "text";
           input.id = "humanInput";
-          input.placeholder = "Change the size of the Google image";
-          inputBox.appendChild(input);
-          input.style = "font-size:14px; border: 1px solid #ddd;";
+          input.placeholder = "i.e Change the font size";
+          outer.appendChild(input);
+          input.style = "font-size:14px; border: 1px solid #ddd; width: 250px;";
 
           // submitButton = document.createElement("button");
           // submitButton.id = "submitButton";
@@ -631,6 +640,7 @@ class CodePanel {
 
           hist = document.createElement("div");
           hist.id = "chatBotHistory";
+          hist.style = "overflow-x: scroll";
           chat.appendChild(hist);
 
           var config = {
@@ -643,8 +653,6 @@ class CodePanel {
             }
           };
           ChatBot.init(config);
-          ChatBot.addPattern("^change the size of the image$", "response", "could you specify which image?", undefined);
-          ChatBot.addPattern("^the Google image$", "response", "Please set its width:", undefined);
         }
         
         function createInputBoxAttr(x, y, element){
