@@ -357,7 +357,7 @@ var ChatBot = function () {
                         var content = '';
                         if (query == 'Change size of the image') {
                             if (targetElmnt) {
-                                if (targetElmnt.tagName === 'img'){
+                                if (targetElmnt.tagName === 'IMG'){
                                     const attrs = targetElmnt.getAttributeNames().reduce((acc, name) => {
                                         //text = text + "<input type='text' value='"+name+"' /><input type='text' value='"+element.getAttribute(name)+"' />";
                                         return {...acc, [name]: targetElmnt.getAttribute(name)};
