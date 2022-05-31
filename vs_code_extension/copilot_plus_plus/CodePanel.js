@@ -89,13 +89,6 @@ class CodePanel {
             this._replaceInEditor(data.new, data.old);
             break;
           }
-          case "onInput": {
-            if (!data.value) {
-              return;
-            } 
-            this.callParaphraseAPI(data.value);
-            break;
-          }
           case "onInsert": {
             if (!data.value) {
               return;
@@ -141,20 +134,6 @@ class CodePanel {
         }
       });
     }
-    
-  callParaphraseAPI(input){
-      fetch("http://127.0.0.1:5000/paraphrase", {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({text: input}) 
-    })
-    .then(ret => ret.json())
-    .then(result => {
-      this._printCommentToEditor("// "+result.paraphrased_text+"");
-    });
-  }
   
   //Print comment to the editor
   _printCommentToEditor(comment){
