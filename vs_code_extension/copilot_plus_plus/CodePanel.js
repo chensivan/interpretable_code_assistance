@@ -224,9 +224,6 @@ class CodePanel {
         
         //Read the file
         const file = fs.readFileSync(CodePanel.filePath, "utf8");
-        console.log(CodePanel.filePath)
-        console.log(webviewSrc)
-        console.log(path.join(__dirname, "media","webview.js"));
         const jsFile = fs.readFileSync(path.join(__dirname, "media","webview.js"), "utf8");
         
         //Parse the file into a string
