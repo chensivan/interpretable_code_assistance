@@ -95,6 +95,7 @@ class CodePanel {
             }
             var comment = "<!-- "+data.value + "-->\n<!--"+data.style+"-->"
             this._replaceInEditor(comment+"\n</body>", "</body>");
+            this.log("user1", "insert", data.value+" "+data.style);
             break;
           }
           case "changeAttr": {
@@ -102,6 +103,7 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new,data.old);
+            this.log("user1", "change attributes", data.old+" to "+data.new);
             break;
           }
           case "delete":{
@@ -109,6 +111,7 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(" ",data.value);
+            this.log("user1", "delete", data.value);
             break;
           }
           case "createjs":{
@@ -121,6 +124,7 @@ class CodePanel {
             else{
               this._replaceInEditor(data.new, data.old);
             }
+            this.log("user1", "add listener", data.event+", "+data.name+", "+data.script);
             break;
           }
           case "onError": {
@@ -134,6 +138,14 @@ class CodePanel {
         }
       });
     }
+
+    log(userId, event, details){
+      fetch("http://127.0.0.1:5000/db/insertLog", {
+      method: 'POST', 
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId: userId, event:event, details:details})
+      })
+  }
   
   //Print comment to the editor
   _printCommentToEditor(comment){
