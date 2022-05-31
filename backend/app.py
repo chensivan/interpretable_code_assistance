@@ -27,7 +27,7 @@ def test():
     mycol = db["log"]
     body = request.json
 
-    mydict = { "event": body["event"], "details": body["details"] }
+    mydict = { "userId": body["userId"], "event": body["event"], "details": body["details"] }
 
     x = mycol.insert_one(mydict)
     return str(x.inserted_id)
