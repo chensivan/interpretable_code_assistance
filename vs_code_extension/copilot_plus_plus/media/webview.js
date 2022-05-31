@@ -1,81 +1,70 @@
-
-var mode = 0; // 0: select; 1: drag, 2: draw and insert
+const vscode = acquireVsCodeApi();
+//---------------------------tool bar functions---------------------------------//
+var mode = 0;
 var icons = document.getElementsByClassName('icon');
 document.getElementById("icon-tip").classList.add("selected");
 for (var i = 0; i < icons.length; i++) {
   icons[i].addEventListener('click', handleSelectIcon);
 }
-// set navbar icon handler
+const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
+"icon-delete", "icon-js", "icon-chat"];
+// set tool bar icon handler
 function handleSelectIcon(event){
   var icon = event.target;
-  if (icon.id === "icon-tip"){
-    mode = 0; 
-    selectIcon("icon-tip");
-  } else if (icon.id === "icon-drag"){
-    mode = 1;
-    selectIcon("icon-drag");
-  }
-  else if (icon.id === "icon-insert"){
-    mode = 2;
-    selectIcon("icon-insert");
-  }
-  else if (icon.id === "icon-edit"){
-    mode = 3;
-    selectIcon("icon-edit");
-  }
-  else if (icon.id === "icon-resize"){
-    mode = 4;
-    selectIcon("icon-resize");
-  }
-  else if (icon.id === "icon-delete"){
-    mode = 5;
-    selectIcon("icon-delete");
-  }
-  else if (icon.id === "icon-js"){
-    mode = 6;
-    selectIcon("icon-js");
-  }
-  else if (icon.id === "icon-chat"){
-    mode = 7;
-    selectIcon("icon-chat");
-    createChatBox();
+  
+  if (iconIds.includes(icon.id)){
+    mode = iconIds.indexOf(icon.id); 
+    selectIcon(icon.id);
+    if(mode == 7){
+      createChatBox();
+    }
   }
 }
 
 function selectIcon(iconName){
-  const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", "icon-delete", "icon-js", "icon-chat"];
   iconIds.map(name => {
     document.getElementById(name).classList.remove("selected");
     if(name === iconName){
       document.getElementById(name).classList.add("selected");
     }
   });
-  closeInputBox();closeWidget();closeBorder(oldElmnt); closeChatBox();
+  closeInputBox();
+  closeWidget();
+  closeBorder(oldElmnt); 
+  closeChatBox();
 }
 
 var oldElmnt;
 var chatBotSelector = true;
-// show tooltip
-const vscode = acquireVsCodeApi();
+
+//---------------------------variables for attribute editor tool---------------------------------//
+var widget;
+var initX;
+var initY;
+var finX;
+var finY;
+var ismousedown = false;
+
+//---------------------------click handler---------------------------------//
 document.addEventListener("click", function(event){
-  if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" 
+  if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox"
   && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && event.target.parentElement.id !== "chatBotOuter"){
-      if (mode == 0){
-        createInfoBox(event.pageX, event.pageY, event.target);
-      }
-      else if (mode == 5 && event.target.tagName !== "BODY"){
-        createDeleteBox(event.pageX, event.pageY, event.target)
-      }
-      else if (mode == 4 && event.target.tagName !== "BODY"){
-        closeBorder(oldElmnt);
-        var target = event.target;
-        oldElmnt = target.outerHTML;
-        target.classList.add('border');
-        target.style.border = '2px dashed #ccc';
-        resizeStart();
-      }
+    if (mode == 0){
+      createInfoBox(event.pageX, event.pageY, event.target);
+    }
+    else if (mode == 5 && event.target.tagName !== "BODY"){
+      createDeleteBox(event.pageX, event.pageY, event.target)
+    }
+    else if (mode == 4 && event.target.tagName !== "BODY"){
+      closeBorder(oldElmnt);
+      var target = event.target;
+      oldElmnt = target.outerHTML;
+      target.classList.add('border');
+      target.style.border = '2px dashed #ccc';
+      resizeStart();
+    }
     else if (mode == 3){
       createInputBoxAttr(event.pageX, event.pageY, event.target)
     }
@@ -95,6 +84,49 @@ document.addEventListener("click", function(event){
   }
 });
 
+//---------------------------mousedown handler---------------------------------//
+document.addEventListener("mousedown", function(event) {
+  if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
+  event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+    closeInputBox();
+    closeWidget();
+    
+    ismousedown = true;
+    initX = event.pageX;
+    initY = event.pageY;
+    //create div element
+    widget = document.createElement("div");
+    widget.style.position = "absolute";
+    widget.style.top = initY+"px";
+    widget.style.left = initX+"px";
+    widget.classList.add("widget");
+    widget.id = "widget";
+    document.body.appendChild(widget);
+    ismousedown = true;
+  }
+});
+
+//---------------------------mousemove handler---------------------------------//
+document.addEventListener("mousemove", function(event) {
+  if (ismousedown) {
+    finX = event.pageX;
+    finY = event.pageY;
+    widget.style.width = finX - initX + "px";
+    widget.style.height = finY - initY + "px";
+    widget.style.display = "block";
+    widget.style.border = '2px dashed #ccc';
+  }
+});
+
+//---------------------------mouseup handler---------------------------------//
+document.addEventListener("mouseup", function(event) {
+  if(ismousedown && initX != finX && initY != finY){
+    ismousedown = false;
+    var style = "absolute position, position at top "+initY+"px, left "+initX+"px with width "+(finX-initX)+"px and height "+(finY-initY)+"px";
+    createInputBox(initX, finY, style);
+  }
+}
+);
 var elmnt;
 var c;
 var resizeAble = false; var onResize = false;
@@ -107,9 +139,9 @@ function resizeStart(){
 }
 
 function initResize(e) {
-    if (e.target.tagName.toLowerCase() === 'img'){
-        e.preventDefault();
-        }
+  if (e.target.tagName.toLowerCase() === 'img'){
+    e.preventDefault();
+  }
   if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
     startX = e.clientX;
     startY = e.clientY;
@@ -173,18 +205,19 @@ function stopResize(e){
   }
 }
 
+
+//---------------------------close elements---------------------------------//
 function closeInputBox(){
-  var inputBox = document.getElementById("inputbox");
+  let inputBox = document.getElementById("inputbox");
   if (inputBox){
     inputBox.parentElement.removeChild(inputBox);
   }
 }
 
-
 function closeWidget(){
-  old = document.getElementById("widget");
-  if(old){
-    document.body.removeChild(old);
+  let oldWidget = document.getElementById("widget");
+  if(oldWidget){
+    document.body.removeChild(oldWidget);
   }
 }
 
@@ -210,14 +243,49 @@ function closeChatBox(){
   }
 }
 
+//---------------------------create basic box element---------------------------------//
+function createBasicBox(x, y){
+  let box = document.createElement("div");
+  box.style.position = "absolute";
+  box.style.top = y+"px";
+  box.style.left = x+"px";
+  box.style.margin = '0px';
+  box.id = "inputbox";
+  box.style.zIndex = '100';
+  return box;
+}
+//---------------------------insert tools---------------------------------//
+function createInputBox(x, y, style){
+  closeInputBox();
+  let inputbox = createBasicBox(x, y);
+  inputbox.innerHTML = "<input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+  document.body.appendChild(inputbox);
+  
+  let submit = document.getElementById("inputbox-submit");
+  submit.addEventListener("click", function() {
+    var text = document.getElementById("inputbox-input");
+    if(text.value){
+      vscode.postMessage({
+        type: "onInsert",
+        value: text.value,
+        style: style
+      })
+    }
+    else{
+      text.setAttribute("placeholder", "Please enter a value");
+    }
+  });
+  
+  let close = document.getElementById("inputbox-close");
+  close.addEventListener("click", function() {
+    closeInputBox();
+  });
+}
 
+//---------------------------tips tool---------------------------------//
 function createInfoBox(x, y, element){
   closeInputBox();
-  inputbox = document.createElement("div");
-  inputbox.style.position = "absolute";
-  inputbox.style.top = y+"px";
-  inputbox.style.left = x+"px";
-  inputbox.style.margin = '0px';
+  let inputbox = createBasicBox(x, y);
   inputbox.style.backgroundColor = 'white';
   inputbox.style.border = '1px solid black';
   inputbox.id = "inputbox";
@@ -230,73 +298,76 @@ function createInfoBox(x, y, element){
   document.body.appendChild(inputbox);
 }
 
+//---------------------------delete tool---------------------------------//
 function createDeleteBox(x, y, element){
   closeInputBox();
-  closeChatBox();
   createInfoBox(x, y, element);
-  inputbutton = document.createElement("button");
-  inputbutton.id = "inputbox-button";
-  inputbutton.innerText = "delete "+element.tagName;
-  inputbutton.addEventListener("click", function() {
+  let inputBox = document.getElementById("inputbox");
+  let button = document.createElement("button");
+  button.id = "inputbox-button";
+  button.innerText = "delete "+element.tagName;
+  button.addEventListener("click", function() {
     vscode.postMessage({
       type: "delete",
       value: element.outerHTML
     })
     //remove child from body
     element.parentNode.removeChild(element);
-    inputbox.parentNode.removeChild(inputbox);
+    button.parentNode.removeChild(inputBox);
   });
   document.querySelector("#inputbox").appendChild(document.createElement("br"));
-  document.querySelector("#inputbox").appendChild(inputbutton);
+  document.querySelector("#inputbox").appendChild(button);
 }
 
+//---------------------------event listener tool---------------------------------//
 function createInputBoxJs(x, y, element){
   closeInputBox();
   createInfoBox(x, y, element);
-  //TODO
-  let input1 = document.createElement("input");
-  input1.id = "inputbox-event";
-  input1.placeholder = "action event, ex. onclick";
-  let input2 = document.createElement("input");
-  input1.id = "inputbox-name";
-  input2.placeholder = "function name, ex. sendMessage()";
+  let event = document.createElement("input");
+  event.id = "inputbox-event";
+  event.placeholder = "action event, ex. onclick";
+  
+  let name = document.createElement("input");
+  name.id = "inputbox-name";
+  name.placeholder = "function name, ex. sendMessage()";
+  
   let script = document.createElement("textarea");
   script.id = "inputbox-script";
   script.placeholder = "action, ex. log Message to console.log";
   script.rows = "3";
-  submitButton = document.createElement("button");
-  submitButton.id = "submitButton";
-  submitButton.innerHTML = "Submit";
-
-  submitButton.addEventListener("click", function() {
+  
+  let submit = document.createElement("button");
+  submit.id = "submitButton";
+  submit.innerHTML = "Submit";
+  
+  submit.addEventListener("click", function() {
     let temp = element.cloneNode(true);
-    temp.setAttribute(input1.value, input2.value);
+    temp.setAttribute(event.value, name.value);
     vscode.postMessage({
       type: "createjs",
       old: element.outerHTML,
       new: temp.outerHTML,
-      event: input1.value,
-      name: input2.value,
+      event: event.value,
+      name: name.value,
       script: script.value
     })
   });
-
+  
   document.querySelector("#inputbox").appendChild(document.createElement("br"));
-  document.querySelector("#inputbox").appendChild(input1);
+  document.querySelector("#inputbox").appendChild(event);
   document.querySelector("#inputbox").appendChild(document.createElement("br"));
-  document.querySelector("#inputbox").appendChild(input2);
+  document.querySelector("#inputbox").appendChild(name);
   document.querySelector("#inputbox").appendChild(document.createElement("br"));
   document.querySelector("#inputbox").appendChild(script);
   document.querySelector("#inputbox").appendChild(document.createElement("br"));
-  document.querySelector("#inputbox").appendChild(submitButton);
-
+  document.querySelector("#inputbox").appendChild(submit);
 }
 
 function createChatBox(){
   outer = document.createElement("div");
   outer.id = "chatBotOuter";
   document.body.appendChild(outer);
-
+  
   outer.style.position = "absolute";
   outer.style.right = "0px";
   outer.style.top = "0px";
@@ -311,70 +382,63 @@ function createChatBox(){
   // inputBox.id = "inputBox";
   // outer.appendChild(inputBox);
   // inputBox.style = "position: relative; display: inline-block";
-
+  
   input = document.createElement("input");
   input.type = "text";
   input.id = "humanInput";
   input.placeholder = "i.e Change the font size";
   outer.appendChild(input);
   input.style = "font-size:14px; border: 1px solid #ddd; width: 250px;";
-
+  
   // submitButton = document.createElement("button");
   // submitButton.id = "submitButton";
   // submitButton.innerHTML = "Submit";
   // outer.appendChild(submitButton);
   // submitButton.style = "border: 1px solid #ddd; background-color: darkcyan; color: #fff; padding: 8px; cursor: pointer; float: right;";
-
-
-
+  
+  
+  
   chat = document.createElement("div");
   chat.id = "chatBot";
   outer.appendChild(chat);
-
+  
   indicator = document.createElement("div");
   indicator.id = "chatBotThinkingIndicator";
   chat.appendChild(indicator);
-
+  
   hist = document.createElement("div");
   hist.id = "chatBotHistory";
   hist.style = "overflow-x: scroll";
   chat.appendChild(hist);
-
+  
   var config = {
     botName: 'Bot',
     inputs: '#humanInput',
     inputCapabilityListing: true,
     engines: [ChatBot.Engines.cppBot()],
     addChatEntryCallback: function(entryDiv, text, origin) {
-        entryDiv.delay(200).slideDown();
+      entryDiv.delay(200).slideDown();
     }
   };
   ChatBot.init(config);
 }
 
+//---------------------------attribute editor tool---------------------------------//
 function createInputBoxAttr(x, y, element){
   closeInputBox();
-  inputbox = document.createElement("div");
-  inputbox.style.position = "absolute";
-  inputbox.style.top = y+"px";
-  inputbox.style.left = x+"px";
-  inputbox.style.margin = '0px';
-  inputbox.id = "inputbox";
-  // var text = "";
-  const attrs = element.getAttributeNames().reduce((acc, name) => {
-    //text = text + "<input type='text' value='"+name+"' /><input type='text' value='"+element.getAttribute(name)+"' />";
+  let inputbox = createBasicBox(x, y);
+  let attrs = element.getAttributeNames().reduce((acc, name) => {
     return {...acc, [name]: element.getAttribute(name)};
   }, {});
   //parse attrs to json
-  var json = JSON.stringify(attrs);
+  let json = JSON.stringify(attrs);
   inputbox.innerHTML = "<textarea rows='7' id='inputbox-text'>"+json+"</textarea><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
   document.body.appendChild(inputbox);
   
-  var submit = document.getElementById("inputbox-submit");
+  let submit = document.getElementById("inputbox-submit");
   submit.addEventListener("click", function() {
     let text = document.getElementById("inputbox-text");
     if(text.value){
-      
       let newEle = document.createElement(element.tagName);
       newEle.innerHTML = element.innerHTML;
       let attrs = JSON.parse(text.value);
@@ -388,54 +452,13 @@ function createInputBoxAttr(x, y, element){
       })
       document.body.replaceChild(newEle, element);
       element = newEle;
-      
     }
     else{
       text.setAttribute("placeholder", "Please enter a value");
     }
   });
   
-  var close = document.getElementById("inputbox-close");
-  close.addEventListener("click", function() {
-    closeInputBox();
-  });
-}
-
-function createInputBox(x, y, style){
-  closeInputBox();
-  inputbox = document.createElement("div");
-  inputbox.style.position = "absolute";
-  inputbox.style.top = y+"px";
-  inputbox.style.left = x+"px";
-  inputbox.style.margin = '0px';
-  inputbox.id = "inputbox";
-  inputbox.innerHTML = "<input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
-  
-  document.body.appendChild(inputbox);
-  
-  var submit = document.getElementById("inputbox-submit");
-  var type;
-  if(mode == 0){
-    type = "onInput";
-  }
-  else if (mode == 2){
-    type = "onInsert";
-  }
-  submit.addEventListener("click", function() {
-    var text = document.getElementById("inputbox-input");
-    if(text.value){
-      vscode.postMessage({
-        type: type,
-        value: text.value,
-        style: style
-      })
-    }
-    else{
-      text.setAttribute("placeholder", "Please enter a value");
-    }
-  });
-  
-  var close = document.getElementById("inputbox-close");
+  let close = document.getElementById("inputbox-close");
   close.addEventListener("click", function() {
     closeInputBox();
   });
@@ -445,7 +468,7 @@ function defineSelector(element){
   var selector = element.outerHTML;
   return selector;
 }
- 
+
 // set drag event for non-svg element
 var divs = document.querySelectorAll('*');
 
@@ -460,9 +483,9 @@ var div, selector;
 var rectX, rectY;
 
 function dragStart(e) {
-    if (e.target.tagName.toLowerCase() === 'img'){
-        e.preventDefault();
-      }
+  if (e.target.tagName.toLowerCase() === 'img'){
+    e.preventDefault();
+  }
   if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
     div = e.target;
     
@@ -521,54 +544,4 @@ function dragEnd(e) {
   }
 }
 
-var widget;
-var x;
-var y;
-var finX;
-var finY;
-var ismousedown = false;
-document.addEventListener("mousedown", function(event) {
-  if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
-  event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
-    //get element with id widget and remove from body
-    closeInputBox();
-    closeWidget();
-    closeBorder(oldElmnt);
-    
-    ismousedown = true;
-    x = event.pageX;
-    y = event.pageY;
-    //create div element
-    widget = document.createElement("div");
-    widget.style.position = "absolute";
-    widget.style.top = y+"px";
-    widget.style.left = x+"px";
-    widget.classList.add("widget");
-    widget.id = "widget";
-    //append to body
-    document.body.appendChild(widget);
-    ismousedown = true;
-  }
-});
-document.addEventListener("mousemove", function(event) {
-  if (ismousedown) {
-    finX = event.pageX;
-    finY = event.pageY;
-    widget.style.width = finX - x + "px";
-    widget.style.height = finY - y + "px";
-    widget.style.display = "block";
-    widget.style.border = '2px dashed #ccc';
-  }
-});
-document.addEventListener("mouseup", function(event) {
-  if(ismousedown){
-    ismousedown = false;
-    var style = "absolute position, position at top "+y+"px, left "+x+"px with width "+(finX-x)+"px and height "+(finY-y)+"px";
-    createInputBox(x, finY, style);
-  }
-}
-);
 
-function initDraggable(element) {
-  element.setAttribute("draggable", "true");
-}
