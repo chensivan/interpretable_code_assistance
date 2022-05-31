@@ -36,9 +36,6 @@ function toggleSelectedIcon(iconName){
   closeChatBox();
 }
 
-var oldElmnt;
-var chatBotSelector = true;
-
 //---------------------------variables for attribute editor tool---------------------------------//
 var widget;
 var widgetInitX;
@@ -130,23 +127,24 @@ document.addEventListener("mouseup", function(event) {
 }
 );
 
-
-var elmnt;
-var c;
+//---------------------------variables for resize tool---------------------------------//
+var resizeElmnt;
+var dir;
 var resizeAble = false; var onResize = false;
 var rect;
 var startWidth, startHeight, startX, startY;
-
+var oldElmnt;
+//---------------------------resize tool---------------------------------//
 function resizeStart(){
-  elmnt = document.getElementsByClassName("border")[0];
-  elmnt.addEventListener('mousemove', doResize, false);
+  resizeElmnt = document.getElementsByClassName("border")[0];
+  resizeElmnt.addEventListener('mousemove', doResize, false);
 }
-
+//---------------------------mousedown handler---------------------------------//
 function initResize(e) {
   if (e.target.tagName.toLowerCase() === 'img'){
     e.preventDefault();
   }
-  if (mode == 4 && resizeAble && elmnt && c != "" && elmnt.id !== "navbar" && elmnt.parentElement.id !== "navbar"){
+  if (mode == 4 && resizeAble && resizeElmnt && dir != "" && resizeElmnt.id !== "navbar" && resizeElmnt.parentElement.id !== "navbar"){
     startX = e.clientX;
     startY = e.clientY;
     startWidth = rect.width;
@@ -155,57 +153,55 @@ function initResize(e) {
     resizeAble = false;
   }
 }
-
+//---------------------------mousemove handler---------------------------------//
 function doResize(e){
   var delta = 5;
   
-  if (!onResize && elmnt){
-    rect = elmnt.getBoundingClientRect();
+  if (!onResize && resizeElmnt){
+    rect = resizeElmnt.getBoundingClientRect();
     var x = e.clientX - rect.left,  
     y = e.clientY - rect.top,     
     w = rect.right - rect.left,
     h = rect.bottom - rect.top;
     
-    c = "";
+    dir = "";
     // if( y > h - delta) c += "s";
     // if(x > w - delta) c += "e";
     if( y > h - delta){
-      c += "s";
-      widthChange = 1;
+      dir += "s";
     }
     if(x > w - delta){
-      c += "e";
-      heightChange = 1;
+      dir += "e";
     }         
     
-    if(c.includes("e") || c.includes("s")){                         
+    if(dir.includes("e") || dir.includes("s")){                         
       // if we are hovering at the border area (c is not empty)
-      elmnt.style.cursor = c + "-resize"; // set the according cursor
+      resizeElmnt.style.cursor = dir + "-resize"; // set the according cursor
       resizeAble = true;
     }else{
-      elmnt.style.cursor = 'default';
+      resizeElmnt.style.cursor = 'default';
       resizeAble = false;
     }
-    elmnt.addEventListener("mousedown",initResize, false);
-    elmnt.addEventListener("mouseup", stopResize, false);
-  }else if (onResize && elmnt){
-    if (c.includes("e")){
-      elmnt.style.width = (startWidth + e.clientX - startX) + 'px';
+    resizeElmnt.addEventListener("mousedown",initResize, false);
+    resizeElmnt.addEventListener("mouseup", stopResize, false);
+  }else if (onResize && resizeElmnt){
+    if (dir.includes("e")){
+      resizeElmnt.style.width = (startWidth + e.clientX - startX) + 'px';
     }
-    if (c.includes("s")){
-      elmnt.style.height = (startHeight + e.clientY - startY) + 'px';
+    if (dir.includes("s")){
+      resizeElmnt.style.height = (startHeight + e.clientY - startY) + 'px';
     }
   }
 }
-
+//---------------------------mouseup handler---------------------------------//
 function stopResize(e){
-  if (onResize && mode === 4 && elmnt){
-    elmnt.style.cursor = 'default';
+  if (onResize && mode === 4 && resizeElmnt){
+    resizeElmnt.style.cursor = 'default';
     onResize = false;
     resizeAble = false;
     closeBorder(oldElmnt);
-    elmnt.removeEventListener('mousemove', doResize, false);
-    elmnt.removeEventListener('mouseup', stopResize, false);
+    resizeElmnt.removeEventListener('mousemove', doResize, false);
+    resizeElmnt.removeEventListener('mouseup', stopResize, false);
   }
 }
 
@@ -227,7 +223,7 @@ function closeWidget(){
 }
 
 function closeBorder(ele){
-  old = document.getElementsByClassName("border")[0];
+  var old = document.getElementsByClassName("border")[0];
   
   if (old && ele){
     old.style.border = null;
@@ -242,10 +238,7 @@ function closeBorder(ele){
 }
 
 function closeChatBox(){
-  old = document.getElementById("chatBotOuter");
-  if(old){
-    document.body.removeChild(old);
-  }
+  closeById("chatBotOuter");
 }
 
 //---------------------------create basic box element---------------------------------//
@@ -368,8 +361,10 @@ function createInputBoxJs(x, y, element){
   document.querySelector("#inputbox").appendChild(submit);
 }
 
+//---------------------------chatbot tool---------------------------------//
+var chatBotSelector = true;
 function createChatBox(){
-  outer = document.createElement("div");
+  var outer = document.createElement("div");
   outer.id = "chatBotOuter";
   document.body.appendChild(outer);
   
@@ -379,39 +374,22 @@ function createChatBox(){
   outer.style.padding = "20px";
   outer.style.width = "300px";
   
-  // chatbox = document.createElement("div");
-  // chatbox.id = "chatBotCommandDescription";
-  // outer.appendChild(chatbox);
-  
-  // inputBox = document.createElement("div");
-  // inputBox.id = "inputBox";
-  // outer.appendChild(inputBox);
-  // inputBox.style = "position: relative; display: inline-block";
-  
-  input = document.createElement("input");
+  var input = document.createElement("input");
   input.type = "text";
   input.id = "humanInput";
   input.placeholder = "i.e Change the font size";
   outer.appendChild(input);
   input.style = "font-size:14px; border: 1px solid #ddd; width: 250px;";
   
-  // submitButton = document.createElement("button");
-  // submitButton.id = "submitButton";
-  // submitButton.innerHTML = "Submit";
-  // outer.appendChild(submitButton);
-  // submitButton.style = "border: 1px solid #ddd; background-color: darkcyan; color: #fff; padding: 8px; cursor: pointer; float: right;";
-  
-  
-  
-  chat = document.createElement("div");
+  var chat = document.createElement("div");
   chat.id = "chatBot";
   outer.appendChild(chat);
   
-  indicator = document.createElement("div");
+  var indicator = document.createElement("div");
   indicator.id = "chatBotThinkingIndicator";
   chat.appendChild(indicator);
   
-  hist = document.createElement("div");
+  var hist = document.createElement("div");
   hist.id = "chatBotHistory";
   hist.style = "overflow-x: scroll";
   chat.appendChild(hist);
@@ -481,12 +459,13 @@ divs.forEach(div => {
   div.addEventListener("mousedown", dragStart);
 });
 
+//---------------------------attributes for drag tool---------------------------------//
 var moving = false;
 var lastX = null, lastY = null;
 var translateX = 0, translateY = 0;
 var div, selector;
 var rectX, rectY;
-
+//---------------------------drag: mousedown handler---------------------------------//
 function dragStart(e) {
   if (e.target.tagName.toLowerCase() === 'img'){
     e.preventDefault();
@@ -497,7 +476,7 @@ function dragStart(e) {
     rectX = div.getBoundingClientRect()['x'];
     rectY = div.getBoundingClientRect()['y'];
     
-    transformValue = window.getComputedStyle(div).transform;
+    var transformValue = window.getComputedStyle(div).transform;
     if (transformValue){
       var matrix = new WebKitCSSMatrix(transformValue);
       translateX = matrix.m41;
@@ -512,7 +491,7 @@ function dragStart(e) {
   }
   
 }
-
+//---------------------------drag: mousemove handler---------------------------------//
 function drag(e) {
   if (moving) {
     if (lastX&&lastY){
@@ -527,7 +506,7 @@ function drag(e) {
     
   }
 }
-
+//---------------------------drag: mouseup handler---------------------------------//
 function dragEnd(e) {
   
   if (moving) {
