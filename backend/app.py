@@ -24,13 +24,13 @@ def paraphrase_text(text):
 
 @flask_app.route("/db/insertLog", methods = ["POST"])
 def test():
-    mycol = db["log"]
+    logCol = db["log"]
     body = request.json
 
-    mydict = { "userId": body["userId"], "event": body["event"], "details": body["details"] }
+    log = { "userId": body["userId"], "event": body["event"], "details": body["details"] }
 
-    x = mycol.insert_one(mydict)
-    return str(x.inserted_id)
+    result = logCol.insert_one(log)
+    return str(result.inserted_id)
 
 if __name__ == "__main__":
     flask_app.run(debug=True)
