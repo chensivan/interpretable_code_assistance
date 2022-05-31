@@ -1,27 +1,29 @@
 const vscode = acquireVsCodeApi();
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
+const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
+"icon-delete", "icon-js", "icon-chat"];
+
 var icons = document.getElementsByClassName('icon');
 document.getElementById("icon-tip").classList.add("selected");
 for (var i = 0; i < icons.length; i++) {
-  icons[i].addEventListener('click', handleSelectIcon);
+  icons[i].addEventListener('click', handleSelectedIcon);
 }
-const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
-"icon-delete", "icon-js", "icon-chat"];
+
 // set tool bar icon handler
-function handleSelectIcon(event){
+function handleSelectedIcon(event){
   var icon = event.target;
   
   if (iconIds.includes(icon.id)){
     mode = iconIds.indexOf(icon.id); 
-    selectIcon(icon.id);
+    toggleSelectedIcon(icon.id);
     if(mode == 7){
       createChatBox();
     }
   }
 }
 
-function selectIcon(iconName){
+function toggleSelectedIcon(iconName){
   iconIds.map(name => {
     document.getElementById(name).classList.remove("selected");
     if(name === iconName){
@@ -39,10 +41,10 @@ var chatBotSelector = true;
 
 //---------------------------variables for attribute editor tool---------------------------------//
 var widget;
-var initX;
-var initY;
-var finX;
-var finY;
+var widgetInitX;
+var widgetInitY;
+var widgetFinX;
+var widgetFinY;
 var ismousedown = false;
 
 //---------------------------click handler---------------------------------//
@@ -92,13 +94,13 @@ document.addEventListener("mousedown", function(event) {
     closeWidget();
     
     ismousedown = true;
-    initX = event.pageX;
-    initY = event.pageY;
+    widgetInitX = event.pageX;
+    widgetInitY = event.pageY;
     //create div element
     widget = document.createElement("div");
     widget.style.position = "absolute";
-    widget.style.top = initY+"px";
-    widget.style.left = initX+"px";
+    widget.style.top = widgetInitY+"px";
+    widget.style.left = widgetInitX+"px";
     widget.classList.add("widget");
     widget.id = "widget";
     document.body.appendChild(widget);
@@ -109,10 +111,10 @@ document.addEventListener("mousedown", function(event) {
 //---------------------------mousemove handler---------------------------------//
 document.addEventListener("mousemove", function(event) {
   if (ismousedown) {
-    finX = event.pageX;
-    finY = event.pageY;
-    widget.style.width = finX - initX + "px";
-    widget.style.height = finY - initY + "px";
+    widgetFinX = event.pageX;
+    widgetFinY = event.pageY;
+    widget.style.width = widgetFinX - widgetInitX + "px";
+    widget.style.height = widgetFinY - widgetInitY + "px";
     widget.style.display = "block";
     widget.style.border = '2px dashed #ccc';
   }
@@ -120,13 +122,15 @@ document.addEventListener("mousemove", function(event) {
 
 //---------------------------mouseup handler---------------------------------//
 document.addEventListener("mouseup", function(event) {
-  if(ismousedown && initX != finX && initY != finY){
+  if(ismousedown && widgetInitX !== widgetFinX && widgetInitY !== widgetFinY){
     ismousedown = false;
-    var style = "absolute position, position at top "+initY+"px, left "+initX+"px with width "+(finX-initX)+"px and height "+(finY-initY)+"px";
-    createInputBox(initX, finY, style);
+    let style = "absolute position, position at top "+widgetInitY+"px, left "+widgetInitX+"px with width "+(widgetFinX - widgetInitX)+"px and height "+(widgetFinY - widgetInitY)+"px";
+    createInputBox(widgetInitX, widgetFinY, style);
   }
 }
 );
+
+
 var elmnt;
 var c;
 var resizeAble = false; var onResize = false;
@@ -207,18 +211,19 @@ function stopResize(e){
 
 
 //---------------------------close elements---------------------------------//
-function closeInputBox(){
-  let inputBox = document.getElementById("inputbox");
-  if (inputBox){
-    inputBox.parentElement.removeChild(inputBox);
+function closeById(id){
+  let elmnt = document.getElementById(id);
+  if (elmnt){
+    elmnt.parentElement.removeChild(elmnt);
   }
 }
 
+function closeInputBox(){
+  closeById("inputbox");
+}
+
 function closeWidget(){
-  let oldWidget = document.getElementById("widget");
-  if(oldWidget){
-    document.body.removeChild(oldWidget);
-  }
+  closeById("widget");
 }
 
 function closeBorder(ele){
