@@ -43,6 +43,19 @@ var widgetInitY;
 var widgetFinX;
 var widgetFinY;
 var ismousedown = false;
+//---------------------------variables for resize tool---------------------------------//
+var resizeElmnt;
+var dir;
+var resizeAble = false; var onResize = false;
+var rect;
+var startWidth, startHeight, startX, startY;
+var oldElmnt;
+//---------------------------attributes for drag tool---------------------------------//
+var moving = false;
+var lastX = null, lastY = null;
+var translateX = 0, translateY = 0;
+var div, selector;
+var rectX, rectY;
 
 //---------------------------click handler---------------------------------//
 document.addEventListener("click", function(event){
@@ -127,19 +140,12 @@ document.addEventListener("mouseup", function(event) {
 }
 );
 
-//---------------------------variables for resize tool---------------------------------//
-var resizeElmnt;
-var dir;
-var resizeAble = false; var onResize = false;
-var rect;
-var startWidth, startHeight, startX, startY;
-var oldElmnt;
 //---------------------------resize tool---------------------------------//
 function resizeStart(){
   resizeElmnt = document.getElementsByClassName("border")[0];
   resizeElmnt.addEventListener('mousemove', doResize, false);
 }
-//---------------------------mousedown handler---------------------------------//
+//---------------------------mousedown handler for resize---------------------------------//
 function initResize(e) {
   if (e.target.tagName.toLowerCase() === 'img'){
     e.preventDefault();
@@ -153,20 +159,18 @@ function initResize(e) {
     resizeAble = false;
   }
 }
-//---------------------------mousemove handler---------------------------------//
+//---------------------------mousemove handler for resize---------------------------------//
 function doResize(e){
-  var delta = 5;
+  let delta = 5;
   
   if (!onResize && resizeElmnt){
     rect = resizeElmnt.getBoundingClientRect();
-    var x = e.clientX - rect.left,  
+    let x = e.clientX - rect.left,  
     y = e.clientY - rect.top,     
     w = rect.right - rect.left,
     h = rect.bottom - rect.top;
     
     dir = "";
-    // if( y > h - delta) c += "s";
-    // if(x > w - delta) c += "e";
     if( y > h - delta){
       dir += "s";
     }
@@ -193,7 +197,7 @@ function doResize(e){
     }
   }
 }
-//---------------------------mouseup handler---------------------------------//
+//---------------------------mouseup handler for resize---------------------------------//
 function stopResize(e){
   if (onResize && mode === 4 && resizeElmnt){
     resizeElmnt.style.cursor = 'default';
@@ -223,7 +227,7 @@ function closeWidget(){
 }
 
 function closeBorder(ele){
-  var old = document.getElementsByClassName("border")[0];
+  let old = document.getElementsByClassName("border")[0];
   
   if (old && ele){
     old.style.border = null;
@@ -261,7 +265,7 @@ function createInputBox(x, y, style){
   
   let submit = document.getElementById("inputbox-submit");
   submit.addEventListener("click", function() {
-    var text = document.getElementById("inputbox-input");
+    let text = document.getElementById("inputbox-input");
     if(text.value){
       vscode.postMessage({
         type: "onInsert",
@@ -364,7 +368,7 @@ function createInputBoxJs(x, y, element){
 //---------------------------chatbot tool---------------------------------//
 var chatBotSelector = true;
 function createChatBox(){
-  var outer = document.createElement("div");
+  let outer = document.createElement("div");
   outer.id = "chatBotOuter";
   document.body.appendChild(outer);
   
@@ -374,27 +378,27 @@ function createChatBox(){
   outer.style.padding = "20px";
   outer.style.width = "300px";
   
-  var input = document.createElement("input");
+  let input = document.createElement("input");
   input.type = "text";
   input.id = "humanInput";
   input.placeholder = "i.e Change the font size";
   outer.appendChild(input);
   input.style = "font-size:14px; border: 1px solid #ddd; width: 250px;";
   
-  var chat = document.createElement("div");
+  let chat = document.createElement("div");
   chat.id = "chatBot";
   outer.appendChild(chat);
   
-  var indicator = document.createElement("div");
+  let indicator = document.createElement("div");
   indicator.id = "chatBotThinkingIndicator";
   chat.appendChild(indicator);
   
-  var hist = document.createElement("div");
+  let hist = document.createElement("div");
   hist.id = "chatBotHistory";
   hist.style = "overflow-x: scroll";
   chat.appendChild(hist);
   
-  var config = {
+  let config = {
     botName: 'Bot',
     inputs: '#humanInput',
     inputCapabilityListing: true,
@@ -459,12 +463,6 @@ divs.forEach(div => {
   div.addEventListener("mousedown", dragStart);
 });
 
-//---------------------------attributes for drag tool---------------------------------//
-var moving = false;
-var lastX = null, lastY = null;
-var translateX = 0, translateY = 0;
-var div, selector;
-var rectX, rectY;
 //---------------------------drag: mousedown handler---------------------------------//
 function dragStart(e) {
   if (e.target.tagName.toLowerCase() === 'img'){
@@ -476,7 +474,7 @@ function dragStart(e) {
     rectX = div.getBoundingClientRect()['x'];
     rectY = div.getBoundingClientRect()['y'];
     
-    var transformValue = window.getComputedStyle(div).transform;
+    let transformValue = window.getComputedStyle(div).transform;
     if (transformValue){
       var matrix = new WebKitCSSMatrix(transformValue);
       translateX = matrix.m41;
@@ -495,8 +493,8 @@ function dragStart(e) {
 function drag(e) {
   if (moving) {
     if (lastX&&lastY){
-      var pX = e.clientX - lastX;
-      var pY = e.clientY - lastY;
+      let pX = e.clientX - lastX;
+      let pY = e.clientY - lastY;
       translateX += pX;
       translateY += pY;
       div.style.transform = "translate(" + translateX + "px, " + translateY + "px)";
@@ -508,7 +506,6 @@ function drag(e) {
 }
 //---------------------------drag: mouseup handler---------------------------------//
 function dragEnd(e) {
-  
   if (moving) {
     moving = false;
     div.style.position = "absolute";
