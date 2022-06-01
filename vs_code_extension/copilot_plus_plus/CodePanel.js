@@ -106,6 +106,14 @@ class CodePanel {
             this.log("user1", "change attributes", data.old+" to "+data.new);
             break;
           }
+          case "onEdit": {
+            if (!data.old || !data.new) {
+              return;
+            }
+            this._replaceInEditor(data.new, data.old);
+            this.log("user1", "edit ", data.old+" to "+data.new);
+            break;
+          }
           case "delete":{
             if (!data.value) {
               return;

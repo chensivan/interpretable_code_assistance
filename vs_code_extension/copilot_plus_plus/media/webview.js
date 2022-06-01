@@ -271,7 +271,7 @@ function createBasicBox(x, y){
   return box;
 }
 //---------------------------set style tools---------------------------------//
-function createStylePreset(x, y, element){
+/*function createStylePreset(x, y, element){
   closeInputBox();
   let inputbox = createBasicBox(x, y);
   inputbox.innerHTML = "<span style='background:white'>"+element.tagName+"</span><input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
@@ -291,7 +291,7 @@ function createStylePreset(x, y, element){
   close.addEventListener("click", function(){
     closeInputBox();
   });
-}
+}*/
 //---------------------------insert tools---------------------------------//
 function createInputBox(x, y, style){
   closeInputBox();
@@ -351,6 +351,22 @@ function createEditBox(x, y, element){
   if(element.tagName !== "BODY"){
     let input = document.getElementById("inputbox-input");
     input.value = element.outerHTML;
+    let submit = document.getElementById("inputbox-submit");
+    let close = document.getElementById("inputbox-close");
+    submit.addEventListener("click", function(){
+      let input = document.getElementById("inputbox-input");
+      vscode.postMessage({
+        type: "onEdit",
+        new: input.value,
+        old: element.outerHTML
+      })
+      element.outerHTML = input.value;
+      closeInputBox();
+    });
+    close.addEventListener("click", function(){
+      closeInputBox();
+    }
+    );
   }
 }
 
