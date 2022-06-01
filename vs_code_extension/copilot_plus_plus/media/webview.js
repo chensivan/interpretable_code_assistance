@@ -64,7 +64,7 @@ document.addEventListener("click", function(event){
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && event.target.parentElement.id !== "chatBotOuter"){
     if (mode == 0){
-      createInfoBox(event.pageX, event.pageY, event.target);
+      createEditBox(event.pageX, event.pageY, event.target);
     }
     else if (mode == 5 && event.target.tagName !== "BODY"){
       createDeleteBox(event.pageX, event.pageY, event.target)
@@ -97,7 +97,7 @@ document.addEventListener("click", function(event){
 });
 
 //---------------------------double click handler---------------------------------//
-document.addEventListener('contextmenu', function (e) {
+/*document.addEventListener('contextmenu', function (e) {
   if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox"
   && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
   && (event.target.tagName !== "HTML") 
@@ -107,7 +107,7 @@ document.addEventListener('contextmenu', function (e) {
     createStylePreset(e.pageX, e.pageY, e.target);
   }
 }
-});
+});*/
 
 //---------------------------mousedown handler---------------------------------//
 document.addEventListener("mousedown", function(event) {
@@ -321,13 +321,12 @@ function createInputBox(x, y, style){
   });
 }
 
-//---------------------------tips tool---------------------------------//
+//---------------------------info tool---------------------------------//
 function createInfoBox(x, y, element){
   closeInputBox();
   let inputbox = createBasicBox(x, y);
   inputbox.style.backgroundColor = 'white';
   inputbox.style.border = '1px solid black';
-  inputbox.id = "inputbox";
   if(element.tagName !== "BODY"){
     inputbox.innerText = element.outerHTML;
   }
@@ -335,6 +334,24 @@ function createInfoBox(x, y, element){
     inputbox.innerText = "document body";
   }
   document.body.appendChild(inputbox);
+}
+
+
+//---------------------------tip tool---------------------------------//
+function createEditBox(x, y, element){
+  closeInputBox();
+  let inputbox = createBasicBox(x, y);
+  if(element.tagName !== "BODY"){
+    inputbox.innerHTML = "<textarea style='background:white' id='inputbox-input' rows='5'></textarea><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+  }
+  else{
+    inputbox.innerText = "document body";
+  }
+  document.body.appendChild(inputbox);
+  if(element.tagName !== "BODY"){
+    let input = document.getElementById("inputbox-input");
+    input.value = element.outerHTML;
+  }
 }
 
 //---------------------------delete tool---------------------------------//
