@@ -1,9 +1,11 @@
 # import numpy as np
+from sqlite3 import Timestamp
 from flask import Flask, request
 import json
 import nlpcloud
 import pymongo
 import json
+import datetime
 
 # Create flask app
 flask_app = Flask(__name__)
@@ -23,14 +25,40 @@ def paraphrase_text(text):
     return paraphrased_text
 
 @flask_app.route("/db/insertLog", methods = ["POST"])
-def test():
+def insertLog():
     logCol = db["log"]
     body = request.json
 
-    log = { "userId": body["userId"], "event": body["event"], "details": body["details"] }
+    log = { "userId": body["userId"], "event": body["event"], 
+    "details": body["details"] , "createDate": datetime.datetime.now(), "updateDate": datetime.datetime.now() }
 
     result = logCol.insert_one(log)
     return str(result.inserted_id)
+
+@flask_app.route("/db/updatePreset", methods = ["POST"])
+def updatePreset():
+    presetCol = db["preset"]
+    body = request.json
+
+    key = {'userId':body["userId"], "tag":body["tag"]}
+    data = {'userId':body["userId"], "tag":body["tag"], "style": body["style"], 'updateDate':datetime.datetime.now()};
+    result = presetCol.update(key, data, upsert=True); 
+
+    return str(result)
+
+@flask_app.route("/db/getPreset", methods = ["GET"])
+def getPreset():
+    presetCol = db["preset"]
+    userId = request.args.get('userId')
+    tag = request.args.get('tag')
+
+    key = {'userId':userId, "tag": tag}
+
+    cursor = presetCol.find(key); 
+    results = []
+    for result in cursor:
+        results.append(result)
+    return json.dumps(results[0], default=str)
 
 if __name__ == "__main__":
     flask_app.run(debug=True)
