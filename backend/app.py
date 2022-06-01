@@ -35,6 +35,18 @@ def insertLog():
     result = logCol.insert_one(log)
     return str(result.inserted_id)
 
+@flask_app.route("/db/getLogs", methods = ["GET"])
+def getLogs():
+    logCol = db["log"]
+    userId = request.args.get('userId')
+
+    cursor = logCol.find({"userId": userId})
+    results = []
+    for result in cursor:
+        results.append(result)
+    return json.dumps(results[0], default=str)
+
+
 @flask_app.route("/db/updatePreset", methods = ["POST"])
 def updatePreset():
     presetCol = db["preset"]
