@@ -127,14 +127,19 @@ class CodePanel {
             this.log("user1", "add listener", data.event+", "+data.name+", "+data.script);
             break;
           }
+          case "savePreset":{
+            if (!data.tag || !data.style) {
+              return;
+            }
+            this.updatePreset("user1", data.tag, data.style);
+          }
           case "onError": {
             if (!data.value) {
               return;
             }
             vscode.window.showErrorMessage(data.value);
             break;
-          }
-          
+          }  
         }
       });
     }
@@ -146,6 +151,23 @@ class CodePanel {
       body: JSON.stringify({userId: userId, event:event, details:details})
       })
   }
+
+  updatePreset(userId, tag, style){
+    fetch("http://127.0.0.1:5000/db/updatePreset", {
+    method: 'POST', 
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({userId: userId, tag:tag, style:style})
+    })
+}
+
+async getPreset(userId, tag){
+  fetch("http://127.0.0.1:5000/db/getPreset?userId="+userId+"&tag="+tag, {
+  method: 'GET'
+  }).then(res => res.json())
+  .then(data => {
+    return data;
+  })
+}
   
   //Print comment to the editor
   _printCommentToEditor(comment){
