@@ -156,14 +156,13 @@ document.addEventListener("mouseup", function(event) {
 //---------------------------resize tool---------------------------------//
 function resizeStart(){
   resizeElmnt = document.getElementsByClassName("border")[0];
+  resizeElmnt.onDragStart = function() { return false; };
   resizeElmnt.addEventListener('mousemove', doResize, false);
 }
 //---------------------------mousedown handler for resize---------------------------------//
 function initResize(e) {
-  if (e.target.tagName.toLowerCase() === 'img'){
-    e.preventDefault();
-  }
   if (mode == 4 && resizeAble && resizeElmnt && dir != "" && resizeElmnt.id !== "navbar" && resizeElmnt.parentElement.id !== "navbar"){
+    e.preventDefault();
     startX = e.clientX;
     startY = e.clientY;
     startWidth = rect.width;
@@ -219,6 +218,7 @@ function stopResize(e){
     closeBorder(oldElmnt);
     resizeElmnt.removeEventListener('mousemove', doResize, false);
     resizeElmnt.removeEventListener('mouseup', stopResize, false);
+    e.returnValue = true;
   }
 }
 
@@ -504,12 +504,9 @@ divs.forEach(div => {
 
 //---------------------------drag: mousedown handler---------------------------------//
 function dragStart(e) {
-  if (e.target.tagName.toLowerCase() === 'img'){
-    e.preventDefault();
-  }
   if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
+    e.preventDefault();
     div = e.target;
-    
     rectX = div.getBoundingClientRect()['x'];
     rectY = div.getBoundingClientRect()['y'];
     
@@ -545,6 +542,7 @@ function drag(e) {
 }
 //---------------------------drag: mouseup handler---------------------------------//
 function dragEnd(e) {
+  e.returnValue = true;
   if (moving) {
     moving = false;
     div.style.position = "absolute";
@@ -561,6 +559,7 @@ function dragEnd(e) {
     
     translateX = 0;
     translateY = 0;
+    
   }
 }
 
