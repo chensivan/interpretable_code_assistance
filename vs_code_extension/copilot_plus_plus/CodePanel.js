@@ -152,6 +152,15 @@ class CodePanel {
       })
   }
 
+  async getLog(userId){
+    fetch("http://127.0.0.1:5000/db/getLogs?userId="+userId, {
+    method: 'GET'
+    }).then(res => res.json())
+    .then(data => {
+      return data;
+    })
+  }
+
   updatePreset(userId, tag, style){
     fetch("http://127.0.0.1:5000/db/updatePreset", {
     method: 'POST', 
