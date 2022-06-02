@@ -96,19 +96,6 @@ document.addEventListener("click", function(event){
   }
 });
 
-//---------------------------double click handler---------------------------------//
-/*document.addEventListener('contextmenu', function (e) {
-  if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox"
-  && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
-  && (event.target.tagName !== "HTML") 
-  && event.target.id !== "chatBotOuter" && event.target.parentElement.id !== "chatBotOuter"){
-  if(mode == 0){
-    e.preventDefault();
-    createStylePreset(e.pageX, e.pageY, e.target);
-  }
-}
-});*/
-
 //---------------------------mousedown handler---------------------------------//
 document.addEventListener("mousedown", function(event) {
   if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
@@ -270,28 +257,6 @@ function createBasicBox(x, y){
   box.style.zIndex = '100';
   return box;
 }
-//---------------------------set style tools---------------------------------//
-/*function createStylePreset(x, y, element){
-  closeInputBox();
-  let inputbox = createBasicBox(x, y);
-  inputbox.innerHTML = "<span style='background:white'>"+element.tagName+"</span><input type='text' id='inputbox-input'/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
-  document.body.appendChild(inputbox);
-  let input = document.getElementById("inputbox-input");
-  input.value = element.style.cssText;
-  let submit = document.getElementById("inputbox-submit");
-  let close = document.getElementById("inputbox-close");
-  submit.addEventListener("click", function(){
-    vscode.postMessage({
-      type: "savePreset",
-      tag: element.tagName,
-      style: input.value
-    })
-    closeInputBox();
-  });
-  close.addEventListener("click", function(){
-    closeInputBox();
-  });
-}*/
 //---------------------------insert tools---------------------------------//
 function createInputBox(x, y, style){
   closeInputBox();
@@ -595,5 +560,4 @@ function dragEnd(e) {
     
   }
 }
-
 
