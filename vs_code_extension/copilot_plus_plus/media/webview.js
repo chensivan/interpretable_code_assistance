@@ -59,10 +59,10 @@ var rectX, rectY;
 
 //---------------------------click handler---------------------------------//
 document.addEventListener("click", function(event){
-  if (event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox"
-  && event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"
+  if (event.target.id !== "inputbox" && (!event.target.parentElement || event.target.parentElement.id !== "inputbox")
+  && event.target.id !== "navbar" && (!event.target.parentElement ||event.target.parentElement.id !== "navbar")
   && (event.target.tagName !== "HTML") 
-  && event.target.id !== "chatBotOuter" && event.target.parentElement.id !== "chatBotOuter"
+  && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
   && event.target.id !== "inputbox-event"){
     if (mode == 0){
       createEditBox(event.pageX, event.pageY, event.target);
@@ -99,8 +99,8 @@ document.addEventListener("click", function(event){
 
 //---------------------------mousedown handler---------------------------------//
 document.addEventListener("mousedown", function(event) {
-  if(mode == 2 && event.target.id !== "inputbox" && event.target.parentElement.id !== "inputbox" && 
-  event.target.id !== "navbar" && event.target.parentElement.id !== "navbar"){
+  if(mode == 2 && event.target.id !== "inputbox" && (!event.target.parentElement || event.target.parentElement.id !== "inputbox") && 
+  event.target.id !== "navbar" && (!event.target.parentElement || event.target.parentElement.id !== "navbar")){
     closeInputBox();
     closeWidget();
     
