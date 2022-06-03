@@ -44,7 +44,7 @@ def getLogs():
     results = []
     for result in cursor:
         results.append(result)
-    return json.dumps(results[0], default=str)
+    return json.dumps(results, default=str)
 
 
 @flask_app.route("/db/updatePreset", methods = ["POST"])
