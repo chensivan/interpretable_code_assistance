@@ -6,6 +6,10 @@ import nlpcloud
 import pymongo
 import json
 import datetime
+from txtai.embeddings import Embeddings
+
+# Create embeddings model, backed by sentence-transformers & transformers
+embeddings = Embeddings({"path": "sentence-transformers/nli-mpnet-base-v2"})
 
 # Create flask app
 flask_app = Flask(__name__)
@@ -29,11 +33,17 @@ def insertLog():
     logCol = db["log"]
     body = request.json
 
-    log = { "userId": body["userId"], "event": body["event"], 
-    "details": body["details"] , "createDate": datetime.datetime.now(), "updateDate": datetime.datetime.now() }
+    log = { 
+        "userId": body["userId"], # user id
+        "event": body["event"], # event title
+        "label": body["label"], # label that user entered
+        "text": body["text"], # text to feed to copilot
+        "details": body["details"] , # something to link the label and element? I guess maybe the id of the element?
+        "createDate": datetime.datetime.now() # timestamp
+        }
 
     result = logCol.insert_one(log)
-    return str(result.inserted_id)
+    return str(result.inserted_id) # return the id of the inserted document
 
 @flask_app.route("/db/getLogs", methods = ["GET"])
 def getLogs():
@@ -46,31 +56,28 @@ def getLogs():
         results.append(result)
     return json.dumps(results, default=str)
 
-
-@flask_app.route("/db/updatePreset", methods = ["POST"])
-def updatePreset():
-    presetCol = db["preset"]
-    body = request.json
-
-    key = {'userId':body["userId"], "tag":body["tag"]}
-    data = {'userId':body["userId"], "tag":body["tag"], "style": body["style"], 'updateDate':datetime.datetime.now()};
-    result = presetCol.update(key, data, upsert=True); 
-
-    return str(result)
-
-@flask_app.route("/db/getPreset", methods = ["GET"])
-def getPreset():
-    presetCol = db["preset"]
+# testing api
+@flask_app.route("/similarity", methods = ["GET"])
+def similarity():
     userId = request.args.get('userId')
-    tag = request.args.get('tag')
+    txt = request.args.get('txt')
 
-    key = {'userId':userId, "tag": tag}
+    data = getAllLabels(userId)
+    uid = embeddings.similarity(txt, data)
+    return json.dumps(uid, default=str)
 
-    cursor = presetCol.find(key); 
+def getAllLabels(userId):
+    key = {'userId':userId}
+
+    logCol = db["log"]
+    cursor = logCol.find(key); 
     results = []
     for result in cursor:
-        results.append(result)
-    return json.dumps(results[0], default=str)
+        if "label" in result:
+            results.append(result["label"])
+    return results
+
+
 
 if __name__ == "__main__":
     flask_app.run(debug=True)
