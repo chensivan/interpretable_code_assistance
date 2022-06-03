@@ -87,6 +87,7 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new, data.old);
+            //TODO: add specific width and height
             if (data.opt == 0){
               this.log("user1", "drag", data.old+" to "+data.new);
             }else if (data.opt == 1){
@@ -183,8 +184,8 @@ class CodePanel {
     })
   }
 
-  getHi(){
-    return 'hi';
+  greeting(){
+    return 'saying hi';
   }
 
 async getPreset(userId, tag){
@@ -291,9 +292,9 @@ async getPreset(userId, tag){
         //Parse the file into a string
         CodePanel.nonce = nonce;
 
-        //Get log
-        // var log = this.getLog('user1');
-        // console.log(log);
+        //TODO:Get log
+        // var userId = "user1";
+        var json = this.getLog('user1');
 
         var html = 
         `
@@ -301,7 +302,7 @@ async getPreset(userId, tag){
         <meta charset="UTF-8">
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
         </head>
-        ` + 
+        ` + json +
         `
         <div class="navbar" id="navbar">Tools
         <img class="icon" id="icon-tip" src="${inlineIcon}"/>

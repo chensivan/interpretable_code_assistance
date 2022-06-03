@@ -1,10 +1,10 @@
-// import {CodePanel} from "../CodePanel";
+// import CodePanel from './CodePanel';
+
+// console.log(CodePanel.greeting());
 
 const vscode = acquireVsCodeApi();
 
 //---------------------------SidePanel(test)---------------------------------//
-
-console.log(Object.keys(json[0]));
 var sidePanel = document.getElementById("sidePanel");
 json.forEach(function(element){
     var hstBlock = document.createElement('div');
@@ -29,9 +29,9 @@ json.forEach(function(element){
       if (key === '_id'){
         val = val["$oid"];
       }else if (key == 'createDate' || key == 'updateDate'){
-        val = Date(Number(val["$date"]["$numberLong"])).toString();
+        val = Date(Number(val["$date"]["$numberLong"]));
       }
-      tag.innerHTML = key + ": " + val;
+      tag.innerHTML = key + ": " + val.toString().replace(/</g, '&lt;');
       hstBlock.appendChild(tag);
     }
 
@@ -100,7 +100,8 @@ document.addEventListener("click", function(event){
   && event.target.id !== "navbar" && (!event.target.parentElement ||event.target.parentElement.id !== "navbar")
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
-  && event.target.id !== "inputbox-event"){
+  && event.target.id !== "inputbox-event"
+  && event.target.id !== "hstBlock" && event.target.parentElement.id !== "hstBlock"){
     if (mode == 0){
       createEditBox(event.pageX, event.pageY, event.target);
     }
