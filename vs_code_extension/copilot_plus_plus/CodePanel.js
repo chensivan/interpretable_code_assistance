@@ -87,6 +87,12 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new, data.old);
+            if (data.opt == 0){
+              this.log("user1", "drag", data.old+" to "+data.new);
+            }else if (data.opt == 1){
+              this.log("user1", "resize", data.old+" to "+data.new);
+            }
+            
             break;
           }
           case "onInsert": {

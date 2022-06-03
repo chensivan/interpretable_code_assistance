@@ -238,6 +238,7 @@ function closeBorder(ele){
       type: 'makeDrag',
       new: old.outerHTML,
       old: ele,
+      opt:1
     })
   }
 }
@@ -552,12 +553,14 @@ function dragEnd(e) {
   if (moving) {
     moving = false;
     div.style.position = "absolute";
+    // div.style.transform = null;x
     div.style.left = rectX + translateX;
     div.style.top = rectY + translateY;
     vscode.postMessage({
       type: 'makeDrag',
       new: defineSelector(div),
       old: selector,
+      opt: 0
     })
     
     lastX = null;
