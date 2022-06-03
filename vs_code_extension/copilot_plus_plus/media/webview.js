@@ -1,4 +1,41 @@
+// import {CodePanel} from "../CodePanel";
+
 const vscode = acquireVsCodeApi();
+
+//---------------------------SidePanel(test)---------------------------------//
+
+console.log(Object.keys(json[0]));
+var sidePanel = document.getElementById("sidePanel");
+json.forEach(function(element){
+    var hstBlock = document.createElement('div');
+    hstBlock.id = 'hstBlock';
+    hstBlock.classList.add('hstBlock');
+    hstBlock.style.padding = '20px';
+    hstBlock.style.margin = '10px';
+    hstBlock.style.backgroundColor = 'white';
+    hstBlock.style.radius = '5px';
+    sidePanel.appendChild(hstBlock);
+    hstBlock.addEventListener('mouseover', function(){
+        hstBlock.style.backgroundColor = '#e6e6e6';
+    });
+    hstBlock.addEventListener('mouseout', function(){
+        hstBlock.style.backgroundColor = 'white';
+    });
+
+    for (var key of Object.keys(element)) {
+      var tag = document.createElement('p');
+      hstBlock.appendChild(tag);
+      var val = element[key];
+      if (key === '_id'){
+        val = val["$oid"];
+      }else if (key == 'createDate' || key == 'updateDate'){
+        val = Date(Number(val["$date"]["$numberLong"])).toString();
+      }
+      tag.innerHTML = key + ": " + val;
+      hstBlock.appendChild(tag);
+    }
+
+});
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 

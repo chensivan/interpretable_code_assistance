@@ -42,6 +42,18 @@ html {
     height: auto;
   }
 
+  .sidePanel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100%;
+    background: #f5f5f5;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    overflow: scroll;
+  }
+
   .navbar {
     padding: 2px 0px;
     width: 240px;

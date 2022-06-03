@@ -181,7 +181,11 @@ class CodePanel {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({userId: userId, tag:tag, style:style})
     })
-}
+  }
+
+  getHi(){
+    return 'hi';
+  }
 
 async getPreset(userId, tag){
   fetch("http://127.0.0.1:5000/db/getPreset?userId="+userId+"&tag="+tag, {
@@ -265,7 +269,8 @@ async getPreset(userId, tag){
         //icons
         const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
         const chatBotSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.js"));
-        const webviewSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "webview.js"));
+        const jsonSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "log.js"));
+        // const webviewSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "webview.js"));
         const chatBotUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.css"));
         const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
         const inlineIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png"));
@@ -285,6 +290,11 @@ async getPreset(userId, tag){
         
         //Parse the file into a string
         CodePanel.nonce = nonce;
+
+        //Get log
+        // var log = this.getLog('user1');
+        // console.log(log);
+
         var html = 
         `
         <head>
@@ -303,11 +313,15 @@ async getPreset(userId, tag){
         <img class="icon" id="icon-delete" src="${deleteIcon}"/>
         <img class="icon" id="icon-chat" src="${chatIcon}"/>
         </div>
+        <div class="sidePanel" id="sidePanel">
+        <h1> History </h1>
+        </div>
         `+file.toString()+` 
         <link href="${stylesResetUri}" rel="stylesheet">
         <link href="${chatBotUri}" rel="stylesheet">
         <script src="${chatBotSrc}"></script>
-        <script nonce="${nonce}">` + jsFile.toString() + `
+        <script src="${jsonSrc}"></script>
+        <script type="module" nonce="${nonce}">` + jsFile.toString() + `
         </script>`;
         return html;
         
