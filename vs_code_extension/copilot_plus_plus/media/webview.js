@@ -1,5 +1,4 @@
 // import CodePanel from './CodePanel';
-
 // console.log(CodePanel.greeting());
 
 const vscode = acquireVsCodeApi();
@@ -276,7 +275,9 @@ function closeBorder(ele){
       type: 'makeDrag',
       new: old.outerHTML,
       old: ele,
-      opt:1
+      opt:1,
+      nlp: old.getAttribute("nlp"),
+      text: getCopilotText(old)
     })
   }
 }
@@ -311,7 +312,7 @@ function createInputBox(x, y, style){
       vscode.postMessage({
         type: "onInsert",
         value: text.value,
-        style: style
+        style: `style="${style}"`
       })
       closeInputBox();
     }
@@ -360,10 +361,14 @@ function createEditBox(x, y, element){
     let close = document.getElementById("inputbox-close");
     submit.addEventListener("click", function(){
       let input = document.getElementById("inputbox-input");
+      let newEle = document.createElement(element.tagName);
+      newEle.outerHTML = input.value;
       vscode.postMessage({
         type: "onEdit",
         new: input.value,
-        old: element.outerHTML
+        old: element.outerHTML,
+        nlp: element.getAttribute("nlp"),
+        text: getCopilotText(newEle)
       })
       element.outerHTML = input.value;
       closeInputBox();
@@ -384,9 +389,11 @@ function createDeleteBox(x, y, element){
   button.id = "inputbox-button";
   button.innerText = "delete "+element.tagName;
   button.addEventListener("click", function() {
-    vscode.postMessage({
+  vscode.postMessage({
       type: "delete",
-      value: element.outerHTML
+      value: element.outerHTML,
+      nlp: element.getAttribute("nlp"),
+      text: "" //since the user cleared the element, assume it is not the wanted style???
     })
     //remove child from body
     element.parentNode.removeChild(element);
@@ -425,15 +432,17 @@ function createInputBoxJs(x, y, element){
   submit.innerHTML = "Submit";
   
   submit.addEventListener("click", function() {
-    let temp = element.cloneNode(true);
-    temp.setAttribute(event.value, name.value);
-    vscode.postMessage({
+  let temp = element.cloneNode(true);
+  temp.setAttribute(event.value, name.value);
+  vscode.postMessage({
       type: "createjs",
       old: element.outerHTML,
       new: temp.outerHTML,
       event: event.value,
       name: name.value,
-      script: script.value
+      script: script.value,
+      nlp: element.getAttribute("nlp"),
+      text: getCopilotText(temp)
     })
     closeInputBox();
   });
@@ -518,7 +527,9 @@ function createInputBoxAttr(x, y, element){
       vscode.postMessage({
         type: "changeAttr",
         old: element.outerHTML,
-        new: newEle.outerHTML
+        new: newEle.outerHTML,
+        nlp: element.getAttribute("nlp"),
+        text: getCopilotText(newEle)
       })
       document.body.replaceChild(newEle, element);
       element = newEle;
@@ -598,7 +609,9 @@ function dragEnd(e) {
       type: 'makeDrag',
       new: defineSelector(div),
       old: selector,
-      opt: 0
+      opt: 0,
+      nlp: div.getAttribute("nlp"),
+      text: getCopilotText(div)
     })
     
     lastX = null;
@@ -714,3 +727,13 @@ var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
   "onresize", "onscroll", "onselect", "onchange", "onreset"]
 
 
+function getCopilotText(element){
+  let text = "";
+  let attrs = element.getAttributeNames().reduce((acc, name) => {
+    if(name !== "src"){
+      text += `${name}="${element.getAttribute(name)}, " `;
+    }
+    return {...acc, [name]: element.getAttribute(name)};
+  }, {});
+  return text;
+}

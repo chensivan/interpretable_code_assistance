@@ -88,10 +88,12 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             //TODO: add specific width and height
-            if (data.opt == 0){
-              this.log("user1", "drag", data.old+" to "+data.new);
-            }else if (data.opt == 1){
-              this.log("user1", "resize", data.old+" to "+data.new);
+            if (data.opt == 0 && data.nlp){
+              //this.log("user1", "drag", data.old+" to "+data.new);
+              this.log("user1", "drag", "", data.nlp, data.text);
+            }else if (data.opt == 1 && data.nlp){
+              //this.log("user1", "resize", data.old+" to "+data.new);
+              this.log("user1", "resize", "", data.nlp, data.text);
             }
             
             break;
@@ -111,7 +113,9 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new,data.old);
-            this.log("user1", "change attributes", data.old+" to "+data.new);
+            if(data.nlp){
+              this.log("user1", "change attributes", "", data.nlp, data.text);
+            }
             break;
           }
           case "onEdit": {
@@ -119,7 +123,9 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new, data.old);
-            this.log("user1", "edit ", data.old+" to "+data.new);
+            if(data.nlp){
+              this.log("user1", "edit", "", data.nlp, data.text);
+            }
             break;
           }
           case "delete":{
@@ -127,7 +133,10 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(" ",data.value);
-            this.log("user1", "delete", data.value);
+            if(data.nlp){
+              this.log("user1", "delete", "", data.nlp, data.text);
+            }
+            //this.log("user1", "delete", data.value);
             break;
           }
           case "createjs":{
@@ -140,7 +149,10 @@ class CodePanel {
             else{
               this._replaceInEditor(data.new, data.old);
             }
-            this.log("user1", "add listener", data.event+", "+data.name+", "+data.script);
+            if(data.nlp){
+              this.log("user1", "createjs", "", data.nlp, data.text);
+            }
+            //this.log("user1", "add listener", data.event+", "+data.name+", "+data.script);
             break;
           }
           case "onError": {

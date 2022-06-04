@@ -57,14 +57,11 @@ def getLogs():
     return json.dumps(results, default=str)
 
 # testing api
-@flask_app.route("/similarity", methods = ["GET"])
-def similarity():
-    userId = request.args.get('userId')
-    txt = request.args.get('txt')
-
+#@flask_app.route("/similarity", methods = ["GET"])
+def similarity(userId, txt):
     data = getAllLabels(userId)
-    uid = embeddings.similarity(txt, data)
-    return json.dumps(uid, default=str)
+    results = embeddings.similarity(txt, data)
+    return results, data#json.dumps(uid, default=str), 
 
 def getAllLabels(userId):
     key = {'userId':userId}
@@ -77,6 +74,23 @@ def getAllLabels(userId):
             results.append(result["label"])
     return results
 
+
+@flask_app.route("/db/getTextByNLP", methods = ["POST"])
+def getTextByNLP():
+    logCol = db["log"]
+    body = request.json
+
+    cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
+    similarities, allLabels = similarity(body["userId"], body["nlp"])
+    if similarities[0][1] > 0.5:
+        cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[0][0]]})
+        results = []
+        for result in cursor:
+            results.append(result)
+        newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
+        return json.dumps({"success": True, "text": newlist[0]["text"]}, default=str)
+    else:
+        return json.dumps({"success": False})
 
 
 if __name__ == "__main__":
