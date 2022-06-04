@@ -173,7 +173,7 @@ document.addEventListener("mousemove", function(event) {
 document.addEventListener("mouseup", function(event) {
   if(ismousedown && widgetInitX !== widgetFinX && widgetInitY !== widgetFinY){
     ismousedown = false;
-    let style = "absolute position, position at top "+widgetInitY+"px, left "+widgetInitX+"px with width "+(widgetFinX - widgetInitX)+"px and height "+(widgetFinY - widgetInitY)+"px";
+    let style = "position:absolute;top:"+widgetInitY+"px;left: "+widgetInitX+"px;width: "+(widgetFinX - widgetInitX)+"px;height: "+(widgetFinY - widgetInitY)+"px;";
     createInputBox(widgetInitX, widgetFinY, style);
   }
 }

@@ -100,9 +100,10 @@ class CodePanel {
             if (!data.value) {
               return;
             }
-            var comment = "<!-- "+data.value + "-->\n<!--"+data.style+"-->"
+            var comment = "<!-- "+data.value + "-->\n<!-- with "+data.style
+            +"-->\n<!--with an attribute called nlp and value \""+data.value+"\"-->"
             this._replaceInEditor(comment+"\n</body>", "</body>");
-            this.log("user1", "insert", data.value+" "+data.style);
+            this.log("user1", "insert", "", data.value, data.style);
             break;
           }
           case "changeAttr": {
@@ -142,12 +143,6 @@ class CodePanel {
             this.log("user1", "add listener", data.event+", "+data.name+", "+data.script);
             break;
           }
-          case "savePreset":{
-            if (!data.tag || !data.style) {
-              return;
-            }
-            this.updatePreset("user1", data.tag, data.style);
-          }
           case "onError": {
             if (!data.value) {
               return;
@@ -159,13 +154,14 @@ class CodePanel {
       });
     }
 
-    log(userId, event, details){
+    log(userId, event, details, label, text){
       fetch("http://127.0.0.1:5000/db/insertLog", {
       method: 'POST', 
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId: userId, event:event, details:details})
+      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text})
       })
   }
+
 
   async getLog(userId){
     fetch("http://127.0.0.1:5000/db/getLogs?userId="+userId, {
@@ -175,27 +171,6 @@ class CodePanel {
       return data;
     })
   }
-
-  updatePreset(userId, tag, style){
-    fetch("http://127.0.0.1:5000/db/updatePreset", {
-    method: 'POST', 
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({userId: userId, tag:tag, style:style})
-    })
-  }
-
-  greeting(){
-    return 'saying hi';
-  }
-
-async getPreset(userId, tag){
-  fetch("http://127.0.0.1:5000/db/getPreset?userId="+userId+"&tag="+tag, {
-  method: 'GET'
-  }).then(res => res.json())
-  .then(data => {
-    return data;
-  })
-}
   
   //Print comment to the editor
   _printCommentToEditor(comment){
