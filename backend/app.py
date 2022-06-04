@@ -14,7 +14,7 @@ embeddings = Embeddings({"path": "sentence-transformers/nli-mpnet-base-v2"})
 # Create flask app
 flask_app = Flask(__name__)
 client = nlpcloud.Client("fast-gpt-j", "aba1569138b09087b8a839356381010dd56d6679", gpu=True, lang="en")
-client = pymongo.MongoClient("mongodb+srv://user:user@cluster.menscjh.mongodb.net/?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb://user:user@ac-yuhr5lt-shard-00-00.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-01.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-02.menscjh.mongodb.net:27017/?ssl=true&replicaSet=atlas-n1yyxs-shard-0&authSource=admin&retryWrites=true&w=majority")
 db = client["copilot_plus_plus"]
 
 @flask_app.route("/paraphrase", methods = ["POST"])
