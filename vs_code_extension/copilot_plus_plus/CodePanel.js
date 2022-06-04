@@ -102,6 +102,10 @@ class CodePanel {
             if (!data.value) {
               return;
             }
+            //SAMPLE USAGE
+            /*this.getTextByNLP("user1", data.value).then(data => {
+              console.log(data);
+            })*/
             var comment = "<!-- "+data.value + "-->\n<!-- with "+data.style
             +"-->\n<!--with an attribute called nlp and value \""+data.value+"\"-->"
             this._replaceInEditor(comment+"\n</body>", "</body>");
@@ -183,6 +187,23 @@ class CodePanel {
       return data;
     })
   }
+
+  getTextByNLP(userId, nlp) {
+    return new Promise((resolve, reject) => {
+      fetch("http://127.0.0.1:5000/db/getTextByNLP", {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({userId: userId, nlp: nlp})
+        })
+        .then(res => res.json())
+        .then(data => {
+          return resolve(data);
+        })
+        .catch(err => {
+          return reject(err);
+        })
+      })
+}
   
   //Print comment to the editor
   _printCommentToEditor(comment){
