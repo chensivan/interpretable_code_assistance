@@ -102,14 +102,57 @@ class CodePanel {
             if (!data.value) {
               return;
             }
-            //SAMPLE USAGE
-            /*this.getTextByNLP("user1", data.value).then(data => {
-              console.log(data);
-            })*/
-            var comment = "<!-- "+data.value + "-->\n<!-- with "+data.style
-            +"-->\n<!--with an attribute called nlp and value \""+data.value+"\"-->"
-            this._replaceInEditor(comment+"\n</body>", "</body>");
-            this.log("user1", "insert", "", data.value, data.style);
+            var insertStyle = data.style;
+            var insertValue = data.value;
+            var remainder = ["position", "top", "left", "width", "height"];
+            this.getTextByNLP("user1", data.value).then(data => {
+              if (data.success){
+                /** Start: remain position and size style */
+                // var d = {};
+                // var middle = insertStyle.slice(
+                //   insertStyle.indexOf('\"') + 1,
+                //   insertStyle.lastIndexOf('\"'),
+                // ).split(';');
+                
+                // for (var i in middle) {
+                //   var a = middle[i].split(':');
+                //   if (remainder.includes(a[0]) && a[0]) {
+                //     d[a[0]] = a[1];
+                //   }
+                // }
+                /** End:remain position and size style */
+                insertStyle = data.text;
+                /** Start: remain position and size style */
+                // middle = insertStyle.slice(
+                //   insertStyle.indexOf('\"') + 1,
+                //   insertStyle.lastIndexOf('\"'),
+                // ).split(';');
+                
+                // for (var i in middle) {
+                //   var a = middle[i].split(':');
+                //   if (!remainder.includes(a[0]) && a[0]) {
+                //     d[a[0]] = a[1];
+                //   }
+                // }
+                // var innerText = '';
+                // for (const [key, value] of Object.entries(d)) {
+                //   innerText += key + ':' + value + ';';
+                // }
+                // insertStyle = insertStyle.replace(
+                //   insertStyle.slice(
+                //     insertStyle.indexOf('\"') + 1,
+                //     insertStyle.lastIndexOf('\"'),
+                //   ),
+                //   innerText,
+                // );
+                /** End: remain position and size style */
+              }
+              this.log("user1", "insert", "", insertValue, insertStyle);
+              var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
+              +"-->\n<!--with an attribute called nlp and value \""+insertValue+"\"-->"
+              this._replaceInEditor(comment+"\n</body>", "</body>");
+            })
+            
             break;
           }
           case "changeAttr": {
