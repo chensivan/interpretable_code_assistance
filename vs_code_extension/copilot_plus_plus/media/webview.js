@@ -361,16 +361,20 @@ function createEditBox(x, y, element){
     let close = document.getElementById("inputbox-close");
     submit.addEventListener("click", function(){
       let input = document.getElementById("inputbox-input");
-      let newEle = document.createElement(element.tagName);
-      newEle.outerHTML = input.value;
+      let temp = element.outerHTML
+      let label = element.getAttribute("nlp");
+      //let newEle = document.createElement(element.tagName);
+      element.outerHTML = input.value;
+      console.log(getCopilotText(element));
+      //newEle.outerHTML = input.value;
       vscode.postMessage({
         type: "onEdit",
         new: input.value,
-        old: element.outerHTML,
-        nlp: element.getAttribute("nlp"),
-        text: getCopilotText(newEle)
+        old: temp,
+        nlp: label,
+        text: getCopilotText(element)
       })
-      element.outerHTML = input.value;
+     
       closeInputBox();
     });
     close.addEventListener("click", function(){
