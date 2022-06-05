@@ -88,7 +88,7 @@ def getTextByNLP():
         for result in cursor:
             results.append(result)
         newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
-        return json.dumps({"success": True, "text": newlist[0]["text"]}, default=str)
+        return json.dumps({"success": True, "text": newlist[0]["text"], "all": newlist[0]}, default=str)
     else:
         return json.dumps({"success": False})
 
