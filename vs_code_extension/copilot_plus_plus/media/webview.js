@@ -348,7 +348,7 @@ function createEditBox(x, y, element){
   closeInputBox();
   let inputbox = createBasicBox(x, y);
   if(element.tagName !== "BODY"){
-    inputbox.innerHTML = "<textarea style='background:white' id='inputbox-input' rows='5' cols='50'></textarea><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
+    inputbox.innerHTML = "<textarea style='background:white' id='inputbox-input' rows='2' cols='20' placeholder='innerHTML'></textarea><br/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
   }
   else{
     inputbox.innerText = "document body";
@@ -356,21 +356,25 @@ function createEditBox(x, y, element){
   document.body.appendChild(inputbox);
   if(element.tagName !== "BODY"){
     let input = document.getElementById("inputbox-input");
-    input.value = element.outerHTML;
+    input.value = element.innerHTML;
     let submit = document.getElementById("inputbox-submit");
     let close = document.getElementById("inputbox-close");
     submit.addEventListener("click", function(){
       let input = document.getElementById("inputbox-input");
-      let newEle = document.createElement(element.tagName);
-      newEle.outerHTML = input.value;
+      let temp = element.outerHTML
+      let label = element.getAttribute("nlp");
+      //let newEle = document.createElement(element.tagName);
+      element.innerHTML = input.value;
+      console.log(getCopilotText(element));
+      //newEle.outerHTML = input.value;
       vscode.postMessage({
         type: "onEdit",
-        new: input.value,
-        old: element.outerHTML,
-        nlp: element.getAttribute("nlp"),
-        text: getCopilotText(newEle)
+        new: element.outerHTML,
+        old: temp,
+        nlp: label,
+        text: getCopilotText(element)
       })
-      element.outerHTML = input.value;
+     
       closeInputBox();
     });
     close.addEventListener("click", function(){

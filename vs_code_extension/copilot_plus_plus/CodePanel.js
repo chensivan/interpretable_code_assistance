@@ -362,8 +362,6 @@ class CodePanel {
         <meta charset="UTF-8">
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
         </head>
-        ` + json +
-        `
         <div class="navbar" id="navbar">Tools
         <img class="icon" id="icon-tip" src="${inlineIcon}"/>
         <img class="icon" id="icon-insert" src="${selectIcon}"/>
