@@ -45,7 +45,7 @@ class CodePanel {
     }
     
     static revive(panel, extensionUri) {
-      CodePanel.currentPanel = new CodePanel(panel, extensionUri);
+      //CodePanel.currentPanel = new CodePanel(panel, extensionUri);
     }
     
     constructor(panel, extensionUri) {
