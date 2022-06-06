@@ -104,48 +104,57 @@ class CodePanel {
             }
             var insertStyle = data.style;
             var insertValue = data.value;
-            var remainder = ["position", "top", "left", "width", "height"];
+            var remainder = ["position", "top", "left", "width", "height", "transform"];
             this.getTextByNLP("user1", data.value).then(data => {
               if (data.success){
-                /** Start: remain position and size style */
-                // var d = {};
-                // var middle = insertStyle.slice(
-                //   insertStyle.indexOf('\"') + 1,
-                //   insertStyle.lastIndexOf('\"'),
-                // ).split(';');
+                var d = {};
+                var styleStart = insertStyle.lastIndexOf('style=') + 'style='.length;
+                var styleNext = insertStyle.slice(
+                  styleStart).indexOf("\"") + styleStart + 1;
+                var styleEnd = insertStyle.slice(
+                  styleStart).split("\"", 2).join("\"").length + styleStart;
+                var middle = insertStyle.slice(
+                  styleNext,
+                  styleEnd,
+                ).split(';');
                 
-                // for (var i in middle) {
-                //   var a = middle[i].split(':');
-                //   if (remainder.includes(a[0]) && a[0]) {
-                //     d[a[0]] = a[1];
-                //   }
-                // }
-                /** End:remain position and size style */
+                for (var i in middle) {
+                  var a = middle[i].split(':');
+                  if (remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+                    d[a[0]] = a[1];
+                  }
+                }
                 insertStyle = data.text;
-                /** Start: remain position and size style */
-                // middle = insertStyle.slice(
-                //   insertStyle.indexOf('\"') + 1,
-                //   insertStyle.lastIndexOf('\"'),
-                // ).split(';');
+                styleStart = insertStyle.lastIndexOf('style=') + 'style='.length;
+                styleNext = insertStyle.slice(
+                  styleStart).indexOf("\"") + styleStart + 1;
+                styleEnd = insertStyle.slice(
+                  styleStart).split("\"", 2).join("\"").length + styleStart;
+                middle = insertStyle.slice(
+                  styleNext,
+                  styleEnd,
+                ).split(';');
                 
-                // for (var i in middle) {
-                //   var a = middle[i].split(':');
-                //   if (!remainder.includes(a[0]) && a[0]) {
-                //     d[a[0]] = a[1];
-                //   }
-                // }
-                // var innerText = '';
-                // for (const [key, value] of Object.entries(d)) {
-                //   innerText += key + ':' + value + ';';
-                // }
-                // insertStyle = insertStyle.replace(
-                //   insertStyle.slice(
-                //     insertStyle.indexOf('\"') + 1,
-                //     insertStyle.lastIndexOf('\"'),
-                //   ),
-                //   innerText,
-                // );
-                /** End: remain position and size style */
+                for (var i in middle) {
+                  var a = middle[i].split(':');
+                  if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+                    d[a[0]] = a[1];
+                  }
+                }
+                var innerText = '';
+                for (const [key, value] of Object.entries(d)) {
+                  if (key && value){
+                    innerText += key + ':' + value + ';';
+                  }
+                  
+                }
+                insertStyle = insertStyle.replace(
+                  insertStyle.slice(
+                    styleStart+1,
+                    styleEnd,
+                  ),
+                  innerText + ",",
+                );
               }
               this.log("user1", "insert", "", insertValue, insertStyle);
               var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
