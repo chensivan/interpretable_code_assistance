@@ -728,7 +728,7 @@ function autocomplete(inp, arr) {
 var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
   "onmousedown", "onmouseup", "onkeydown", "onkeypress", "onkeyup",
   "onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
-  "onresize", "onscroll", "onselect", "onchange", "onreset"]
+  "onresize", "onscroll", "onselect", "onreset"]
 
 
 function getCopilotText(element){
