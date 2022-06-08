@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 
+const URL = "http://127.0.0.1:5000"
+
 class CodePanel {
   /**
   * Track the currently panel. Only allow a single panel to exist at a time.
@@ -223,7 +225,7 @@ class CodePanel {
     }
 
     log(userId, event, details, label, text){
-      fetch("http://127.0.0.1:5000/db/insertLog", {
+      fetch(URL+"/db/insertLog", {
       method: 'POST', 
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text})
@@ -232,7 +234,7 @@ class CodePanel {
 
   getLog(userId){
     return new Promise((resolve, reject) => {
-      fetch("http://127.0.0.1:5000/db/getLogs?userId="+userId, {
+      fetch(URL+"/db/getLogs?userId="+userId, {
         method: 'GET'
         })
         .then(res => res.json())
@@ -247,7 +249,7 @@ class CodePanel {
 
   getTextByNLP(userId, nlp) {
     return new Promise((resolve, reject) => {
-      fetch("http://127.0.0.1:5000/db/getTextByNLP", {
+      fetch(URL+"/db/getTextByNLP", {
         method: 'POST',
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({userId: userId, nlp: nlp})
