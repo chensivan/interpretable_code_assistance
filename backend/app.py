@@ -38,12 +38,37 @@ def insertLog():
         "event": body["event"], # event title
         "label": body["label"], # label that user entered
         "text": body["text"], # text to feed to copilot
-        "details": body["details"] , # something to link the label and element? I guess maybe the id of the element?
+        "details": body["details"] , # human readable comment
         "createDate": datetime.datetime.now() # timestamp
         }
+    if body["event"] == "insert":
+        log["done"] = False
+        log["rId"] = body["code"]
+    else:
+        log["code"] = body["code"]
 
     result = logCol.insert_one(log)
     return str(result.inserted_id) # return the id of the inserted document
+
+@flask_app.route("/db/completeLog", methods = ["POST"])
+def insertLog():
+    logCol = db["log"]
+    body = request.json
+    cursor = logCol.find({"userId": body["userId"], "done": False})
+    count = 0
+    for result in cursor:
+        if result["rId"] in body["inserted"].keys():
+            logCol.update_one({
+                '_id': result['_id']
+                    },{
+                    '$set': {
+                        'done': True,
+                        'code': body["inserted"][result["rId"]]
+                        }
+                    }, upsert=False)
+            count += 1
+    return str(count) # return the id of the inserted document
+
 
 @flask_app.route("/db/getLogs", methods = ["GET"])
 def getLogs():
