@@ -51,7 +51,7 @@ def insertLog():
     return str(result.inserted_id) # return the id of the inserted document
 
 @flask_app.route("/db/completeLog", methods = ["POST"])
-def insertLog():
+def completeLog():
     logCol = db["log"]
     body = request.json
     cursor = logCol.find({"userId": body["userId"], "done": False})
