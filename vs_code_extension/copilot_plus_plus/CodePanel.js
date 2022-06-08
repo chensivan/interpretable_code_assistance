@@ -165,11 +165,22 @@ class CodePanel {
               let rId = getNonce();
               this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, rId);
               var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
-              +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and an attribute rId= \""+rId+"\"-->"
+              +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and another attribute rid= \""+rId+"\"-->"
               this._replaceInEditor(comment+"\n</body>", "</body>");
             })
             
             break;
+          }
+          case "onComplete": {
+            //loop data.inserted
+            console.log(data.inserted);
+            for (var prop in data.inserted) {
+              if (Object.prototype.hasOwnProperty.call(data.inserted, prop)) {
+                  this._replaceInEditor(data.replaced[prop], data.inserted[prop]);
+              }
+          }
+          this.completeLogs("user1", data.replaced);
+          break;
           }
           case "changeAttr": {
             if (!data.old || !data.new) {
@@ -235,6 +246,14 @@ class CodePanel {
       body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code})
       })
   }
+
+  completeLogs(userId, inserted){
+    fetch(URL+"/db/completeLog", {
+    method: 'POST', 
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({userId: userId, inserted:inserted})
+    })
+}
 
   getLog(userId){
     return new Promise((resolve, reject) => {
@@ -319,7 +338,7 @@ class CodePanel {
               var firstLine = editor.document.lineAt(0);
               var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
               var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
-              
+             
               var range = new vscode.Range(pos, pos);
               // Line added - by having a selection at the same position twice, the cursor jumps there
               editor.edit(editBuilder => {
