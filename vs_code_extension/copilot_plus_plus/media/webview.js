@@ -286,7 +286,8 @@ function closeBorder(ele){
       old: ele,
       opt:1,
       nlp: old.getAttribute("nlp"),
-      text: getCopilotText(old)
+      text: getCopilotText(old),
+      size: old.style.width + "px wide and "+old.style.height+"px height"
     })
   }
 }
@@ -381,7 +382,8 @@ function createEditBox(x, y, element){
         new: element.outerHTML,
         old: temp,
         nlp: label,
-        text: getCopilotText(element)
+        text: getCopilotText(element),
+        inner: input.value
       })
      
       closeInputBox();
@@ -406,7 +408,8 @@ function createDeleteBox(x, y, element){
       type: "delete",
       value: element.outerHTML,
       nlp: element.getAttribute("nlp"),
-      text: "" //since the user cleared the element, assume it is not the wanted style???
+      text: "", //since the user cleared the element, assume it is not the wanted style???
+      detail: getCopilotText(element)
     })
     //remove child from body
     element.parentNode.removeChild(element);
@@ -537,12 +540,43 @@ function createInputBoxAttr(x, y, element){
       for (var key in attrs) {
         newEle.setAttribute(key, attrs[key]);
       }
+
+      let add = "Added attributes: ";
+      let remove = "Removed attributes: ";
+      let change = "Changed attributes: ";
+
+      newEle.getAttributeNames().forEach(function(name){
+        if(!element.getAttribute(name) && element.getAttribute(name)!==""){
+          add += name + ", ";
+        }
+      });
+      element.getAttributeNames().forEach(function(name){
+        if(!newEle.getAttribute(name)&& newEle.getAttribute(name)!==""){
+          remove += name + ", ";
+        }
+        else if(newEle.getAttribute(name) != element.getAttribute(name)){
+          change += name + " from " + element.getAttribute(name) + " to " + newEle.getAttribute(name) + ", ";
+        }
+      });
+
+      let total = "";
+      if(add !== "Added attributes: "){
+        total += add.substring(0, add.length - 2) + "\n";
+      }
+      if(remove !== "Removed attributes: "){
+        total += remove.substring(0, remove.length - 2) + "\n";
+      }
+      if(change !== "Changed attributes: "){
+        total += change.substring(0, change.length - 2) + "\n";
+      }
+
       vscode.postMessage({
         type: "changeAttr",
         old: element.outerHTML,
         new: newEle.outerHTML,
         nlp: element.getAttribute("nlp"),
-        text: getCopilotText(newEle)
+        text: getCopilotText(newEle),
+        changes: total
       })
       document.body.replaceChild(newEle, element);
       element = newEle;
@@ -624,7 +658,8 @@ function dragEnd(e) {
       old: selector,
       opt: 0,
       nlp: div.getAttribute("nlp"),
-      text: getCopilotText(div)
+      text: getCopilotText(div),
+      transform: translateX+"px right and "+translateY+"px down"
     })
     
     lastX = null;
