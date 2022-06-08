@@ -54,6 +54,21 @@ html {
     overflow: scroll;
   }
 
+  .openbtn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+    background-color: #111;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+  }
+  
+  .openbtn:hover {
+    background-color: #444;
+  }
+
   .navbar {
     padding: 2px 0px;
     width: 240px;
