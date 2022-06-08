@@ -34,6 +34,14 @@ data.forEach(function(element){
     }
 
 });
+
+document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
+    sidePanel.style.display = "none";
+});
+
+document.getElementById("openbtn").addEventListener("click", function(){
+    sidePanel.style.display = "block";
+});
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
@@ -99,7 +107,9 @@ document.addEventListener("click", function(event){
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
   && event.target.id !== "inputbox-event"
-  && event.target.id !== "hstBlock" && event.target.parentElement.id !== "hstBlock"){
+  && event.target.id !== "hstBlock" && event.target.parentElement.id !== "hstBlock" 
+  && event.target.parentElement.id !== "sidePanel" && event.target.id !== "sidePanel"
+  && event.target.id !== "openbtn"){
     if (mode == 0){
       createEditBox(event.pageX, event.pageY, event.target);
     }

@@ -374,7 +374,9 @@ class CodePanel {
           <img class="icon" id="icon-delete" src="${deleteIcon}"/>
           <img class="icon" id="icon-chat" src="${chatIcon}"/>
           </div>
+          <button class="openbtn" id="openbtn">&#9776;</button>
           <div class="sidePanel" id="sidePanel">
+          <a href="javascript:void(0)" class="closebtn">&times;</a>
           <h1> History </h1>
           </div>
           `+file.toString()+` 
