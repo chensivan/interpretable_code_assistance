@@ -162,9 +162,10 @@ class CodePanel {
                   innerText + ",",
                 );
               }
-              this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, "");
+              let rId = getNonce();
+              this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, rId);
               var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
-              +"-->\n<!--with an attribute called nlp and value \""+insertValue+"\"-->"
+              +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and an attribute rId= \""+rId+"\"-->"
               this._replaceInEditor(comment+"\n</body>", "</body>");
             })
             
