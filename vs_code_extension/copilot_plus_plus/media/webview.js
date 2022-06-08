@@ -2,6 +2,27 @@
 const vscode = acquireVsCodeApi();
 //---------------------------SidePanel(test)---------------------------------//
 var sidePanel = document.getElementById("sidePanel");
+
+// let searchLabel = document.createElement("div");
+// searchLabel.innerHTML = "<input type='text' id='searchLabel'/><button id='searchLabel-submit'>Search</button>";
+// sidePanel.appendChild(searchLabel);
+
+// let search = document.getElementById("searchLabel-submit");
+// search.addEventListener("click", function() {
+//   let text = document.getElementById("searchLabel");
+//   if(text.value){
+//     vscode.postMessage({
+//       type: "onInsert",
+//       value: text.value,
+//       style: `style="${style}"`
+//     })
+//   }
+//   else{
+//     text.setAttribute("placeholder", "Please enter a value");
+//   }
+// });
+
+
 data.forEach(function(element){
     var hstBlock = document.createElement('div');
     hstBlock.id = 'hstBlock';
@@ -101,15 +122,28 @@ var div, selector;
 var rectX, rectY;
 
 //---------------------------click handler---------------------------------//
+function findAncestor (el, cls) {
+  var temp = el;
+  while (temp && temp.id !== cls) {
+    temp = temp.parentElement;
+    
+  };
+  if (!temp){
+    return false;
+  }else if (temp.id === cls){
+    return true;
+  }
+}
+
+
+
 document.addEventListener("click", function(event){
   if (event.target.id !== "inputbox" && (!event.target.parentElement || event.target.parentElement.id !== "inputbox")
   && event.target.id !== "navbar" && (!event.target.parentElement ||event.target.parentElement.id !== "navbar")
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
   && event.target.id !== "inputbox-event"
-  && event.target.id !== "hstBlock" && event.target.parentElement.id !== "hstBlock" 
-  && event.target.parentElement.id !== "sidePanel" && event.target.id !== "sidePanel"
-  && event.target.id !== "openbtn"){
+  && !findAncestor(event.target, "sidePanel")){
     if (mode == 0){
       createEditBox(event.pageX, event.pageY, event.target);
     }
