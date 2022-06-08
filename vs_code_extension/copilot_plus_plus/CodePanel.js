@@ -84,20 +84,24 @@ class CodePanel {
       //Messages passed from the webview to the extension
       webview.onDidReceiveMessage(async (data) => {
         switch (data.type) {
-          case "makeDrag":{
+          case "onDrag":{
             if (!data.new) {
               return;
             }
             this._replaceInEditor(data.new, data.old);
-            //TODO: add specific width and height
             if (data.opt == 0 && data.nlp){
-              //this.log("user1", "drag", data.old+" to "+data.new);
-              this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text);
-            }else if (data.opt == 1 && data.nlp){
-              //this.log("user1", "resize", data.old+" to "+data.new);
-              this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text);
+              this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text, data.new);
             }
-            
+            break;
+          }
+          case "onResize":{
+            if (!data.new) {
+              return;
+            }
+            this._replaceInEditor(data.new, data.old);
+            if (data.nlp){
+              this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text, data.new);
+            }
             break;
           }
           case "onInsert": {
@@ -158,7 +162,7 @@ class CodePanel {
                   innerText + ",",
                 );
               }
-              this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle);
+              this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, "");
               var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
               +"-->\n<!--with an attribute called nlp and value \""+insertValue+"\"-->"
               this._replaceInEditor(comment+"\n</body>", "</body>");
@@ -172,7 +176,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new,data.old);
             if(data.nlp){
-              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, data.nlp, data.text);
+              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, data.nlp, data.text, data.new);
             }
             break;
           }
@@ -182,7 +186,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if(data.nlp){
-              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, data.nlp, data.text);
+              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, data.nlp, data.text, data.new);
             }
             break;
           }
@@ -192,7 +196,7 @@ class CodePanel {
             }
             this._replaceInEditor(" ",data.value);
             if(data.nlp){
-              this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text);
+              this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "");
             }
             //this.log("user1", "delete", data.value);
             break;
@@ -208,9 +212,8 @@ class CodePanel {
               this._replaceInEditor(data.new, data.old);
             }
             if(data.nlp){
-              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: <${data.nlp}>`, data.nlp, data.text);
+              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: <${data.nlp}>`, data.nlp, data.text, data.new);
             }
-            //this.log("user1", "add listener", data.event+", "+data.name+", "+data.script);
             break;
           }
           case "onError": {
@@ -224,11 +227,11 @@ class CodePanel {
       });
     }
 
-    log(userId, event, details, label, text){
+    log(userId, event, details, label, text, code){
       fetch(URL+"/db/insertLog", {
       method: 'POST', 
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text})
+      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code})
       })
   }
 

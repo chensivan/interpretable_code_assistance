@@ -315,13 +315,12 @@ function closeBorder(ele){
     old.style.cursor = null;
     old.classList.remove("border");
     vscode.postMessage({
-      type: 'makeDrag',
+      type: 'onResize',
       new: old.outerHTML,
       old: ele,
-      opt:1,
       nlp: old.getAttribute("nlp"),
       text: getCopilotText(old),
-      size: old.style.width + "px wide and "+old.style.height+"px height"
+      size: old.style.width + " wide and "+old.style.height+" height"
     })
   }
 }
@@ -687,10 +686,9 @@ function dragEnd(e) {
     div.style.left = rectX + translateX;
     div.style.top = rectY + translateY;
     vscode.postMessage({
-      type: 'makeDrag',
+      type: 'onDrag',
       new: defineSelector(div),
       old: selector,
-      opt: 0,
       nlp: div.getAttribute("nlp"),
       text: getCopilotText(div),
       transform: translateX+"px right and "+translateY+"px down"
@@ -812,7 +810,7 @@ var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
 function getCopilotText(element){
   let text = "";
   let attrs = element.getAttributeNames().reduce((acc, name) => {
-    if(name !== "src"){
+    if(name.toLowerCase() !== "src" && name.toLowerCase() !== "nlp"){
       text += `${name}="${element.getAttribute(name)}, " `;
     }
     return {...acc, [name]: element.getAttribute(name)};
