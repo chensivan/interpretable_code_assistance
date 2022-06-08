@@ -55,6 +55,10 @@ html {
     overflow: scroll;
   }
 
+  .hstBlock{
+    overflow-wrap: break-word;
+  }
+
   .openbtn {
     position: absolute;
     top: 0;
