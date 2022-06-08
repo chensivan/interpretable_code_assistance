@@ -230,14 +230,19 @@ class CodePanel {
       })
   }
 
-
-  async getLog(userId){
-    fetch("http://127.0.0.1:5000/db/getLogs?userId="+userId, {
-    method: 'GET'
-    }).then(res => res.json())
-    .then(data => {
-      return data;
-    })
+  getLog(userId){
+    return new Promise((resolve, reject) => {
+      fetch("http://127.0.0.1:5000/db/getLogs?userId="+userId, {
+        method: 'GET'
+        })
+        .then(res => res.json())
+        .then(data => {
+          return resolve(data);
+        })
+        .catch(err => {
+          return reject(err);
+        })
+      })
   }
 
   getTextByNLP(userId, nlp) {
@@ -351,38 +356,47 @@ class CodePanel {
         
         //Parse the file into a string
         CodePanel.nonce = nonce;
-
-        //TODO:Get log
-        // var userId = "user1";
-        var json = this.getLog('user1');
-
-        var html = 
-        `
-        <head>
-        <meta charset="UTF-8">
-        <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-        </head>
-        <div class="navbar" id="navbar">Tools
-        <img class="icon" id="icon-tip" src="${inlineIcon}"/>
-        <img class="icon" id="icon-insert" src="${selectIcon}"/>
-        <img class="icon" id="icon-drag" src="${dragIcon}"/>
-        <img class="icon" id="icon-resize" src="${resizeIcon}"/>
-        <img class="icon" id="icon-edit" src="${showIcon}"/>
-        <img class="icon" id="icon-js" src="${showIcon}"/>
-        <img class="icon" id="icon-delete" src="${deleteIcon}"/>
-        <img class="icon" id="icon-chat" src="${chatIcon}"/>
-        </div>
-        <div class="sidePanel" id="sidePanel">
-        <h1> History </h1>
-        </div>
-        `+file.toString()+` 
-        <link href="${stylesResetUri}" rel="stylesheet">
-        <link href="${chatBotUri}" rel="stylesheet">
-        <script src="${chatBotSrc}"></script>
-        <script src="${jsonSrc}"></script>
-        <script type="module" nonce="${nonce}">` + jsFile.toString() + `
-        </script>`;
-        return html;
+        var html;
+        this.getLog("user1").then(data => {
+          html = 
+          `
+          <head>
+          <meta charset="UTF-8">
+          <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+          </head>
+          <div class="navbar" id="navbar">Tools
+          <img class="icon" id="icon-tip" src="${inlineIcon}"/>
+          <img class="icon" id="icon-insert" src="${selectIcon}"/>
+          <img class="icon" id="icon-drag" src="${dragIcon}"/>
+          <img class="icon" id="icon-resize" src="${resizeIcon}"/>
+          <img class="icon" id="icon-edit" src="${showIcon}"/>
+          <img class="icon" id="icon-js" src="${showIcon}"/>
+          <img class="icon" id="icon-delete" src="${deleteIcon}"/>
+          <img class="icon" id="icon-chat" src="${chatIcon}"/>
+          </div>
+          <div class="sidePanel" id="sidePanel">
+          <h1> History </h1>
+          </div>
+          `+file.toString()+` 
+          <link href="${stylesResetUri}" rel="stylesheet">
+          <link href="${chatBotUri}" rel="stylesheet">
+          <script src="${chatBotSrc}"></script>
+          <script type="module" nonce="${nonce}">
+          var data = ${JSON.stringify(data)};
+          ` + jsFile.toString() + `
+          </script>`;
+          return html;
+        }
+        )
+        .then(html => {
+          webview.html = html;
+          return html;
+        }
+        )
+        .catch(err => {
+          console.log(err);
+        }
+        );
         
       }
     }

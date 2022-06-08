@@ -1,11 +1,8 @@
-// import CodePanel from './CodePanel';
-// console.log(CodePanel.greeting());
 
 const vscode = acquireVsCodeApi();
-
 //---------------------------SidePanel(test)---------------------------------//
 var sidePanel = document.getElementById("sidePanel");
-json.forEach(function(element){
+data.forEach(function(element){
     var hstBlock = document.createElement('div');
     hstBlock.id = 'hstBlock';
     hstBlock.classList.add('hstBlock');
@@ -20,18 +17,20 @@ json.forEach(function(element){
     hstBlock.addEventListener('mouseout', function(){
         hstBlock.style.backgroundColor = 'white';
     });
-
+    var targetKey = ["event", "label", "details", "createDate"];
     for (var key of Object.keys(element)) {
-      var tag = document.createElement('p');
-      hstBlock.appendChild(tag);
-      var val = element[key];
-      if (key === '_id'){
-        val = val["$oid"];
-      }else if (key == 'createDate' || key == 'updateDate'){
-        val = Date(Number(val["$date"]["$numberLong"]));
+      if (targetKey.includes(key)){
+        var tag = document.createElement('p');
+        hstBlock.appendChild(tag);
+        var val = element[key].toString().replace(/</g, '&lt;');
+        if (key === "createDate"){
+          val = val.slice(0, val.indexOf("."));
+        }
+        tag.innerHTML = key + ": " + val;
+        hstBlock.appendChild(tag);
+
       }
-      tag.innerHTML = key + ": " + val.toString().replace(/</g, '&lt;');
-      hstBlock.appendChild(tag);
+
     }
 
 });
