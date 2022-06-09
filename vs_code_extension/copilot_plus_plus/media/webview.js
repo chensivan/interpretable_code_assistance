@@ -1,68 +1,6 @@
 
 const vscode = acquireVsCodeApi();
-//---------------------------SidePanel(test)---------------------------------//
-var sidePanel = document.getElementById("sidePanel");
 
-// let searchLabel = document.createElement("div");
-// searchLabel.innerHTML = "<input type='text' id='searchLabel'/><button id='searchLabel-submit'>Search</button>";
-// sidePanel.appendChild(searchLabel);
-
-// let search = document.getElementById("searchLabel-submit");
-// search.addEventListener("click", function() {
-//   let text = document.getElementById("searchLabel");
-//   if(text.value){
-//     vscode.postMessage({
-//       type: "onInsert",
-//       value: text.value,
-//       style: `style="${style}"`
-//     })
-//   }
-//   else{
-//     text.setAttribute("placeholder", "Please enter a value");
-//   }
-// });
-
-
-data.forEach(function(element){
-    var hstBlock = document.createElement('div');
-    hstBlock.id = 'hstBlock';
-    hstBlock.classList.add('hstBlock');
-    hstBlock.style.padding = '20px';
-    hstBlock.style.margin = '10px';
-    hstBlock.style.backgroundColor = 'white';
-    hstBlock.style.radius = '5px';
-    sidePanel.appendChild(hstBlock);
-    hstBlock.addEventListener('mouseover', function(){
-        hstBlock.style.backgroundColor = '#e6e6e6';
-    });
-    hstBlock.addEventListener('mouseout', function(){
-        hstBlock.style.backgroundColor = 'white';
-    });
-    var targetKey = ["event", "label", "details", "createDate"];
-    for (var key of Object.keys(element)) {
-      if (targetKey.includes(key)){
-        var tag = document.createElement('p');
-        hstBlock.appendChild(tag);
-        var val = element[key].toString().replace(/</g, '&lt;');
-        if (key === "createDate"){
-          val = val.slice(0, val.indexOf("."));
-        }
-        tag.innerHTML = key + ": " + val;
-        hstBlock.appendChild(tag);
-
-      }
-
-    }
-
-});
-
-document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
-    sidePanel.style.display = "none";
-});
-
-document.getElementById("openbtn").addEventListener("click", function(){
-    sidePanel.style.display = "block";
-});
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
@@ -703,6 +641,73 @@ function dragEnd(e) {
     
   }
 }
+
+//---------------------------SidePanel(test)---------------------------------//
+  var sidePanel = document.getElementById("sidePanel");
+
+  // let searchLabel = document.createElement("div");
+  // searchLabel.innerHTML = "<input type='text' id='searchLabel'/><button id='searchLabel-submit'>Search</button>";
+  // sidePanel.appendChild(searchLabel);
+
+  // let search = document.getElementById("searchLabel-submit");
+  // search.addEventListener("click", function() {
+  //   let text = document.getElementById("searchLabel");
+  //   if(text.value){
+  //     vscode.postMessage({
+  //       type: "onInsert",
+  //       value: text.value,
+  //       style: `style="${style}"`
+  //     })
+  //   }
+  //   else{
+  //     text.setAttribute("placeholder", "Please enter a value");
+  //   }
+  // });
+
+
+  data.forEach(function(element){
+      var hstBlock = document.createElement('div');
+      hstBlock.id = 'hstBlock';
+      hstBlock.classList.add('hstBlock');
+      hstBlock.style.padding = '20px';
+      hstBlock.style.margin = '10px';
+      hstBlock.style.backgroundColor = 'white';
+      hstBlock.style.radius = '5px';
+      sidePanel.appendChild(hstBlock);
+      hstBlock.addEventListener('mouseover', function(){
+          hstBlock.style.backgroundColor = '#e6e6e6';
+      });
+      hstBlock.addEventListener('mouseout', function(){
+          hstBlock.style.backgroundColor = 'white';
+      });
+      var targetKey = ["event", "label", "details", "createDate"];
+      for (var key of Object.keys(element)) {
+        if (targetKey.includes(key)){
+          var tag = document.createElement('p');
+          hstBlock.appendChild(tag);
+          var val = element[key].toString().replace(/</g, '&lt;');
+          if (key === "createDate"){
+            val = val.slice(0, val.indexOf("."));
+          }
+          tag.innerHTML = key + ": " + val;
+          hstBlock.appendChild(tag);
+
+        }
+
+      }
+
+  });
+
+  document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
+      sidePanel.style.display = "none";
+  });
+
+  document.getElementById("openbtn").addEventListener("click", function(){
+      sidePanel.style.display = "block";
+  });
+
+
+//---------------------------Helper functions---------------------------------//
 
 function autocomplete(inp, arr) {
   /*the autocomplete function takes two arguments,
