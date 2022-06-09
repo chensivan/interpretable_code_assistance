@@ -111,63 +111,71 @@ class CodePanel {
             var insertStyle = data.style;
             var insertValue = data.value;
             var remainder = ["position", "top", "left", "width", "height", "transform"];
-            this.getTextByNLP("user1", data.value).then(data => {
+            this.getLogByNLP("user1", data.value).then(data => {
               if (data.success){
-                var d = {};
-                var styleStart = insertStyle.lastIndexOf('style=') + 'style='.length;
-                var styleNext = insertStyle.slice(
-                  styleStart).indexOf("\"") + styleStart + 1;
-                var styleEnd = insertStyle.slice(
-                  styleStart).split("\"", 2).join("\"").length + styleStart;
-                var middle = insertStyle.slice(
-                  styleNext,
-                  styleEnd,
-                ).split(';');
+                // log the length of data.all
+                console.log(data.all.length);
+              };
+            }
+            )
+
+            // this.getTextByNLP("user1", data.value).then(data => {
+            //   if (data.success){
+            //     var d = {};
+            //     var styleStart = insertStyle.lastIndexOf('style=') + 'style='.length;
+            //     var styleNext = insertStyle.slice(
+            //       styleStart).indexOf("\"") + styleStart + 1;
+            //     var styleEnd = insertStyle.slice(
+            //       styleStart).split("\"", 2).join("\"").length + styleStart;
+            //     var middle = insertStyle.slice(
+            //       styleNext,
+            //       styleEnd,
+            //     ).split(';');
                 
-                for (var i in middle) {
-                  var a = middle[i].split(':');
-                  if (remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
-                    d[a[0]] = a[1];
-                  }
-                }
-                insertStyle = data.text;
-                styleStart = insertStyle.lastIndexOf('style=') + 'style='.length;
-                styleNext = insertStyle.slice(
-                  styleStart).indexOf("\"") + styleStart + 1;
-                styleEnd = insertStyle.slice(
-                  styleStart).split("\"", 2).join("\"").length + styleStart;
-                middle = insertStyle.slice(
-                  styleNext,
-                  styleEnd,
-                ).split(';');
+            //     for (var i in middle) {
+            //       var a = middle[i].split(':');
+            //       if (remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+            //         d[a[0]] = a[1];
+            //       }
+            //     }
+            //     insertStyle = data.text;
+            //     styleStart = insertStyle.lastIndexOf('style=') + 'style='.length;
+            //     styleNext = insertStyle.slice(
+            //       styleStart).indexOf("\"") + styleStart + 1;
+            //     styleEnd = insertStyle.slice(
+            //       styleStart).split("\"", 2).join("\"").length + styleStart;
+            //     middle = insertStyle.slice(
+            //       styleNext,
+            //       styleEnd,
+            //     ).split(';');
                 
-                for (var i in middle) {
-                  var a = middle[i].split(':');
-                  if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
-                    d[a[0]] = a[1];
-                  }
-                }
-                var innerText = '';
-                for (const [key, value] of Object.entries(d)) {
-                  if (key && value){
-                    innerText += key + ':' + value + ';';
-                  }
+            //     for (var i in middle) {
+            //       var a = middle[i].split(':');
+            //       if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+            //         d[a[0]] = a[1];
+            //       }
+            //     }
+            //     var innerText = '';
+            //     for (const [key, value] of Object.entries(d)) {
+            //       if (key && value){
+            //         innerText += key + ':' + value + ';';
+            //       }
                   
-                }
-                insertStyle = insertStyle.replace(
-                  insertStyle.slice(
-                    styleStart+1,
-                    styleEnd,
-                  ),
-                  innerText + ",",
-                );
-              }
-              let rId = getNonce();
-              this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, rId);
-              var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
-              +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and another attribute rid= \""+rId+"\"-->"
-              this._replaceInEditor(comment+"\n</body>", "</body>");
-            })
+            //     }
+            //     insertStyle = insertStyle.replace(
+            //       insertStyle.slice(
+            //         styleStart+1,
+            //         styleEnd,
+            //       ),
+            //       innerText + ",",
+            //     );
+            //   }
+            //   let rId = getNonce();
+            //   this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, rId);
+            //   var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
+            //   +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and another attribute rid= \""+rId+"\"-->"
+            //   this._replaceInEditor(comment+"\n</body>", "</body>");
+            // })
             
             break;
           }
@@ -273,6 +281,23 @@ class CodePanel {
   getTextByNLP(userId, nlp) {
     return new Promise((resolve, reject) => {
       fetch(URL+"/db/getTextByNLP", {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({userId: userId, nlp: nlp})
+        })
+        .then(res => res.json())
+        .then(data => {
+          return resolve(data);
+        })
+        .catch(err => {
+          return reject(err);
+        })
+      })
+  }
+
+  getLogByNLP(userId, nlp) {
+    return new Promise((resolve, reject) => {
+      fetch(URL+"/db/getLogByNLP", {
         method: 'POST',
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({userId: userId, nlp: nlp})
