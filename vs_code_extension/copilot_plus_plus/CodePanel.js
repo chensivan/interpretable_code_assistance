@@ -115,6 +115,10 @@ class CodePanel {
             var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
             +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and another attribute rid= \""+rId+"\"-->"
             this._replaceInEditor(comment+"\n</body>", "</body>");
+            if (!data.success) {
+              vscode.window.showInformationMessage(`No proper recommendations found`);
+            }
+            
             
             
             break;

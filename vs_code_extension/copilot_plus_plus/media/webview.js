@@ -310,6 +310,7 @@ function createInputBox(x, y, style){
           declineBtn.addEventListener("click", function() {
             vscode.postMessage({
               type: "onInsert",
+              success: true,
               value: text.value,
               style: `style="${style}"`
             })
@@ -345,6 +346,7 @@ function createInputBox(x, y, style){
 
                 vscode.postMessage({
                   type: "onInsert",
+                  success: true,
                   value: text.value,
                   style: `${replaceStyle}`
                 })
@@ -362,8 +364,10 @@ function createInputBox(x, y, style){
 
 
         }else{
+          alert("I am an alert box!");
           vscode.postMessage({
             type: "onInsert",
+            success: false,
             value: text.value,
             style: `style="${style}"`
           })
