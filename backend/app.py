@@ -1,6 +1,7 @@
 # import numpy as np
 from sqlite3 import Timestamp
 from flask import Flask, request
+from flask_cors import CORS, cross_origin
 import json
 import nlpcloud
 import pymongo
@@ -13,6 +14,7 @@ embeddings = Embeddings({"path": "sentence-transformers/nli-mpnet-base-v2"})
 
 # Create flask app
 flask_app = Flask(__name__)
+cors = CORS(flask_app)
 client = nlpcloud.Client("fast-gpt-j", "aba1569138b09087b8a839356381010dd56d6679", gpu=True, lang="en")
 client = pymongo.MongoClient("mongodb://user:user@ac-yuhr5lt-shard-00-00.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-01.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-02.menscjh.mongodb.net:27017/?ssl=true&replicaSet=atlas-n1yyxs-shard-0&authSource=admin&retryWrites=true&w=majority")
 db = client["copilot_plus_plus"]
@@ -71,6 +73,7 @@ def completeLog():
 
 
 @flask_app.route("/db/getLogs", methods = ["GET"])
+@cross_origin()
 def getLogs():
     logCol = db["log"]
     userId = request.args.get('userId')
