@@ -3,17 +3,10 @@ const vscode = acquireVsCodeApi();
 const URL = "http://127.0.0.1:5000";
 
 //----------test------------//
-
-
-// getLog("user1").then(data => {
-//   console.log(data);
-// }
-// ).catch(err => {
-//   console.log(err);
-// }
-// );
-
-
+getLog("user1").then(data => {
+  createSidePanel(data);
+}
+);
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
@@ -310,7 +303,22 @@ function createInputBox(x, y, style){
           var logData = data.all.slice(0, length);
           createSidePanel(logData);
 
-        
+          var sidePanel = document.getElementById("sidePanelLog");
+          var declineBtn = document.createElement("button");
+          declineBtn.innerHTML = "Create a new chat";
+          sidePanel.appendChild(declineBtn);
+          declineBtn.addEventListener("click", function() {
+            vscode.postMessage({
+              type: "onInsert",
+              value: text.value,
+              style: `style="${style}"`
+            })
+            getLog("user1").then(data => {
+              createSidePanel(data);
+            }
+            );
+          }
+          );
 
           var hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
@@ -341,6 +349,10 @@ function createInputBox(x, y, style){
                   style: `${replaceStyle}`
                 })
                 targetHst.style.backgroundColor = 'white';
+                getLog("user1").then(data => {
+                  createSidePanel(data);
+                }
+                );
               }
               )
       
@@ -744,6 +756,7 @@ function createSidePanel(logData){
 
 
   }
+  return;
 }
   
   document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
