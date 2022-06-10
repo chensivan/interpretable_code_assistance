@@ -108,6 +108,11 @@ class CodePanel {
             if (!data.value) {
               return;
             }
+            if (!data.success) {
+              vscode.window.showInformationMessage(`No proper recommendations found`);
+            }else{
+              vscode.window.showInformationMessage(`Recommendations from history found`);
+            }
             var insertStyle = data.style;
             var insertValue = data.value;
             let rId = getNonce();
@@ -115,9 +120,7 @@ class CodePanel {
             var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
             +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and another attribute rid= \""+rId+"\"-->"
             this._replaceInEditor(comment+"\n</body>", "</body>");
-            if (!data.success) {
-              vscode.window.showInformationMessage(`No proper recommendations found`);
-            }
+
             
             
             

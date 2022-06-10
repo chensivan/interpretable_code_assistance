@@ -344,7 +344,6 @@ function createInputBox(x, y, style){
               targetHst.appendChild(confirmation);
               confirmation.addEventListener('click', function(){
                 var replaceStyle = handleTextReplace(style, logData[i].text);
-
                 vscode.postMessage({
                   type: "onInsert",
                   success: true,
@@ -971,7 +970,7 @@ function handleTextReplace(insertStyle, replaceStyle) {
       }
     }
     
-    var styleStart = replaceStyle.indexOf('style=') + 'style='.length;
+    var styleStart = replaceStyle.lastIndexOf('style=') + 'style='.length;
     var styleNext = replaceStyle.slice(
       styleStart).indexOf("\"") + styleStart + 1;
     var styleEnd = replaceStyle.slice(
@@ -980,7 +979,6 @@ function handleTextReplace(insertStyle, replaceStyle) {
       styleNext,
       styleEnd,
     ).split(';');
-    
     for (var i in middle) {
       var a = middle[i].split(':');
       if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
@@ -993,7 +991,6 @@ function handleTextReplace(insertStyle, replaceStyle) {
       if (key && value){
         innerText += key + ':' + value + ';';
       }
-      
     }
     replaceStyle = replaceStyle.replace(
       replaceStyle.slice(
