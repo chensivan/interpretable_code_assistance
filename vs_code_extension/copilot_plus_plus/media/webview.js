@@ -304,16 +304,13 @@ function createInputBox(x, y, style){
   submit.addEventListener("click", function() {
     let text = document.getElementById("inputbox-input");
     if(text.value){
-      // vscode.postMessage({
-      //   type: "onInsert",
-      //   value: text.value,
-      //   style: `style="${style}"`
-      // })
       getLogByNLP("user1", text.value).then(data => {
         if (data.success){
           var length = Math.min(5, data.all.length);
           var logData = data.all.slice(0, length);
           createSidePanel(logData);
+
+        
 
           var hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
@@ -338,13 +335,10 @@ function createInputBox(x, y, style){
               confirmation.addEventListener('click', function(){
                 var replaceStyle = handleTextReplace(style, logData[i].text);
 
-                console.log(style);
-                console.log(logData[i].text);
-                console.log(replaceStyle);
                 vscode.postMessage({
                   type: "onInsert",
                   value: text.value,
-                  style: `style="${replaceStyle}"`
+                  style: `${replaceStyle}`
                 })
                 targetHst.style.backgroundColor = 'white';
               }
@@ -724,13 +718,6 @@ function createSidePanel(logData){
       hstBlock.style.backgroundColor = 'white';
       hstBlock.style.radius = '5px';
       
-
-      // var confirmation = document.createElement('div');
-      // confirmation.id = 'confirmation';
-      // confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
-      // confirmation.style.display = 'none';
-      // hstBlock.appendChild(confirmation);
-
       sidePanel.appendChild(hstBlock);
       hstBlock.addEventListener('mouseover', function(){
         hstBlock.style.backgroundColor = '#e6e6e6';
@@ -759,26 +746,6 @@ function createSidePanel(logData){
   }
 }
   
-
-  // let searchLabel = document.createElement("div");
-  // searchLabel.innerHTML = "<input type='text' id='searchLabel'/><button id='searchLabel-submit'>Search</button>";
-  // sidePanel.appendChild(searchLabel);
-
-  // let search = document.getElementById("searchLabel-submit");
-  // search.addEventListener("click", function() {
-  //   let text = document.getElementById("searchLabel");
-  //   if(text.value){
-  //     vscode.postMessage({
-  //       type: "onInsert",
-  //       value: text.value,
-  //       style: `style="${style}"`
-  //     })
-  //   }
-  //   else{
-  //     text.setAttribute("placeholder", "Please enter a value");
-  //   }
-  // });
-
   document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
       sidePanel.style.display = "none";
   });

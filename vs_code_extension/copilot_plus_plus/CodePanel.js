@@ -111,7 +111,7 @@ class CodePanel {
             var insertStyle = data.style;
             var insertValue = data.value;
             let rId = getNonce();
-            // this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, rId);
+            this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, insertStyle, rId);
             var comment = "<!-- "+insertValue + "-->\n<!-- with "+insertStyle
             +"-->\n<!--with an attribute nlp=\""+insertValue+"\" and another attribute rid= \""+rId+"\"-->"
             this._replaceInEditor(comment+"\n</body>", "</body>");
