@@ -336,10 +336,15 @@ function createInputBox(x, y, style){
               targetHst.style.position = 'relative';
               targetHst.appendChild(confirmation);
               confirmation.addEventListener('click', function(){
+                var replaceStyle = handleTextReplace(style, logData[i].text);
+
+                console.log(style);
+                console.log(logData[i].text);
+                console.log(replaceStyle);
                 vscode.postMessage({
                   type: "onInsert",
-                  value: logData[i]["text"],
-                  style: `style="${style}"`
+                  value: text.value,
+                  style: `style="${replaceStyle}"`
                 })
                 targetHst.style.backgroundColor = 'white';
               }
@@ -350,7 +355,13 @@ function createInputBox(x, y, style){
           }
 
 
-        };
+        }else{
+          vscode.postMessage({
+            type: "onInsert",
+            value: text.value,
+            style: `style="${style}"`
+          })
+        }
       }
       )
       closeInputBox();
@@ -960,4 +971,52 @@ function removeAllChildNodes(parent) {
   while (parent.firstChild) {
       parent.removeChild(parent.firstChild);
   }
+}
+
+function handleTextReplace(insertStyle, replaceStyle) {
+    var remainder = ["position", "top", "left", "width", "height", "transform"];
+    var d = {};
+    
+    var middle = insertStyle.split(';');
+    
+    for (var i in middle) {
+      var a = middle[i].split(':');
+      if (remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+        d[a[0]] = a[1];
+      }
+    }
+    
+    var styleStart = replaceStyle.indexOf('style=') + 'style='.length;
+    var styleNext = replaceStyle.slice(
+      styleStart).indexOf("\"") + styleStart + 1;
+    var styleEnd = replaceStyle.slice(
+      styleStart).split("\"", 2).join("\"").length + styleStart;
+    middle = replaceStyle.slice(
+      styleNext,
+      styleEnd,
+    ).split(';');
+    
+    for (var i in middle) {
+      var a = middle[i].split(':');
+      if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+        d[a[0]] = a[1];
+      }
+    }
+
+    var innerText = '';
+    for (const [key, value] of Object.entries(d)) {
+      if (key && value){
+        innerText += key + ':' + value + ';';
+      }
+      
+    }
+    replaceStyle = replaceStyle.replace(
+      replaceStyle.slice(
+        styleStart+1,
+        styleEnd,
+      ),
+      innerText + ",",
+    );
+    return replaceStyle;
+  
 }
