@@ -1,5 +1,18 @@
 
 const vscode = acquireVsCodeApi();
+const URL = "http://127.0.0.1:5000";
+
+//----------test------------//
+
+
+// getLog("user1").then(data => {
+//   console.log(data);
+// }
+// ).catch(err => {
+//   console.log(err);
+// }
+// );
+
 
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
@@ -291,11 +304,55 @@ function createInputBox(x, y, style){
   submit.addEventListener("click", function() {
     let text = document.getElementById("inputbox-input");
     if(text.value){
-      vscode.postMessage({
-        type: "onInsert",
-        value: text.value,
-        style: `style="${style}"`
-      })
+      // vscode.postMessage({
+      //   type: "onInsert",
+      //   value: text.value,
+      //   style: `style="${style}"`
+      // })
+      getLogByNLP("user1", text.value).then(data => {
+        if (data.success){
+          var length = Math.min(5, data.all.length);
+          var logData = data.all.slice(0, length);
+          createSidePanel(logData);
+
+          var hstBlocks = document.getElementsByClassName("hstBlock");
+          for (var i = 0; i < hstBlocks.length; i++){
+            var hstBlock = hstBlocks[i];
+            hstBlock.addEventListener('click', function(e){
+              
+              var targetHst = e.target;
+              while (targetHst.id !== "hstBlock"){
+                targetHst = targetHst.parentElement;
+              }
+              targetHst.style.backgroundColor = '#e6e6e6';
+              var slides = document.getElementsByClassName('confirmation');
+              for (var i = 0; i < slides.length; i++) {
+                slides[i].parentNode.style.position = 'null';
+                slides[i].parentNode.removeChild(slides[i]);
+              }
+              var confirmation = document.createElement('div');
+              confirmation.classList.add('confirmation');
+              confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
+              targetHst.style.position = 'relative';
+              targetHst.appendChild(confirmation);
+              confirmation.addEventListener('click', function(){
+                vscode.postMessage({
+                  type: "onInsert",
+                  value: logData[i]["text"],
+                  style: `style="${style}"`
+                })
+                targetHst.style.backgroundColor = 'white';
+              }
+              )
+      
+          });
+           
+          }
+
+
+        };
+      }
+      )
       closeInputBox();
     }
     else{
@@ -643,7 +700,54 @@ function dragEnd(e) {
 }
 
 //---------------------------SidePanel(test)---------------------------------//
-  var sidePanel = document.getElementById("sidePanel");
+function createSidePanel(logData){
+  var sidePanel = document.getElementById("sidePanelLog");
+  if (sidePanel){
+    removeAllChildNodes(sidePanel);
+    logData.forEach(function(element){
+      var hstBlock = document.createElement('div');
+      hstBlock.id = 'hstBlock';
+      hstBlock.classList.add('hstBlock');
+      hstBlock.style.padding = '20px';
+      hstBlock.style.margin = '10px';
+      hstBlock.style.backgroundColor = 'white';
+      hstBlock.style.radius = '5px';
+      
+
+      // var confirmation = document.createElement('div');
+      // confirmation.id = 'confirmation';
+      // confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
+      // confirmation.style.display = 'none';
+      // hstBlock.appendChild(confirmation);
+
+      sidePanel.appendChild(hstBlock);
+      hstBlock.addEventListener('mouseover', function(){
+        hstBlock.style.backgroundColor = '#e6e6e6';
+      });
+
+      hstBlock.addEventListener('mouseout', function(){
+          hstBlock.style.backgroundColor = 'white';
+      });
+      var targetKey = ["event", "label", "details", "createDate"];
+      for (var key of Object.keys(element)) {
+        if (targetKey.includes(key)){
+          var tag = document.createElement('p');
+          hstBlock.appendChild(tag);
+          var val = element[key].toString().replace(/</g, '&lt;');
+          if (key === "createDate"){
+            val = val.slice(0, val.indexOf("."));
+          }
+          tag.innerHTML = key + ": " + val;
+          hstBlock.appendChild(tag);
+
+        }
+      }
+  });
+
+
+  }
+}
+  
 
   // let searchLabel = document.createElement("div");
   // searchLabel.innerHTML = "<input type='text' id='searchLabel'/><button id='searchLabel-submit'>Search</button>";
@@ -663,40 +767,6 @@ function dragEnd(e) {
   //     text.setAttribute("placeholder", "Please enter a value");
   //   }
   // });
-
-
-  data.forEach(function(element){
-      var hstBlock = document.createElement('div');
-      hstBlock.id = 'hstBlock';
-      hstBlock.classList.add('hstBlock');
-      hstBlock.style.padding = '20px';
-      hstBlock.style.margin = '10px';
-      hstBlock.style.backgroundColor = 'white';
-      hstBlock.style.radius = '5px';
-      sidePanel.appendChild(hstBlock);
-      hstBlock.addEventListener('mouseover', function(){
-          hstBlock.style.backgroundColor = '#e6e6e6';
-      });
-      hstBlock.addEventListener('mouseout', function(){
-          hstBlock.style.backgroundColor = 'white';
-      });
-      var targetKey = ["event", "label", "details", "createDate"];
-      for (var key of Object.keys(element)) {
-        if (targetKey.includes(key)){
-          var tag = document.createElement('p');
-          hstBlock.appendChild(tag);
-          var val = element[key].toString().replace(/</g, '&lt;');
-          if (key === "createDate"){
-            val = val.slice(0, val.indexOf("."));
-          }
-          tag.innerHTML = key + ": " + val;
-          hstBlock.appendChild(tag);
-
-        }
-
-      }
-
-  });
 
   document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
       sidePanel.style.display = "none";
@@ -852,3 +922,42 @@ function getInsertedElements(){
 
 getInsertedElements();
 //console.log(inserted);
+
+
+function getLog(userId){
+  return new Promise((resolve, reject) => {
+    fetch(URL+"/db/getLogs?userId="+userId, {
+      method: 'GET'
+      })
+      .then(res => res.json())
+      .then(data => {
+        return resolve(data);
+      })
+      .catch(err => {
+        return reject(err);
+      })
+    })
+}
+
+function getLogByNLP(userId, nlp) {
+  return new Promise((resolve, reject) => {
+    fetch(URL+"/db/getLogByNLP", {
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId: userId, nlp: nlp})
+      })
+      .then(res => res.json())
+      .then(data => {
+        return resolve(data);
+      })
+      .catch(err => {
+        return reject(err);
+      })
+    })
+}
+
+function removeAllChildNodes(parent) {
+  while (parent.firstChild) {
+      parent.removeChild(parent.firstChild);
+  }
+}
