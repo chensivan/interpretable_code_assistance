@@ -881,7 +881,7 @@ var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
 function getCopilotText(element){
   let text = "";
   let attrs = element.getAttributeNames().reduce((acc, name) => {
-    if(name.toLowerCase() !== "src" && name.toLowerCase() !== "nlp"){
+    if(name.toLowerCase() !== "src" && name.toLowerCase() !== "nlp" && name.toLowerCase() !== "rid"){
       text += `${name}="${element.getAttribute(name)}, " `;
     }
     return {...acc, [name]: element.getAttribute(name)};
