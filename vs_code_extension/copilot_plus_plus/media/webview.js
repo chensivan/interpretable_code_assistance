@@ -88,7 +88,8 @@ document.addEventListener("click", function(event){
   && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
   && event.target.id !== "inputbox-event"
   && !findAncestor(event.target, "sidePanel")
-  && event.target.id !== "openbtn"){
+  && event.target.id !== "openbtn"
+  && event.target.id !== "hstBlock"){
     if (mode == 0){
       createEditBox(event.pageX, event.pageY, event.target);
     }
