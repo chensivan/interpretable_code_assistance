@@ -26,7 +26,10 @@ function handleSelectedIcon(event){
     mode = iconIds.indexOf(icon.id); 
     toggleSelectedIcon(icon.id);
     if(mode == 7){
-      createChatBox();
+      var sidePanel = document.getElementById("sidePanelLog");
+      if (sidePanel){
+        removeAllChildNodes(sidePanel);
+      }
     }
   }
 }
@@ -111,11 +114,12 @@ document.addEventListener("click", function(event){
       createInputBoxJs(event.pageX, event.pageY, event.target)
     }
     else if (mode == 7){
-      if (chatBotSelector){
-        ChatBot.setTargetElmnt(event.target);
-        // TODO: set close selector button
-        chatBotSelector = false;
-      }
+      // if (chatBotSelector){
+      //   ChatBot.setTargetElmnt(event.target);
+      //   // TODO: set close selector button
+      //   chatBotSelector = false;
+      // }
+      logElementHistory(event.target);
     }
   }
   else if (event.target.tagName !== "HTML"){
@@ -274,6 +278,13 @@ function closeBorder(ele){
 
 function closeChatBox(){
   closeById("chatBotOuter");
+}
+
+function emptySidePanel(){
+  var sidePanel = document.getElementById("sidePanelLog");
+  if (sidePanel){
+    removeAllChildNodes(sidePanel);
+  }
 }
 
 //---------------------------create basic box element---------------------------------//
@@ -803,10 +814,38 @@ document.getElementsByClassName("closebtn")[0].addEventListener("click", functio
   sidePanel.style.display = "none";
 });
 
+
 document.getElementById("openbtn").addEventListener("click", function(){
   sidePanel.style.display = "block";
 });
 }
+
+//---------------------------Log element history tool--------------------------//
+function logElementHistory(element){
+  emptySidePanel();
+  var elmntRid = getRID(element);
+  if (elmntRid){
+    getLogByRID("user1", elmntRid).then(data => {
+      console.log(data);
+      if (data.length > 0){
+        createSidePanel(data);
+      }else{
+        var sidePanel = document.getElementById("sidePanelLog");
+        var tip = document.createElement('p');
+        tip.innerHTML = "No history found";
+        sidePanel.appendChild(tip);
+      }
+    }
+    );
+  }else{
+    var sidePanel = document.getElementById("sidePanelLog");
+    var tip = document.createElement('p');
+    tip.innerHTML = "No history found";
+    sidePanel.appendChild(tip);
+  }
+    
+  }
+
 
 //---------------------------Helper functions---------------------------------//
 
@@ -980,6 +1019,24 @@ function getLogByNLP(userId, nlp) {
     })
   })
 }
+
+function getLogByRID(userId, rId) {
+  return new Promise((resolve, reject) => {
+    fetch(URL+"/db/getLogByRID", {
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId: userId, rId: rId})
+      })
+      .then(res => res.json())
+      .then(data => {
+        return resolve(data);
+      })
+      .catch(err => {
+        return reject(err);
+      })
+    })
+}
+
 
 function removeAllChildNodes(parent) {
   while (parent.firstChild) {
