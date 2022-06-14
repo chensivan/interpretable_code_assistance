@@ -749,7 +749,7 @@ function createSidePanel(logData){
       hstBlock.classList.add('hstBlock');
       hstBlock.style.padding = '20px';
       hstBlock.style.margin = '10px';
-      hstBlock.style.backgroundColor = 'white';
+      hstBlock.style.backgroundColor = '#ededed';
       hstBlock.style.radius = '5px';
       
       sidePanel.appendChild(hstBlock);
@@ -758,20 +758,8 @@ function createSidePanel(logData){
       });
       
       hstBlock.addEventListener('mouseout', function(){
-        hstBlock.style.backgroundColor = 'white';
+        hstBlock.style.backgroundColor = '#ededed';
       });
-      
-      /*let wrapper= document.createElement('div');
-      wrapper.innerHTML= element.code;
-      let codeBlock= wrapper.firstChild;
-      codeBlock.style.display = 'block';
-      codeBlock.style.height = '50px';
-      codeBlock.style.width = '50px';
-      codeBlock.style.overflow = 'hidden';
-      codeBlock.style.width = 'auto';
-      codeBlock.style.position = 'relative';
-      codeBlock.style.top = '0';
-      codeBlock.style.left = '0';*/
 
       hstBlock.innerHTML = `
       <table>
@@ -784,7 +772,7 @@ function createSidePanel(logData){
       Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
       </td></tr></table>`;
 
-     /* let wrapper= document.createElement('div');
+     let wrapper= document.createElement('div');
       wrapper.innerHTML= element.code;
       //let codeBlock= wrapper.firstChild;
     wrapper.style.display = "none";
@@ -792,7 +780,7 @@ function createSidePanel(logData){
     document.body.appendChild(wrapper);
 
 html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
-  useCORS: true,
+  //useCORS: true,
   allowTaint : true,
   onclone: function (clonedDoc) {
       console.log('historyIndex-'+index);
@@ -805,7 +793,7 @@ html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
   canvas.style.width = "50px"
   document.querySelector("#test"+index).appendChild(canvas)
   document.body.removeChild(document.querySelector("#historyIndex-"+index))
-});*/
+});
     });
   return;
 }
