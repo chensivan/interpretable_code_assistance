@@ -311,81 +311,93 @@ function createInputBox(x, y, style){
     let text = document.getElementById("inputbox-input");
     if(text.value){
       getLogByNLP("user1", text.value).then(data => {
+        let sidePanel = document.getElementById("sidePanelLog");
         if (data.success){
-          var length = Math.min(3, data.all.length);
-          var logData = data.all.slice(0, length);
-          console.log(logData);
+          let length = Math.min(3, data.all.length);
+          let logData = data.all.slice(0, length);
           createSidePanel(logData);
-          
-          var sidePanel = document.getElementById("sidePanelLog");
-          var declineBtn = document.createElement("button");
-          declineBtn.innerHTML = "Create New";
-          sidePanel.appendChild(declineBtn);
-          declineBtn.addEventListener("click", function() {
-            vscode.postMessage({
-              type: "onInsert",
-              success: true,
-              value: text.value,
-              style: `style="${style}"`
-            })
-            getLog("user1").then(data => {
-              createSidePanel(data);
-            }
-            );
-          }
-          );
-          
-          var hstBlocks = document.getElementsByClassName("hstBlock");
+
+          let hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
-            var hstBlock = hstBlocks[i];
+            let hstBlock = hstBlocks[i];
             hstBlock.addEventListener('click', function(e){
-              
-              var targetHst = e.target;
-              while (targetHst.id !== "hstBlock"){
+              let targetHst = e.target;
+              while (!targetHst.classList.contains("hstBlock")){
                 targetHst = targetHst.parentElement;
               }
               targetHst.style.backgroundColor = '#e6e6e6';
-              var slides = document.getElementsByClassName('confirmation');
-              for (var i = 0; i < slides.length; i++) {
-                slides[i].parentNode.style.position = 'null';
-                slides[i].parentNode.removeChild(slides[i]);
+              let slides = document.getElementsByClassName('confirmation');
+              for (let j = 0; j < slides.length; j++) {
+                slides[j].parentNode.style.position = 'null';
+                slides[j].parentNode.removeChild(slides[j]);
               }
-              var confirmation = document.createElement('div');
+              let confirmation = document.createElement('div');
               confirmation.classList.add('confirmation');
               confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
               targetHst.style.position = 'relative';
               targetHst.appendChild(confirmation);
               confirmation.addEventListener('click', function(){
-                var replaceStyle = handleTextReplace(style, logData[i].text);
-                vscode.postMessage({
+              let element = logData[targetHst.getAttribute("index")]
+              let wrapper= document.createElement('div');
+              wrapper.innerHTML= element.code;
+              let codeBlock= wrapper.firstChild;
+              let replaceStyle = handleTextReplace(style, "style=\""+codeBlock.getAttribute("style")+"\"");
+              codeBlock.style = replaceStyle.substring("style=\"".length, replaceStyle.length - 2);
+              codeBlock.removeAttribute("eid");
+              codeBlock.setAttribute("rid", "rid-placeholder");
+              codeBlock.setAttribute("nlp", text.value);
+              vscode.postMessage({
                   type: "onInsert",
-                  success: true,
+                  //success: true,
                   value: text.value,
-                  style: `${replaceStyle}`
-                })
+                  style: `${replaceStyle}`,
+                  code: codeBlock.outerHTML,
+                  opt: 2 // "copy & paste" old elements
+              });
                 targetHst.style.backgroundColor = 'white';
                 getLog("user1").then(data => {
                   createSidePanel(data);
-                }
-                );
-              }
-              )
-              
+                });
+              });
             });
-            
           }
-          
-          
-        }else{
-          vscode.postMessage({
-            type: "onInsert",
-            success: false,
-            value: text.value,
-            style: `style="${style}"`
-          })
         }
-      }
-      )
+        else{
+          createSidePanel([]);
+        }
+          
+          let declineBtn = document.createElement("button");
+          declineBtn.innerHTML = "Create New";
+          sidePanel.appendChild(declineBtn);
+          declineBtn.addEventListener("click", function() {
+            vscode.postMessage({
+              type: "onInsert",
+              //success: true,
+              value: text.value,
+              style: `style="${style}"`,
+              opt: 0 // create new
+            });
+            getLog("user1").then(data => {
+              createSidePanel(data);
+            });
+          });
+
+          let copilotbtn = document.createElement("button");
+          copilotbtn.innerHTML = "Create New Using Copilot";
+          sidePanel.appendChild(copilotbtn);
+          copilotbtn.addEventListener("click", function() {
+            vscode.postMessage({
+              type: "onInsert",
+              //success: true,
+              value: text.value,
+              style: `style="${style}"`,
+              opt: 1 // create new using copilot
+            });
+            getLog("user1").then(data => {
+              createSidePanel(data);
+            });
+          });
+      });
       closeInputBox();
     }
     else{
@@ -438,7 +450,6 @@ function createEditBox(x, y, element){
       let rid = getRID(element);
       //let newEle = document.createElement(element.tagName);
       element.innerHTML = input.value;
-      console.log(getCopilotText(element));
       //newEle.outerHTML = input.value;
       vscode.postMessage({
         type: "onEdit",
@@ -448,14 +459,13 @@ function createEditBox(x, y, element){
         text: getCopilotText(element),
         inner: input.value,
         rid: rid
-      })
+      });
       
       closeInputBox();
     });
     close.addEventListener("click", function(){
       closeInputBox();
-    }
-    );
+    });
   }
 }
 
@@ -463,7 +473,6 @@ function createEditBox(x, y, element){
 function createDeleteBox(x, y, element){
   closeInputBox();
   createInfoBox(x, y, element);
-  let inputBox = document.getElementById("inputbox");
   let button = document.createElement("button");
   button.id = "inputbox-button";
   button.innerText = "delete "+element.tagName;
@@ -745,7 +754,8 @@ function createSidePanel(logData){
     removeAllChildNodes(sidePanel);
     logData.forEach((element, index) => {
       let hstBlock = document.createElement('div');
-      hstBlock.id = 'hstBlock';
+      //hstBlock.id = 'hstBlock';
+      hstBlock.setAttribute('index', index);
       hstBlock.classList.add('hstBlock');
       hstBlock.style.padding = '20px';
       hstBlock.style.margin = '10px';
@@ -783,10 +793,8 @@ html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
   //useCORS: true,
   allowTaint : true,
   onclone: function (clonedDoc) {
-      console.log('historyIndex-'+index);
       let temp = clonedDoc.getElementById('historyIndex-'+index);
       temp.style.display = "block";
-      console.log(temp);
   }
 }).then(canvas => {
   canvas.style.height = "auto"
@@ -823,15 +831,13 @@ function logElementHistory(element){
         tip.innerHTML = "No history found";
         sidePanel.appendChild(tip);
       }
-    }
-    );
+    });
   }else{
     var sidePanel = document.getElementById("sidePanelLog");
     var tip = document.createElement('p');
     tip.innerHTML = "No history found";
     sidePanel.appendChild(tip);
-  }
-    
+  } 
   }
 
 

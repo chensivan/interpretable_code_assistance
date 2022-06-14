@@ -108,16 +108,23 @@ class CodePanel {
             if (!data.value) {
               return;
             }
-            if (!data.success) {
+            /*if (!data.success) {
               vscode.window.showInformationMessage(`No proper recommendations found`);
             }else{
               vscode.window.showInformationMessage(`Recommendations from history found`);
-            }
-            var insertStyle = data.style;
-            var insertValue = data.value;
+            }*/
             let rId = getNonce();
-            this.log("user1", "insert", "insert object with prompt/label: "+insertValue+" and style "+insertStyle, insertValue, "style=\""+insertStyle+"\"", rId);
-            var comment = `<div ${insertStyle} nlp="${insertValue}" rid="${rId}">\n<!-- ${insertValue} -->\n</div>`;
+            this.log("user1", "insert", "insert object with prompt/label: "+data.value+" and style "+data.style, data.value, "style=\""+data.style+"\"", rId);
+            
+            if(data.opt == 0){
+              var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
+            }
+            else if(data.opt == 1){
+              var comment = `<div ${data.style} nlp="${data.value}" rid="${rId}">\n<!-- ${data.value} -->\n</div>`;
+            }
+            else if(data.opt == 2){
+              var comment = data.code.replace("rid-placeholder", rId);
+            }
             this._replaceInEditor(comment+"\n</body>", "</body>");
             break;
           }
