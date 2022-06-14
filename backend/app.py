@@ -48,6 +48,7 @@ def insertLog():
         log["rId"] = body["code"]
     else:
         log["code"] = body["code"]
+        log["rId"] = body["rid"]
 
     result = logCol.insert_one(log)
     return str(result.inserted_id) # return the id of the inserted document
