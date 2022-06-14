@@ -105,7 +105,6 @@ def getAllLabels(userId):
 
 
 @flask_app.route("/db/getTextByNLP", methods = ["POST"])
-@cross_origin()
 def getTextByNLP():
     logCol = db["log"]
     body = request.json
@@ -122,8 +121,7 @@ def getTextByNLP():
     else:
         return json.dumps({"success": False})
 
-@flask_app.route("/db/getLogByRID", methods = ["GET"])
-@cross_origin()
+@flask_app.route("/db/getLogByRID", methods = ["POST"])
 def getLogByRID():
     logCol = db["log"]
     body = request.json
