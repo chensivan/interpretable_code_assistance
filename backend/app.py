@@ -105,6 +105,7 @@ def getAllLabels(userId):
 
 
 @flask_app.route("/db/getTextByNLP", methods = ["POST"])
+@cross_origin()
 def getTextByNLP():
     logCol = db["log"]
     body = request.json
@@ -121,22 +122,18 @@ def getTextByNLP():
     else:
         return json.dumps({"success": False})
 
-@flask_app.route("/db/getLogByNLP", methods = ["POST"])
-def getLogByNLP():
+@flask_app.route("/db/getLogByRID", methods = ["GET"])
+@cross_origin()
+def getLogByRID():
     logCol = db["log"]
     body = request.json
 
-    cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
-    similarities, allLabels = similarity(body["userId"], body["nlp"])
-    if similarities[0][1] > 0.5:
-        cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[0][0]]})
-        results = []
-        for result in cursor:
-            results.append(result)
-        newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
-        return json.dumps({"success": True, "all": newlist}, default=str)
-    else:
-        return json.dumps({"success": False})
+    cursor = logCol.find({"userId": body["userId"], "rId": body["rId"]})
+    results = []
+    for result in cursor:
+        results.append(result)
+    newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
+    return json.dumps(newlist, default=str)
 
 
 if __name__ == "__main__":

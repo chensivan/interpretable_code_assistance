@@ -26,7 +26,10 @@ function handleSelectedIcon(event){
     mode = iconIds.indexOf(icon.id); 
     toggleSelectedIcon(icon.id);
     if(mode == 7){
-      createChatBox();
+      var sidePanel = document.getElementById("sidePanelLog");
+      if (sidePanel){
+        removeAllChildNodes(sidePanel);
+      }
     }
   }
 }
@@ -951,6 +954,24 @@ function getLogByNLP(userId, nlp) {
       })
     })
 }
+
+function getLogByRID(userId, rId) {
+  return new Promise((resolve, reject) => {
+    fetch(URL+"/db/getLogByRID", {
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId: userId, rId: rId})
+      })
+      .then(res => res.json())
+      .then(data => {
+        return resolve(data);
+      })
+      .catch(err => {
+        return reject(err);
+      })
+    })
+}
+
 
 function removeAllChildNodes(parent) {
   while (parent.firstChild) {
