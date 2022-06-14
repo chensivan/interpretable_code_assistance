@@ -89,8 +89,8 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new, data.old);
-            if (data.opt == 0 && data.nlp){
-              this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text, data.new);
+            if (data.nlp){
+              this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -100,7 +100,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
-              this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text, data.new);
+              this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -138,7 +138,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new,data.old);
             if(data.nlp){
-              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, data.nlp, data.text, data.new);
+              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -148,7 +148,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if(data.nlp){
-              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, data.nlp, data.text, data.new);
+              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -158,7 +158,7 @@ class CodePanel {
             }
             this._replaceInEditor(" ",data.value);
             if(data.nlp){
-              this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "");
+              this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "", data.rid);
             }
             //this.log("user1", "delete", data.value);
             break;
@@ -174,7 +174,8 @@ class CodePanel {
               this._replaceInEditor(data.new, data.old);
             }
             if(data.nlp){
-              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: <${data.nlp}>`, data.nlp, data.text, data.new);
+              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: <${data.nlp}>`, 
+              data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -189,11 +190,11 @@ class CodePanel {
       });
     }
 
-    log(userId, event, details, label, text, code){
+    log(userId, event, details, label, text, code, rid){
       fetch(URL+"/db/insertLog", {
       method: 'POST', 
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code})
+      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid})
       })
   }
 
@@ -273,7 +274,6 @@ class CodePanel {
               var pos1 = new vscode.Position(lineNumber-1,comment.length);
               
               var range = new vscode.Range(pos1, pos1);
-              // console.log(comment)
               // Line added - by having a selection at the same position twice, the cursor jumps there
               editor.revealRange(range);
               editor.edit(editBuilder => {
@@ -305,9 +305,6 @@ class CodePanel {
               }
               
               let newDoc = text.replace(oldText, newText);
-              console.log(newText);
-              console.log(oldText);
-              //console.log(text);
               var firstLine = editor.document.lineAt(0);
               var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
               var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);

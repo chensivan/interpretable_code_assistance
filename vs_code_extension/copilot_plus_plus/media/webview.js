@@ -264,9 +264,10 @@ function closeBorder(ele){
       type: 'onResize',
       new: old.outerHTML,
       old: ele,
-      nlp: old.getAttribute("nlp"),
+      nlp: getNLP(old),
       text: getCopilotText(old),
-      size: old.style.width + " wide and "+old.style.height+" height"
+      size: old.style.width + " wide and "+old.style.height+" height",
+      rid: getRID(old)
     })
   }
 }
@@ -422,7 +423,8 @@ function createEditBox(x, y, element){
     submit.addEventListener("click", function(){
       let input = document.getElementById("inputbox-input");
       let temp = element.outerHTML
-      let label = element.getAttribute("nlp");
+      let label = getNLP(element);
+      let rid = getRID(element);
       //let newEle = document.createElement(element.tagName);
       element.innerHTML = input.value;
       console.log(getCopilotText(element));
@@ -433,7 +435,8 @@ function createEditBox(x, y, element){
         old: temp,
         nlp: label,
         text: getCopilotText(element),
-        inner: input.value
+        inner: input.value,
+        rid: rid
       })
      
       closeInputBox();
@@ -457,7 +460,8 @@ function createDeleteBox(x, y, element){
   vscode.postMessage({
       type: "delete",
       value: element.outerHTML,
-      nlp: element.getAttribute("nlp"),
+      nlp: getNLP(element),
+      rid: getRID(element),
       text: "", //since the user cleared the element, assume it is not the wanted style???
       detail: getCopilotText(element)
     })
@@ -507,7 +511,8 @@ function createInputBoxJs(x, y, element){
       event: event.value,
       name: name.value,
       script: script.value,
-      nlp: element.getAttribute("nlp"),
+      nlp: getNLP(element),
+      rid: getRID(element),
       text: getCopilotText(temp)
     })
     closeInputBox();
@@ -624,7 +629,8 @@ function createInputBoxAttr(x, y, element){
         type: "changeAttr",
         old: element.outerHTML,
         new: newEle.outerHTML,
-        nlp: element.getAttribute("nlp"),
+        nlp: getNLP(element),
+        rid: getRID(element),
         text: getCopilotText(newEle),
         changes: total
       })
@@ -706,7 +712,8 @@ function dragEnd(e) {
       type: 'onDrag',
       new: defineSelector(div),
       old: selector,
-      nlp: div.getAttribute("nlp"),
+      nlp: getNLP(div),
+      rid: getRID(div),
       text: getCopilotText(div),
       transform: translateX+"px right and "+translateY+"px down"
     })
@@ -881,7 +888,7 @@ var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
 function getCopilotText(element){
   let text = "";
   let attrs = element.getAttributeNames().reduce((acc, name) => {
-    if(name.toLowerCase() !== "src" && name.toLowerCase() !== "nlp" && name.toLowerCase() !== "rid"){
+    if(name.toLowerCase() !== "src" && name.toLowerCase() !== "nlp" && name.toLowerCase() !== "rid" && name.toLowerCase() !== "eid"){
       text += `${name}="${element.getAttribute(name)}, " `;
     }
     return {...acc, [name]: element.getAttribute(name)};
@@ -995,4 +1002,22 @@ function handleTextReplace(insertStyle, replaceStyle) {
     );
     return replaceStyle;
   
+}
+
+function getNLP(element){
+    while(element.tagName !== "BODY"){
+      if(element.hasAttribute("nlp")){
+        return element.getAttribute("nlp");
+      }
+      element = element.parentNode;
+    }
+}
+
+function getRID(element){
+    while(element.tagName !== "BODY"){
+      if(element.hasAttribute("eid")){
+        return element.getAttribute("eid");
+      }
+      element = element.parentNode;
+    }
 }
