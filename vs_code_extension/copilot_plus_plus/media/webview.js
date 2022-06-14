@@ -364,7 +364,7 @@ function createInputBox(x, y, style){
 
 
         }else{
-          alert("I am an alert box!");
+          //alert("I am an alert box!");
           vscode.postMessage({
             type: "onInsert",
             success: false,
@@ -893,30 +893,24 @@ function getInsertedElements(){
   //get all elements in the document
   let elements = document.getElementsByTagName("*");
   let inserted = {}
-  let replaced = {}
-  //for each
   for(let i = 0; i < elements.length; i++){
     //check if the element has a rId attribute
     if(elements[i].hasAttribute("rid")){
-      //if it does, add it to the inserted elements object
-      inserted[elements[i].getAttribute("rid")] = elements[i].outerHTML;
-      //clone elements[i]
       let clone = elements[i].cloneNode(true);
       clone.removeAttribute("rid");
-      replaced[elements[i].getAttribute("rid")] = clone.outerHTML;
+      clone.setAttribute("eid", elements[i].getAttribute("rid"));
+      inserted[elements[i].getAttribute("rid")] = clone.outerHTML;
     }
   }
   if(inserted !== {}){
     vscode.postMessage({
       type: "onComplete",
-      inserted: inserted,
-      replaced: replaced
+      inserted: inserted
     });
   }
 }
 
 getInsertedElements();
-//console.log(inserted);
 
 
 function getLog(userId){
