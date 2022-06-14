@@ -315,7 +315,7 @@ function createInputBox(x, y, style){
         if (data.success){
           let length = Math.min(3, data.all.length);
           let logData = data.all.slice(0, length);
-          createSidePanel(logData);
+          createSidePanel(logData, true);
 
           let hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
@@ -748,7 +748,7 @@ function dragEnd(e) {
 }
 
 //---------------------------SidePanel(test)---------------------------------//
-function createSidePanel(logData){
+function createSidePanel(logData, insert){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     removeAllChildNodes(sidePanel);
@@ -771,16 +771,28 @@ function createSidePanel(logData){
         hstBlock.style.backgroundColor = '#ededed';
       });
 
+      if(insert){
       hstBlock.innerHTML = `
       <table>
       <tr>
       <td id="test${index}"></td>
-      <td>
-      Event: ${element.event}<br>
-      Label: ${element.label}<br>
-      Details: ${element.details}<br>
+      <td style="word-wrap: break-word;">
+      <strong>${element.label}</strong><br/>
       Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
       </td></tr></table>`;
+      }
+      else{
+        hstBlock.innerHTML = `
+      <table>
+      <tr>
+      <td id="test${index}"></td>
+      <td>
+      Event: ${element.event}<br/>
+      Label: ${element.label}<br/>
+      Details: ${element.details}<br/>
+      Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
+      </td></tr></table>`;
+      }
 
      let wrapper= document.createElement('div');
       wrapper.innerHTML= element.code;
