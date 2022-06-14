@@ -83,7 +83,8 @@ def getLogs():
     results = []
     for result in cursor:
         results.append(result)
-    return json.dumps(results, default=str)
+    newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
+    return json.dumps(newList, default=str)
 
 # testing api
 #@flask_app.route("/similarity", methods = ["GET"])
