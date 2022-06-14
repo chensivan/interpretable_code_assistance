@@ -99,7 +99,7 @@ def getAllLabels(userId):
     cursor = logCol.find(key); 
     results = []
     for result in cursor:
-        if "label" in result:
+        if "label" in result and result["label"] not in results:
             results.append(result["label"])
     return results
 
@@ -141,13 +141,19 @@ def getLogByNLP():
 
     cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
     similarities, allLabels = similarity(body["userId"], body["nlp"])
-    if similarities[0][1] > 0.5:
-        cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[0][0]]})
-        results = []
-        for result in cursor:
-            results.append(result)
-        newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
-        return json.dumps({"success": True, "all": newlist}, default=str)
+    results = []
+    for i in range(len(similarities)):
+        if similarities[i][1] > 0.5:
+            cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[i][0]]})
+            newest = {}
+            for log in cursor:
+                rId = log["rId"]
+                if rId not in newest or newest[rId]["createDate"] < log["createDate"]:
+                    newest[rId] = log
+            for log in newest.values():
+                results.append(log)
+    if len(results) > 0:
+        return json.dumps({"success": True, "all": results}, default=str)
     else:
         return json.dumps({"success": False})
 
