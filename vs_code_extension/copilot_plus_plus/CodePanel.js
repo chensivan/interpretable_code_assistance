@@ -340,6 +340,7 @@ class CodePanel {
         const resizeIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "resize.png"));
         const deleteIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "delete.png"));
         const chatIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.png"));
+        const html2canvas = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "html2canvas.min.js"));
         // Use a nonce to only allow specific scripts to be run
         const nonce = getNonce();
         
@@ -380,6 +381,7 @@ class CodePanel {
           <link href="${stylesResetUri}" rel="stylesheet">
           <link href="${chatBotUri}" rel="stylesheet">
           <script src="${chatBotSrc}"></script>
+          <script src="${html2canvas}"></script>
           <script nonce="${nonce}">
           var data = ${JSON.stringify(data)};
           ` + jsFile.toString() + `

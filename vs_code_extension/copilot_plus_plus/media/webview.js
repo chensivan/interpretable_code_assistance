@@ -312,13 +312,14 @@ function createInputBox(x, y, style){
     if(text.value){
       getLogByNLP("user1", text.value).then(data => {
         if (data.success){
-          var length = Math.min(5, data.all.length);
+          var length = Math.min(3, data.all.length);
           var logData = data.all.slice(0, length);
+          console.log(logData);
           createSidePanel(logData);
-
+          
           var sidePanel = document.getElementById("sidePanelLog");
           var declineBtn = document.createElement("button");
-          declineBtn.innerHTML = "Create a new chat";
+          declineBtn.innerHTML = "Create New";
           sidePanel.appendChild(declineBtn);
           declineBtn.addEventListener("click", function() {
             vscode.postMessage({
@@ -333,7 +334,7 @@ function createInputBox(x, y, style){
             );
           }
           );
-
+          
           var hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
             var hstBlock = hstBlocks[i];
@@ -369,14 +370,13 @@ function createInputBox(x, y, style){
                 );
               }
               )
-      
-          });
-           
+              
+            });
+            
           }
-
-
+          
+          
         }else{
-          //alert("I am an alert box!");
           vscode.postMessage({
             type: "onInsert",
             success: false,
@@ -449,7 +449,7 @@ function createEditBox(x, y, element){
         inner: input.value,
         rid: rid
       })
-     
+      
       closeInputBox();
     });
     close.addEventListener("click", function(){
@@ -468,7 +468,7 @@ function createDeleteBox(x, y, element){
   button.id = "inputbox-button";
   button.innerText = "delete "+element.tagName;
   button.addEventListener("click", function() {
-  vscode.postMessage({
+    vscode.postMessage({
       type: "delete",
       value: element.outerHTML,
       nlp: getNLP(element),
@@ -492,12 +492,12 @@ function createInputBoxJs(x, y, element){
   div.classList.add("autocomplete");
   let event = document.createElement("input");
   event.id = "inputbox-event";
-
+  
   div.appendChild(event);
   autocomplete(event, EVENTS);
-
+  
   event.placeholder = "action event, ex. onclick";
-
+  
   
   let name = document.createElement("input");
   name.id = "inputbox-name";
@@ -513,9 +513,9 @@ function createInputBoxJs(x, y, element){
   submit.innerHTML = "Submit";
   
   submit.addEventListener("click", function() {
-  let temp = element.cloneNode(true);
-  temp.setAttribute(event.value, name.value);
-  vscode.postMessage({
+    let temp = element.cloneNode(true);
+    temp.setAttribute(event.value, name.value);
+    vscode.postMessage({
       type: "createjs",
       old: element.outerHTML,
       new: temp.outerHTML,
@@ -606,11 +606,11 @@ function createInputBoxAttr(x, y, element){
       for (var key in attrs) {
         newEle.setAttribute(key, attrs[key]);
       }
-
+      
       let add = "Added attributes: ";
       let remove = "Removed attributes: ";
       let change = "Changed attributes: ";
-
+      
       newEle.getAttributeNames().forEach(function(name){
         if(!element.getAttribute(name) && element.getAttribute(name)!==""){
           add += name + ", ";
@@ -624,7 +624,7 @@ function createInputBoxAttr(x, y, element){
           change += name + " from " + element.getAttribute(name) + " to " + newEle.getAttribute(name) + ", ";
         }
       });
-
+      
       let total = "";
       if(add !== "Added attributes: "){
         total += add.substring(0, add.length - 2) + "\n";
@@ -635,7 +635,7 @@ function createInputBoxAttr(x, y, element){
       if(change !== "Changed attributes: "){
         total += change.substring(0, change.length - 2) + "\n";
       }
-
+      
       vscode.postMessage({
         type: "changeAttr",
         old: element.outerHTML,
@@ -740,11 +740,11 @@ function dragEnd(e) {
 
 //---------------------------SidePanel(test)---------------------------------//
 function createSidePanel(logData){
-  var sidePanel = document.getElementById("sidePanelLog");
+  let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     removeAllChildNodes(sidePanel);
-    logData.forEach(function(element){
-      var hstBlock = document.createElement('div');
+    logData.forEach((element, index) => {
+      let hstBlock = document.createElement('div');
       hstBlock.id = 'hstBlock';
       hstBlock.classList.add('hstBlock');
       hstBlock.style.padding = '20px';
@@ -756,38 +756,69 @@ function createSidePanel(logData){
       hstBlock.addEventListener('mouseover', function(){
         hstBlock.style.backgroundColor = '#e6e6e6';
       });
-
+      
       hstBlock.addEventListener('mouseout', function(){
-          hstBlock.style.backgroundColor = 'white';
+        hstBlock.style.backgroundColor = 'white';
       });
-      var targetKey = ["event", "label", "details", "createDate"];
-      for (var key of Object.keys(element)) {
-        if (targetKey.includes(key)){
-          var tag = document.createElement('p');
-          hstBlock.appendChild(tag);
-          var val = element[key].toString().replace(/</g, '&lt;');
-          if (key === "createDate"){
-            val = val.slice(0, val.indexOf("."));
-          }
-          tag.innerHTML = key + ": " + val;
-          hstBlock.appendChild(tag);
+      
+      /*let wrapper= document.createElement('div');
+      wrapper.innerHTML= element.code;
+      let codeBlock= wrapper.firstChild;
+      codeBlock.style.display = 'block';
+      codeBlock.style.height = '50px';
+      codeBlock.style.width = '50px';
+      codeBlock.style.overflow = 'hidden';
+      codeBlock.style.width = 'auto';
+      codeBlock.style.position = 'relative';
+      codeBlock.style.top = '0';
+      codeBlock.style.left = '0';*/
 
-        }
-      }
-  });
+      hstBlock.innerHTML = `
+      <table>
+      <tr>
+      <td id="test${index}"></td>
+      <td>
+      Event: ${element.event}<br>
+      Label: ${element.label}<br>
+      Details: ${element.details}<br>
+      Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
+      </td></tr></table>`;
 
+     /* let wrapper= document.createElement('div');
+      wrapper.innerHTML= element.code;
+      //let codeBlock= wrapper.firstChild;
+    wrapper.style.display = "none";
+    wrapper.id = "historyIndex-"+index;
+    document.body.appendChild(wrapper);
 
+html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
+  useCORS: true,
+  allowTaint : true,
+  onclone: function (clonedDoc) {
+      console.log('historyIndex-'+index);
+      let temp = clonedDoc.getElementById('historyIndex-'+index);
+      temp.style.display = "block";
+      console.log(temp);
   }
+}).then(canvas => {
+  canvas.style.height = "auto"
+  canvas.style.width = "50px"
+  document.querySelector("#test"+index).appendChild(canvas)
+  document.body.removeChild(document.querySelector("#historyIndex-"+index))
+});*/
+    });
   return;
 }
-  
-  document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
-      sidePanel.style.display = "none";
-  });
 
-  document.getElementById("openbtn").addEventListener("click", function(){
-      sidePanel.style.display = "block";
-  });
+document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
+  sidePanel.style.display = "none";
+});
+
+
+document.getElementById("openbtn").addEventListener("click", function(){
+  sidePanel.style.display = "block";
+});
+}
 
 //---------------------------Log element history tool--------------------------//
 function logElementHistory(element){
@@ -824,64 +855,64 @@ function autocomplete(inp, arr) {
   var currentFocus;
   /*execute a function when someone writes in the text field:*/
   inp.addEventListener("input", function(e) {
-      var a, b, i, val = this.value;
-      /*close any already open lists of autocompleted values*/
-      closeAllLists();
-      if (!val) { return false;}
-      currentFocus = -1;
-      /*create a DIV element that will contain the items (values):*/
-      a = document.createElement("DIV");
-      a.setAttribute("id", this.id + "autocomplete-list");
-      a.setAttribute("class", "autocomplete-items");
-      /*append the DIV element as a child of the autocomplete container:*/
-      this.parentNode.appendChild(a);
-      /*for each item in the array...*/
-      for (i = 0; i < arr.length; i++) {
-        /*check if the item starts with the same letters as the text field value:*/
-        if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
-          /*create a DIV element for each matching element:*/
-          b = document.createElement("DIV");
-          /*make the matching letters bold:*/
-          b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-          b.innerHTML += arr[i].substr(val.length);
-          /*insert a input field that will hold the current array item's value:*/
-          b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-          /*execute a function when someone clicks on the item value (DIV element):*/
-          b.addEventListener("click", function(e) {
-              /*insert the value for the autocomplete text field:*/
-              inp.value = this.getElementsByTagName("input")[0].value;
-              /*close the list of autocompleted values,
-              (or any other open lists of autocompleted values:*/
-              closeAllLists();
-          });
-          a.appendChild(b);
-        }
+    var a, b, i, val = this.value;
+    /*close any already open lists of autocompleted values*/
+    closeAllLists();
+    if (!val) { return false;}
+    currentFocus = -1;
+    /*create a DIV element that will contain the items (values):*/
+    a = document.createElement("DIV");
+    a.setAttribute("id", this.id + "autocomplete-list");
+    a.setAttribute("class", "autocomplete-items");
+    /*append the DIV element as a child of the autocomplete container:*/
+    this.parentNode.appendChild(a);
+    /*for each item in the array...*/
+    for (i = 0; i < arr.length; i++) {
+      /*check if the item starts with the same letters as the text field value:*/
+      if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+        /*create a DIV element for each matching element:*/
+        b = document.createElement("DIV");
+        /*make the matching letters bold:*/
+        b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+        b.innerHTML += arr[i].substr(val.length);
+        /*insert a input field that will hold the current array item's value:*/
+        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+        /*execute a function when someone clicks on the item value (DIV element):*/
+        b.addEventListener("click", function(e) {
+          /*insert the value for the autocomplete text field:*/
+          inp.value = this.getElementsByTagName("input")[0].value;
+          /*close the list of autocompleted values,
+          (or any other open lists of autocompleted values:*/
+          closeAllLists();
+        });
+        a.appendChild(b);
       }
+    }
   });
   /*execute a function presses a key on the keyboard:*/
   inp.addEventListener("keydown", function(e) {
-      var x = document.getElementById(this.id + "autocomplete-list");
-      if (x) x = x.getElementsByTagName("div");
-      if (e.keyCode == 40) {
-        /*If the arrow DOWN key is pressed,
-        increase the currentFocus variable:*/
-        currentFocus++;
-        /*and and make the current item more visible:*/
-        addActive(x);
-      } else if (e.keyCode == 38) { //up
-        /*If the arrow UP key is pressed,
-        decrease the currentFocus variable:*/
-        currentFocus--;
-        /*and and make the current item more visible:*/
-        addActive(x);
-      } else if (e.keyCode == 13) {
-        /*If the ENTER key is pressed, prevent the form from being submitted,*/
-        e.preventDefault();
-        if (currentFocus > -1) {
-          /*and simulate a click on the "active" item:*/
-          if (x) x[currentFocus].click();
-        }
+    var x = document.getElementById(this.id + "autocomplete-list");
+    if (x) x = x.getElementsByTagName("div");
+    if (e.keyCode == 40) {
+      /*If the arrow DOWN key is pressed,
+      increase the currentFocus variable:*/
+      currentFocus++;
+      /*and and make the current item more visible:*/
+      addActive(x);
+    } else if (e.keyCode == 38) { //up
+      /*If the arrow UP key is pressed,
+      decrease the currentFocus variable:*/
+      currentFocus--;
+      /*and and make the current item more visible:*/
+      addActive(x);
+    } else if (e.keyCode == 13) {
+      /*If the ENTER key is pressed, prevent the form from being submitted,*/
+      e.preventDefault();
+      if (currentFocus > -1) {
+        /*and simulate a click on the "active" item:*/
+        if (x) x[currentFocus].click();
       }
+    }
   });
   function addActive(x) {
     /*a function to classify an item as "active":*/
@@ -911,15 +942,15 @@ function autocomplete(inp, arr) {
   }
   /*execute a function when someone clicks in the document:*/
   document.addEventListener("click", function (e) {
-      closeAllLists(e.target);
+    closeAllLists(e.target);
   });
 }
 
 /*An array containing all the country names in the world:*/
 var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
-  "onmousedown", "onmouseup", "onkeydown", "onkeypress", "onkeyup",
-  "onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
-  "onresize", "onscroll", "onselect", "onreset"]
+"onmousedown", "onmouseup", "onkeydown", "onkeypress", "onkeyup",
+"onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
+"onresize", "onscroll", "onselect", "onreset"]
 
 
 function getCopilotText(element){
@@ -961,15 +992,15 @@ function getLog(userId){
   return new Promise((resolve, reject) => {
     fetch(URL+"/db/getLogs?userId="+userId, {
       method: 'GET'
-      })
-      .then(res => res.json())
-      .then(data => {
-        return resolve(data);
-      })
-      .catch(err => {
-        return reject(err);
-      })
     })
+    .then(res => res.json())
+    .then(data => {
+      return resolve(data);
+    })
+    .catch(err => {
+      return reject(err);
+    })
+  })
 }
 
 function getLogByNLP(userId, nlp) {
@@ -978,15 +1009,15 @@ function getLogByNLP(userId, nlp) {
       method: 'POST',
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({userId: userId, nlp: nlp})
-      })
-      .then(res => res.json())
-      .then(data => {
-        return resolve(data);
-      })
-      .catch(err => {
-        return reject(err);
-      })
     })
+    .then(res => res.json())
+    .then(data => {
+      return resolve(data);
+    })
+    .catch(err => {
+      return reject(err);
+    })
+  })
 }
 
 function getLogByRID(userId, rId) {
@@ -1009,70 +1040,70 @@ function getLogByRID(userId, rId) {
 
 function removeAllChildNodes(parent) {
   while (parent.firstChild) {
-      parent.removeChild(parent.firstChild);
+    parent.removeChild(parent.firstChild);
   }
 }
 
 function handleTextReplace(insertStyle, replaceStyle) {
-    var remainder = ["position", "top", "left", "width", "height", "transform"];
-    var d = {};
-    
-    var middle = insertStyle.split(';');
-    
-    for (var i in middle) {
-      var a = middle[i].split(':');
-      if (remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
-        d[a[0]] = a[1];
-      }
+  var remainder = ["position", "top", "left", "width", "height", "transform"];
+  var d = {};
+  
+  var middle = insertStyle.split(';');
+  
+  for (var i in middle) {
+    var a = middle[i].split(':');
+    if (remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+      d[a[0]] = a[1];
     }
-    
-    var styleStart = replaceStyle.lastIndexOf('style=') + 'style='.length;
-    var styleNext = replaceStyle.slice(
-      styleStart).indexOf("\"") + styleStart + 1;
+  }
+  
+  var styleStart = replaceStyle.lastIndexOf('style=') + 'style='.length;
+  var styleNext = replaceStyle.slice(
+    styleStart).indexOf("\"") + styleStart + 1;
     var styleEnd = replaceStyle.slice(
       styleStart).split("\"", 2).join("\"").length + styleStart;
-    middle = replaceStyle.slice(
-      styleNext,
-      styleEnd,
-    ).split(';');
-    for (var i in middle) {
-      var a = middle[i].split(':');
-      if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
-        d[a[0]] = a[1];
-      }
-    }
-
-    var innerText = '';
-    for (const [key, value] of Object.entries(d)) {
-      if (key && value){
-        innerText += key + ':' + value + ';';
-      }
-    }
-    replaceStyle = replaceStyle.replace(
-      replaceStyle.slice(
-        styleStart+1,
+      middle = replaceStyle.slice(
+        styleNext,
         styleEnd,
-      ),
-      innerText + ",",
-    );
-    return replaceStyle;
-  
+        ).split(';');
+        for (var i in middle) {
+          var a = middle[i].split(':');
+          if (!remainder.includes(a[0].replace(/\s/g, '')) && a[0].replace(/\s/g, '') !== '') {
+            d[a[0]] = a[1];
+          }
+        }
+        
+        var innerText = '';
+        for (const [key, value] of Object.entries(d)) {
+          if (key && value){
+            innerText += key + ':' + value + ';';
+          }
+        }
+        replaceStyle = replaceStyle.replace(
+          replaceStyle.slice(
+            styleStart+1,
+            styleEnd,
+            ),
+            innerText + ",",
+            );
+            return replaceStyle;
+            
 }
-
-function getNLP(element){
-    while(element.tagName !== "BODY"){
-      if(element.hasAttribute("nlp")){
-        return element.getAttribute("nlp");
-      }
-      element = element.parentNode;
-    }
-}
-
-function getRID(element){
-    while(element.tagName !== "BODY"){
-      if(element.hasAttribute("eid")){
-        return element.getAttribute("eid");
-      }
-      element = element.parentNode;
-    }
-}
+          
+          function getNLP(element){
+            while(element.tagName !== "BODY"){
+              if(element.hasAttribute("nlp")){
+                return element.getAttribute("nlp");
+              }
+              element = element.parentNode;
+            }
+          }
+          
+          function getRID(element){
+            while(element.tagName !== "BODY"){
+              if(element.hasAttribute("eid")){
+                return element.getAttribute("eid");
+              }
+              element = element.parentNode;
+            }
+          }
