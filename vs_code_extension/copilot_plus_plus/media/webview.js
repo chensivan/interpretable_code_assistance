@@ -2,11 +2,20 @@
 const vscode = acquireVsCodeApi();
 const URL = "http://127.0.0.1:5000";
 
-//----------test------------//
+//----------initiate side panel------------//
 getLog("user1").then(data => {
   createSidePanel(data);
 }
 );
+
+document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
+  document.getElementById("sidePanel").style.display = "none";
+});
+
+
+document.getElementById("openbtn").addEventListener("click", function(){
+  document.getElementById("sidePanel").style.display = "block";
+});
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
@@ -818,14 +827,7 @@ html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
   return;
 }
 
-document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
-  sidePanel.style.display = "none";
-});
 
-
-document.getElementById("openbtn").addEventListener("click", function(){
-  sidePanel.style.display = "block";
-});
 }
 
 //---------------------------Log element history tool--------------------------//
