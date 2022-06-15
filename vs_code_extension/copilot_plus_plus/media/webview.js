@@ -657,7 +657,7 @@ function createInputBoxAttr(x, y, element){
         text: getCopilotText(newEle),
         changes: total
       })
-      document.body.replaceChild(newEle, element);
+      element.parentElement.replaceChild(newEle, element);
       element = newEle;
       closeInputBox();
     }
