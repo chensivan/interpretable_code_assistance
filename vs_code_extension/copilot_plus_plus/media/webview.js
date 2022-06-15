@@ -171,8 +171,7 @@ document.addEventListener("mouseup", function(event) {
     let style = "position:absolute;top:"+widgetInitY+"px;left: "+widgetInitX+"px;width: "+(widgetFinX - widgetInitX)+"px;height: "+(widgetFinY - widgetInitY)+"px;";
     createInputBox(widgetInitX, widgetFinY, style);
   }
-}
-);
+});
 
 //---------------------------resize tool---------------------------------//
 function resizeStart(){
@@ -1037,7 +1036,26 @@ function getInsertedElements(){
   }
 }
 
+function getInsertedScripts(){
+  //get all elements in the document
+  let elements = document.getElementsByTagName("*");
+  let inserted = {}
+  for(let i = 0; i < elements.length; i++){
+    //check if the element has a rId attribute
+    if(elements[i].hasAttribute("sid")){
+      inserted[elements[i].getAttribute("sid")] = elements[i].outerHTML;
+    }
+  }
+  if(inserted !== {}){
+    vscode.postMessage({
+      type: "onCompleteJS",
+      inserted: inserted
+    });
+  }
+}
+
 getInsertedElements();
+getInsertedScripts();
 
 
 function getLog(userId){
