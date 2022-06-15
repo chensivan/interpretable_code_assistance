@@ -192,7 +192,15 @@ class CodePanel {
             }
             vscode.window.showErrorMessage(data.value);
             break;
-          }  
+          } 
+          case "onReplace": {
+            console.log('hi')
+            if (!data.new) {
+              return;
+            }
+            this._replaceInEditor(data.new, data.old);
+            break;
+          }; 
         }
       });
     }

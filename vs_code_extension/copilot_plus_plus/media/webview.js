@@ -122,11 +122,6 @@ document.addEventListener("click", function(event){
       createInputBoxJs(event.pageX, event.pageY, event.target)
     }
     else if (mode == 7){
-      // if (chatBotSelector){
-      //   ChatBot.setTargetElmnt(event.target);
-      //   // TODO: set close selector button
-      //   chatBotSelector = false;
-      // }
       logElementHistory(event.target);
     }
   }
@@ -831,14 +826,63 @@ html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
 }
 
 //---------------------------Log element history tool--------------------------//
-function logElementHistory(element){
+function logElementHistory(ele){
+  var origin = ele.outerHTML;
   emptySidePanel();
-  var elmntRid = getRID(element);
+  var elmntRid = getRID(ele);
   if (elmntRid){
     getLogByRID("user1", elmntRid).then(data => {
-      console.log(data);
       if (data.length > 0){
         createSidePanel(data);
+        let hstBlocks = document.getElementsByClassName("hstBlock");
+        for (var i = 0; i < hstBlocks.length; i++){
+          let hstBlock = hstBlocks[i];
+          hstBlock.addEventListener('click', function(e){
+            let targetHst = e.target;
+            while (!targetHst.classList.contains("hstBlock")){
+              targetHst = targetHst.parentElement;
+            }
+
+            let element = data[targetHst.getAttribute("index")]
+            console.log(element);
+            console.log(origin);
+            // let wrapper= document.createElement('div');
+            // wrapper.innerHTML= element.code;
+            // let codeBlock= wrapper.firstChild;
+            // codeBlock.removeAttribute("eid");
+            // codeBlock.setAttribute("rid", "rid-placeholder");
+            // codeBlock.setAttribute("nlp", text.value);
+            vscode.postMessage({
+                type: "onReplace",
+                old: origin,
+                new: element.code,
+            });
+            
+
+            let slides = document.getElementsByClassName('actionBtn');
+            for (let j = 0; j < slides.length; j++) {
+              slides[j].parentNode.style.position = 'null';
+              slides[j].parentNode.removeChild(slides[j]);
+            }
+            let actionBtn = document.createElement('div');
+            actionBtn.classList.add('actionBtn');
+            actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
+            actionBtn.innerHTML =  "<button id='submitBtn' >Confirm</button>; <button id='undoBtn'>Undo</button>";
+            targetHst.style.position = 'relative';
+            targetHst.appendChild(actionBtn);
+            document.getElementById("submitBtn").addEventListener('click', function(){
+              console.log("undo");
+              // reloadSidePanel();
+            }
+            );
+            document.getElementById("undoBtn").addEventListener('click', function(){
+              console.log("undo");
+              // reloadSidePanel();
+            }
+            );
+          }
+          );
+        }
       }else{
         var sidePanel = document.getElementById("sidePanelLog");
         var tip = document.createElement('p');
