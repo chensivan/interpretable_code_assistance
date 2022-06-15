@@ -199,7 +199,7 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new, data.old);
-            this.log("user1", "reset", `Reset element with label <${data.nlp}> back by #${data.step}# step`, data.nlp, data.text, data.new, data.rid);
+            this.log("user1", "reset", `Reset element with label <${data.nlp}> back to #${data.id}#`, data.nlp, data.text, data.new, data.rid);
             break;
           }
           case "onReset": {
@@ -214,7 +214,7 @@ class CodePanel {
               for (var i = 0; i < ids.length; i++) {
                 this.deleteLog(ids[i]);
               }
-              
+
             }
 
           }
