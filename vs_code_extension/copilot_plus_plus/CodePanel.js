@@ -193,7 +193,15 @@ class CodePanel {
             }
             vscode.window.showErrorMessage(data.value);
             break;
-          }  
+          } 
+          case "onReplace": {
+            console.log('hi')
+            if (!data.new) {
+              return;
+            }
+            this._replaceInEditor(data.new, data.old);
+            break;
+          }; 
         }
       });
     }
@@ -329,7 +337,6 @@ completeJSLogs(userId, inserted){
         //icons
         const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
         const chatBotSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.js"));
-        const jsonSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "log.js"));
         // const webviewSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "webview.js"));
         const chatBotUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.css"));
         const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
@@ -381,7 +388,6 @@ completeJSLogs(userId, inserted){
           <script src="${chatBotSrc}"></script>
           <script src="${html2canvas}"></script>
           <script nonce="${nonce}">
-  
           ` + jsFile.toString() + `
           </script>`;
           return html;
