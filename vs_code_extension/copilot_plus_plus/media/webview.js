@@ -842,22 +842,6 @@ function logElementHistory(ele){
               targetHst = targetHst.parentElement;
             }
 
-            let element = data[targetHst.getAttribute("index")]
-            console.log(element);
-            console.log(origin);
-            // let wrapper= document.createElement('div');
-            // wrapper.innerHTML= element.code;
-            // let codeBlock= wrapper.firstChild;
-            // codeBlock.removeAttribute("eid");
-            // codeBlock.setAttribute("rid", "rid-placeholder");
-            // codeBlock.setAttribute("nlp", text.value);
-            vscode.postMessage({
-                type: "onReplace",
-                old: origin,
-                new: element.code,
-            });
-            
-
             let slides = document.getElementsByClassName('actionBtn');
             for (let j = 0; j < slides.length; j++) {
               slides[j].parentNode.style.position = 'null';
@@ -866,19 +850,57 @@ function logElementHistory(ele){
             let actionBtn = document.createElement('div');
             actionBtn.classList.add('actionBtn');
             actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
-            actionBtn.innerHTML =  "<button id='submitBtn' >Confirm</button>; <button id='undoBtn'>Undo</button>";
             targetHst.style.position = 'relative';
             targetHst.appendChild(actionBtn);
-            document.getElementById("submitBtn").addEventListener('click', function(){
-              console.log("undo");
-              // reloadSidePanel();
+            let element = data[targetHst.getAttribute("index")]
+            let event = element.event;
+            if (event != 'reset'){
+              actionBtn.innerHTML =  "<button id='viewBtn'>View</button>";
+              // console.log(document.getElementById("viewBtn"))
+              document.getElementById("viewBtn").addEventListener('click', function(){
+                // let element = data[targetHst.getAttribute("index")]
+                vscode.postMessage({
+                    type: "onView",
+                    old: origin,
+                    new: element.code,
+                    nlp: getNLP(ele),
+                    rid: elmntRid,
+                    text: getCopilotText(ele),
+                    step: parseInt(targetHst.getAttribute("index")) + 1
+                });
+              }
+              );
+            }else if (event == 'reset'){
+              actionBtn.innerHTML =  "<button id='resetBtn' >Reset</button>; <button id='undoBtn' >Undo</button>;";
+              let details = element.details;
+              let step = parseInt(details.split("#")[1])+1;
+              document.getElementById("resetBtn").addEventListener('click', function(){
+                var idList = [];
+                for (var i = 0; i < step; i++) {
+                  idList.push(data[i]._id);
+                }
+                vscode.postMessage({
+                    type: "onReset",
+                    opt:1,
+                    old: element.code,
+                    new: element.code,
+                    id: idList
+              }
+              );
+              }
+              );
+              document.getElementById("undoBtn").addEventListener('click', function(){
+                let resetElmnt = data[1];
+                vscode.postMessage({
+                  type: "onReset",
+                  opt: 0, // undo 'reset'
+                  old: element.code,
+                  new: resetElmnt.code,
+                  id: element._id
+              });
+              }
+              );
             }
-            );
-            document.getElementById("undoBtn").addEventListener('click', function(){
-              console.log("undo");
-              // reloadSidePanel();
-            }
-            );
           }
           );
         }

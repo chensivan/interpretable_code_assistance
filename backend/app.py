@@ -5,6 +5,7 @@ from flask_cors import CORS, cross_origin
 import json
 import nlpcloud
 import pymongo
+from bson.objectid import ObjectId
 import json
 import datetime
 from txtai.embeddings import Embeddings
@@ -96,6 +97,18 @@ def getLogs():
         results.append(result)
     newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
     return json.dumps(newList, default=str)
+
+@flask_app.route("/db/deleteLogs", methods = ["GET"])
+@cross_origin()
+def deleteLogs():
+    logCol = db["log"]
+    # userId = request.args.get('userId')
+    dataId = request.args.get('dataId')
+
+    result = logCol.delete_one({"_id": ObjectId(dataId)})
+
+    return json.dumps(result.deleted_count, default=str)
+
 
 # testing api
 #@flask_app.route("/similarity", methods = ["GET"])

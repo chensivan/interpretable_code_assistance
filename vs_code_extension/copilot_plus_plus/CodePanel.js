@@ -194,14 +194,30 @@ class CodePanel {
             vscode.window.showErrorMessage(data.value);
             break;
           } 
-          case "onReplace": {
-            console.log('hi')
+          case "onView": {
             if (!data.new) {
               return;
             }
             this._replaceInEditor(data.new, data.old);
+            this.log("user1", "reset", `Reset element with label <${data.nlp}> back by #${data.step}# step`, data.nlp, data.text, data.new, data.rid);
             break;
-          }; 
+          }
+          case "onReset": {
+            if (!data.new) {
+              return;
+            }
+            if (data.opt === 0){
+              this._replaceInEditor(data.new, data.old);
+              this.deleteLog(data.id);
+            }else if (data.opt === 1){
+              var ids = data.id;
+              for (var i = 0; i < ids.length; i++) {
+                this.deleteLog(ids[i]);
+              }
+              
+            }
+
+          }
         }
       });
     }
@@ -236,6 +252,20 @@ completeJSLogs(userId, inserted){
         method: 'GET'
         })
         .then(res => res.json())
+        .then(data => {
+          return resolve(data);
+        })
+        .catch(err => {
+          return reject(err);
+        })
+      })
+  }
+
+  deleteLog(dataId){
+    return new Promise((resolve, reject) => {
+      fetch(URL+"/db/deleteLogs?dataId="+dataId, {
+        method: 'GET'
+        })
         .then(data => {
           return resolve(data);
         })
