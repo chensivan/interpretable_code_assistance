@@ -46,7 +46,7 @@ def insertLog():
 def completeLog():
     logCol = db["log"]
     body = request.json
-    cursor = logCol.find({"userId": body["userId"], "done": False})
+    cursor = logCol.find({"userId": body["userId"], "done": False, "event": "insert"})
     count = 0
     for result in cursor:
         if result["rId"] in body["inserted"].keys():
@@ -65,17 +65,19 @@ def completeLog():
 def completeJSLog():
     logCol = db["log"]
     body = request.json
-    cursor = logCol.find({"userId": body["userId"]})
+    cursor = logCol.find({"userId": body["userId"],  "event": "insert"})
     count = 0
     for result in cursor:
-        if result["rId"] in body["inserted"].keys():
+        if result["rId"] in body["inserted"].keys() and (
+            not result["done"] or 
+            result["code"] != body["inserted"][result["rId"]]):
             logCol.update_one({
                 '_id': result['_id']
                     },{
                     '$set': {
                         'done': True,
-                        'code': body["inserted"][result["rId"],
-                        'updateDate': datetime.datetime.now()]
+                        'code': body["inserted"][result["rId"]],
+                        'updateDate': datetime.datetime.now()
                         }
                     }, upsert=False)
             count += 1
