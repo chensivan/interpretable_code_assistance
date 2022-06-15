@@ -866,14 +866,17 @@ function logElementHistory(ele){
                     nlp: getNLP(ele),
                     rid: elmntRid,
                     text: getCopilotText(ele),
-                    id: element._id
+                    newId: element._id,
+                    oldId: data[0]._id,
+                    step: parseInt(targetHst.getAttribute("index")) + 1
                 });
               }
               );
             }else if (event == 'reset'){
               actionBtn.innerHTML =  "<button id='resetBtn' >Reset</button>; <button id='undoBtn' >Undo</button>;";
               let details = element.details;
-              let resetId = details.split("#")[1];
+              let oldId = details.split("#")[1];
+              let resetId = details.split("#")[3];
               document.getElementById("resetBtn").addEventListener('click', function(){
                 var idList = [];
                 var i = 0; 
@@ -892,13 +895,19 @@ function logElementHistory(ele){
               }
               );
               document.getElementById("undoBtn").addEventListener('click', function(){
-                let resetElmnt = data[1];
+                var idList = [];
+                var i = 0; 
+                while (data[i]._id != oldId){
+                  idList.push(data[i]._id);
+                  i++;
+                }
+                let resetElmnt = data[i];
                 vscode.postMessage({
                   type: "onReset",
                   opt: 0, // undo 'reset'
                   old: element.code,
                   new: resetElmnt.code,
-                  id: element._id
+                  id: idList,
               });
               }
               );
