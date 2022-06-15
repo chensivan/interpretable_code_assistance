@@ -989,7 +989,7 @@ function getInsertedElements(){
   }
 }
 
-/*function getInsertedScripts(){
+function getInsertedScripts(){
   //get all elements in the document
   let elements = document.getElementsByTagName("*");
   let inserted = {}
@@ -1005,10 +1005,10 @@ function getInsertedElements(){
       inserted: inserted
     });
   }
-}*/
+}
 
 getInsertedElements();
-//getInsertedScripts();
+getInsertedScripts();
 
 
 function getLog(userId){

@@ -134,10 +134,10 @@ class CodePanel {
           this.completeLogs("user1", data.inserted);
           break;
           }
-          /*case "onCompleteJS": {
+          case "onCompleteJS": {
             this.completeJSLogs("user1", data.inserted);
             break;
-          }*/
+          }
           case "changeAttr": {
             if (!data.old || !data.new) {
               return;
@@ -352,7 +352,6 @@ completeJSLogs(userId, inserted){
         //Parse the file into a string
         CodePanel.nonce = nonce;
         var html;
-        this.getLog("user1").then(data => {
           html = 
           `
           <head>
@@ -382,21 +381,10 @@ completeJSLogs(userId, inserted){
           <script src="${chatBotSrc}"></script>
           <script src="${html2canvas}"></script>
           <script nonce="${nonce}">
-          var data = ${JSON.stringify(data)};
+  
           ` + jsFile.toString() + `
           </script>`;
           return html;
-        }
-        )
-        .then(html => {
-          webview.html = html;
-          return html;
-        }
-        )
-        .catch(err => {
-          console.log(err);
-        }
-        );
         
       }
     }
