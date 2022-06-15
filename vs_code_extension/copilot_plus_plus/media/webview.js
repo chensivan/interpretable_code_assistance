@@ -3,10 +3,7 @@ const vscode = acquireVsCodeApi();
 const URL = "http://127.0.0.1:5000";
 
 //----------initiate side panel------------//
-getLog("user1").then(data => {
-  createSidePanel(data);
-}
-);
+reloadSidePanel();
 
 document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
   document.getElementById("sidePanel").style.display = "none";
@@ -39,6 +36,8 @@ function handleSelectedIcon(event){
       if (sidePanel){
         removeAllChildNodes(sidePanel);
       }
+    }else{
+      reloadSidePanel();
     }
   }
 }
@@ -296,6 +295,13 @@ function emptySidePanel(){
   }
 }
 
+function reloadSidePanel(){
+  getLog("user1").then(data => {
+    createSidePanel(data);
+  }
+  );
+}
+
 //---------------------------create basic box element---------------------------------//
 function createBasicBox(x, y){
   let box = document.createElement("div");
@@ -364,9 +370,7 @@ function createInputBox(x, y, style){
                   opt: 2 // "copy & paste" old elements
               });
                 targetHst.style.backgroundColor = 'white';
-                getLog("user1").then(data => {
-                  createSidePanel(data);
-                });
+                reloadSidePanel();
               });
             });
           }
@@ -386,9 +390,7 @@ function createInputBox(x, y, style){
               style: `style="${style}"`,
               opt: 0 // create new
             });
-            getLog("user1").then(data => {
-              createSidePanel(data);
-            });
+            reloadSidePanel();
           });
 
           let copilotbtn = document.createElement("button");
@@ -402,9 +404,7 @@ function createInputBox(x, y, style){
               style: `style="${style}"`,
               opt: 1 // create new using copilot
             });
-            getLog("user1").then(data => {
-              createSidePanel(data);
-            });
+            reloadSidePanel();
           });
       });
       closeInputBox();
