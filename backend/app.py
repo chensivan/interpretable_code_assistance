@@ -19,17 +19,6 @@ client = nlpcloud.Client("fast-gpt-j", "aba1569138b09087b8a839356381010dd56d6679
 client = pymongo.MongoClient("mongodb://user:user@ac-yuhr5lt-shard-00-00.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-01.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-02.menscjh.mongodb.net:27017/?ssl=true&replicaSet=atlas-n1yyxs-shard-0&authSource=admin&retryWrites=true&w=majority")
 db = client["copilot_plus_plus"]
 
-@flask_app.route("/paraphrase", methods = ["POST"])
-def paraphrase():
-    body = request.json
-    text = body["text"]
-    paraphrased_text = paraphrase_text(text)
-    return json.dumps(paraphrased_text)
-
-def paraphrase_text(text):
-    paraphrased_text = client.paraphrasing(text)
-    return paraphrased_text
-
 @flask_app.route("/db/insertLog", methods = ["POST"])
 def insertLog():
     logCol = db["log"]
@@ -67,6 +56,26 @@ def completeLog():
                     '$set': {
                         'done': True,
                         'code': body["inserted"][result["rId"]]
+                        }
+                    }, upsert=False)
+            count += 1
+    return str(count) # return the id of the inserted document
+
+@flask_app.route("/db/completeJSLog", methods = ["POST"])
+def completeJSLog():
+    logCol = db["log"]
+    body = request.json
+    cursor = logCol.find({"userId": body["userId"]})
+    count = 0
+    for result in cursor:
+        if result["rId"] in body["inserted"].keys():
+            logCol.update_one({
+                '_id': result['_id']
+                    },{
+                    '$set': {
+                        'done': True,
+                        'code': body["inserted"][result["rId"],
+                        'updateDate': datetime.datetime.now()]
                         }
                     }, upsert=False)
             count += 1

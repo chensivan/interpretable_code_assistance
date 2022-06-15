@@ -108,11 +108,6 @@ class CodePanel {
             if (!data.value) {
               return;
             }
-            /*if (!data.success) {
-              vscode.window.showInformationMessage(`No proper recommendations found`);
-            }else{
-              vscode.window.showInformationMessage(`Recommendations from history found`);
-            }*/
             let rId = getNonce();
             this.log("user1", "insert", "insert object with prompt/label: "+data.value+" and style "+data.style, data.value, "style=\""+data.style+"\"", rId);
             
@@ -139,6 +134,10 @@ class CodePanel {
           this.completeLogs("user1", data.inserted);
           break;
           }
+          /*case "onCompleteJS": {
+            this.completeJSLogs("user1", data.inserted);
+            break;
+          }*/
           case "changeAttr": {
             if (!data.old || !data.new) {
               return;
@@ -175,7 +174,9 @@ class CodePanel {
               return;
             }
             if(data.script){
-              this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}");
+              let sId = getNonce();
+              this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
+              this.log("user1", "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", sId);
             }
             else{
               this._replaceInEditor(data.new, data.old);
@@ -213,6 +214,14 @@ class CodePanel {
     })
 }
 
+completeJSLogs(userId, inserted){
+  fetch(URL+"/db/completeJSLog", {
+  method: 'POST', 
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({userId: userId, inserted:inserted})
+  })
+}
+
   getLog(userId){
     return new Promise((resolve, reject) => {
       fetch(URL+"/db/getLogs?userId="+userId, {
@@ -245,25 +254,8 @@ class CodePanel {
       })
   }
 
-//   getLogByNLP(userId, nlp) {
-//     return new Promise((resolve, reject) => {
-//       fetch(URL+"/db/getLogByNLP", {
-//         method: 'POST',
-//         headers: {"Content-Type": "application/json"},
-//         body: JSON.stringify({userId: userId, nlp: nlp})
-//         })
-//         .then(res => res.json())
-//         .then(data => {
-//           return resolve(data);
-//         })
-//         .catch(err => {
-//           return reject(err);
-//         })
-//       })
-// }
-  
   //Print comment to the editor
-  _printCommentToEditor(comment){
+  _printCommentToEditor(comment, sId){
     var openPath = vscode.Uri.file(CodePanel.filePath);
     if(openPath){
       vscode.workspace.openTextDocument(openPath).then(doc => {
@@ -276,7 +268,7 @@ class CodePanel {
               }
               var lineNumber = text.split('\n').length;
               // var tempString = str.substring(0, index);
-              comment = "<script> \n "+ comment + "\n</script>" 
+              comment = "<script sid=\""+sId+"\"> \n "+ comment + "\n</script>" 
               var pos = new vscode.Position(lineNumber-1,0);
               var pos1 = new vscode.Position(lineNumber-1,comment.length);
               
@@ -294,7 +286,7 @@ class CodePanel {
         }
       }
       
-      _replaceInEditor(newText, oldText, script){
+      _replaceInEditor(newText, oldText, script, sId){
         var openPath = vscode.Uri.file(CodePanel.filePath);
         if(openPath){
           vscode.workspace.openTextDocument(openPath).then(doc => {
@@ -326,7 +318,7 @@ class CodePanel {
               editor.revealRange(range);
               editor.selections = [new vscode.Selection(pos,pos)]; 
               if(script){
-                this._printCommentToEditor(script)
+                this._printCommentToEditor(script, sId)
               }
             });
           });
