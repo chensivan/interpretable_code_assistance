@@ -345,7 +345,6 @@ class CodePanel {
         //icons
         const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
         const chatBotSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.js"));
-        const jsonSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "log.js"));
         // const webviewSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "webview.js"));
         const chatBotUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.css"));
         const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
@@ -368,7 +367,6 @@ class CodePanel {
         //Parse the file into a string
         CodePanel.nonce = nonce;
         var html;
-        this.getLog("user1").then(data => {
           html = 
           `
           <head>
@@ -398,21 +396,9 @@ class CodePanel {
           <script src="${chatBotSrc}"></script>
           <script src="${html2canvas}"></script>
           <script nonce="${nonce}">
-          var data = ${JSON.stringify(data)};
           ` + jsFile.toString() + `
           </script>`;
           return html;
-        }
-        )
-        .then(html => {
-          webview.html = html;
-          return html;
-        }
-        )
-        .catch(err => {
-          console.log(err);
-        }
-        );
         
       }
     }
