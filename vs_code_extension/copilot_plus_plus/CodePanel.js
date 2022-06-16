@@ -164,7 +164,7 @@ class CodePanel {
             }
             this._replaceInEditor(" ",data.value);
             if(data.nlp){
-              this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "", data.rid);
+              //this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "", data.rid);
             }
             //this.log("user1", "delete", data.value);
             break;
