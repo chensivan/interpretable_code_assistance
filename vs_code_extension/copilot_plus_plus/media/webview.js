@@ -110,7 +110,7 @@ document.addEventListener("click", function(event){
     else if (mode == 4 && event.target.tagName !== "BODY"){
       closeBorder(oldElmnt);
       var target = event.target;
-      oldElmnt = target.outerHTML;
+      oldElmnt = getElement(target).outerHTML;
       target.classList.add('border');
       target.style.border = '2px dashed #ccc';
       resizeStart();
@@ -268,7 +268,7 @@ function closeBorder(ele){
     old.classList.remove("border");
     vscode.postMessage({
       type: 'onResize',
-      new: old.outerHTML,
+      new: getElement(old).outerHTML,
       old: ele,
       nlp: getNLP(old),
       text: getCopilotText(old),
@@ -448,7 +448,7 @@ function createEditBox(x, y, element){
     let close = document.getElementById("inputbox-close");
     submit.addEventListener("click", function(){
       let input = document.getElementById("inputbox-input");
-      let temp = element.outerHTML
+      let temp = getElement(element).outerHTML
       let label = getNLP(element);
       let rid = getRID(element);
       //let newEle = document.createElement(element.tagName);
@@ -456,7 +456,7 @@ function createEditBox(x, y, element){
       //newEle.outerHTML = input.value;
       vscode.postMessage({
         type: "onEdit",
-        new: element.outerHTML,
+        new: getElement(element).outerHTML,
         old: temp,
         nlp: label,
         text: getCopilotText(element),
@@ -482,7 +482,7 @@ function createDeleteBox(x, y, element){
   button.addEventListener("click", function() {
     vscode.postMessage({
       type: "delete",
-      value: element.outerHTML,
+      value: getElement(element).outerHTML,
       nlp: getNLP(element),
       rid: getRID(element),
       text: "", //since the user cleared the element, assume it is not the wanted style???
@@ -529,8 +529,8 @@ function createInputBoxJs(x, y, element){
     temp.setAttribute(event.value, name.value);
     vscode.postMessage({
       type: "createjs",
-      old: element.outerHTML,
-      new: temp.outerHTML,
+      old: getElement(element).outerHTML,
+      new: getElement(temp).outerHTML,
       event: event.value,
       name: name.value,
       script: script.value,
@@ -650,8 +650,8 @@ function createInputBoxAttr(x, y, element){
       
       vscode.postMessage({
         type: "changeAttr",
-        old: element.outerHTML,
-        new: newEle.outerHTML,
+        old: getElement(element).outerHTML,
+        new: getElement(newEle).outerHTML,
         nlp: getNLP(element),
         rid: getRID(element),
         text: getCopilotText(newEle),
@@ -673,7 +673,7 @@ function createInputBoxAttr(x, y, element){
 }
 
 function defineSelector(element){
-  var selector = element.outerHTML;
+  var selector = getElement(element).outerHTML;
   return selector;
 }
 
@@ -1206,6 +1206,15 @@ function handleTextReplace(insertStyle, replaceStyle) {
             while(element.tagName !== "BODY"){
               if(element.hasAttribute("eid")){
                 return element.getAttribute("eid");
+              }
+              element = element.parentNode;
+            }
+          }
+
+          function getElement(element){
+            while(element.tagName !== "BODY"){
+              if(element.hasAttribute("nlp")){
+                return element;
               }
               element = element.parentNode;
             }
