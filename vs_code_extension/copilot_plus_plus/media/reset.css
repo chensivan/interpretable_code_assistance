@@ -71,7 +71,8 @@ html {
     top: 0;
     right: 30px;
     font-size: 18px;
-    font-family: Lucida Sans Unicode
+    font-family: Lucida Sans Unicode;
+    cursor: pointer;
   }
 
   .hstBlock{

@@ -2,7 +2,7 @@
 const vscode = acquireVsCodeApi();
 const URL = "http://127.0.0.1:5000";
 
-//----------initiate side panel------------//
+//----------initiate side panel button------------//
 reloadSidePanel();
 
 document.getElementsByClassName("closebtn")[0].addEventListener("click", function(){
@@ -13,6 +13,11 @@ document.getElementsByClassName("closebtn")[0].addEventListener("click", functio
 document.getElementById("openbtn").addEventListener("click", function(){
   document.getElementById("sidePanel").style.display = "block";
 });
+
+document.getElementById("reload").addEventListener("click", function(){
+  reloadSidePanel();
+});
+
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
