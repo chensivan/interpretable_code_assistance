@@ -51,6 +51,7 @@ function handleSelectedIcon(event){
       let createBtn = document.createElement("div");
       createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
       sidePanel.appendChild(createBtn);
+      submitGrouping();
     }
     
   }
@@ -71,22 +72,12 @@ function toggleSelectedIcon(iconName){
 }
 
 //---------------------------(temp)group---------------------------------//
-// function createDragSelector(){
-//   const ds = new DragSelect({
-//     // selectables: document.querySelectorAll('*')
-//     area: document.getElementById('area')
-//   });
-//   ds.subscribe("callback", (e) => {
-//     console.log('hi');
-//     console.log(e);
-//     console.log(ds.getSelection());
-//   })
-  
-// }
+let memberRId = [];
+let memberLabel = [];
 
 function createGroupSelector(ele){
-  if (!ele.classList.contains("border")){
-    ele.classList.add('border');
+  if (!ele.classList.contains("group-border")){
+    ele.classList.add('group-border');
     ele.style.border = '2px dashed #ccc';
     logSelectedElement(ele);
   }
@@ -99,10 +90,46 @@ function logSelectedElement(ele){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
         createSidePanel([data[0]], false, true);
+        memberRId.push(data[0].rId);
+        memberLabel.push(data[0].label);
+
       }
       //TODO: add no data me
     });
   }
+}
+
+function submitGrouping(){
+  let groupBtn = document.getElementById('submit-group');
+  groupBtn.addEventListener('click', function(){
+    let text = document.getElementById("inputbox-group");
+    let members = document.getElementsByClassName("group-border");
+    let success = true;
+    if (members.length == 0){
+      success = false;
+    }
+    if (text.value){
+      vscode.postMessage({
+        type: "onGroup",
+        success: success,
+        label: text.value,
+        memberRId: memberRId.join("#"), 
+        memberLabel: memberLabel.join("/"), 
+        message: 'Please select template elements.',
+      })
+    }else{
+      //alert
+      success = false;
+      vscode.postMessage({
+        type: "onGroup",
+        success: success,
+        label: '',
+        memberRId: '', 
+        memberLabel: '', 
+        message: 'Please input the label of the template.',
+      })
+    }
+  });
 }
 //---------------------------variables for attribute editor tool---------------------------------//
 var widget;
@@ -340,22 +367,14 @@ function closeChatBox(){
 }
 
 function closeGroupBox(){
-  const boxes = document.getElementsByClassName("border");
-  // const boxesLen = document.getElementsByClassName("border").length;
-  // for (let i = 0; i < boxesLen; i++) {
-  //   let old = boxes[i];
-  //   console.log(i);
-  //   console.log(boxesLen);
-  //   console.log(old);
-  //   old.style.border = null;
-  //   old.style.cursor = null;
-  // }
+  const boxes = document.getElementsByClassName("group-border");
   while(boxes.length > 0){
     boxes[0].style.border = null;
     boxes[0].style.cursor = null;
-    boxes[0].classList.remove('border');
-}
-
+    boxes[0].classList.remove('group-border');
+  }
+  memberRId = [];
+  memberLabel = [];
 }
 
 function emptySidePanel(){

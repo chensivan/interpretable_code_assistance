@@ -128,7 +128,12 @@ class CodePanel {
           }
           case "onGroup":{
             let rId = getNonce();
-            this.log("user1", "group", "group elements with label: "+data.value, data.label, "", "", rId);
+            if (data.success) {
+              this.logGroup("user1", "group", data.label, data.memberRId, data.memberLabel, rId);
+            }else{
+              vscode.window.showInformationMessage(data.message);
+            }
+            
             break;
           }
           case "onComplete": {
@@ -237,6 +242,14 @@ class CodePanel {
       method: 'POST', 
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid})
+      })
+  }
+
+  logGroup(userId, event, label, memberRId, memberLabel, rid){
+    fetch(URL+"/db/insertGroup", {
+      method: 'POST', 
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId: userId, event:event, label:label, memberRId: memberRId, memberLabel:memberLabel, rId:rid})
       })
   }
 
