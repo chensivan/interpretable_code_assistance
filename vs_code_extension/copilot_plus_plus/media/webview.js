@@ -85,7 +85,7 @@ function toggleSelectedIcon(iconName){
 // }
 
 function createGroupSelector(ele){
-  if (!ele.classList.contains(className)){
+  if (!ele.classList.contains("border")){
     ele.classList.add('border');
     ele.style.border = '2px dashed #ccc';
     logSelectedElement(ele);
