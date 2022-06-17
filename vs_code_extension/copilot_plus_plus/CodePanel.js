@@ -126,6 +126,11 @@ class CodePanel {
             this._replaceInEditor(comment+"\n</body>", "</body>");
             break;
           }
+          case "onGroup":{
+            let rId = getNonce();
+            this.log("user1", "group", "group elements with label: "+data.value, data.label, "", "", rId);
+            break;
+          }
           case "onComplete": {
             //loop data.inserted
             for (var prop in data.inserted) {
@@ -419,7 +424,7 @@ completeJSLogs(userId, inserted){
           <button class="openbtn" id="openbtn">&#9776;</button>
           <div class="sidePanel" id="sidePanel">
           <span class="reload" id="reload">&#x21bb;</span>
-          <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+          <a href="javascript:void(0)" class="closebtn">&times;</a>
           <h1> History </h1>
           <div class="sidePanelLog" id="sidePanelLog">
           </div>
