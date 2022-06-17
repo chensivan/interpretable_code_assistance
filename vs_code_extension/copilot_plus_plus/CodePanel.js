@@ -429,6 +429,7 @@ completeJSLogs(userId, inserted){
           <link href="${chatBotUri}" rel="stylesheet">
           <script src="${chatBotSrc}"></script>
           <script src="${html2canvas}"></script>
+          // <script src="https://dragselect.com/v2/ds.min.js"></script>
           <script nonce="${nonce}">
           ` + jsFile.toString() + `
           </script>`;

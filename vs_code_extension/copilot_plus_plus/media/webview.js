@@ -18,6 +18,9 @@ document.getElementById("reload").addEventListener("click", function(){
   reloadSidePanel();
 });
 
+//----------initiate grouping------------//
+
+
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
@@ -42,6 +45,14 @@ function handleSelectedIcon(event){
         removeAllChildNodes(sidePanel);
       }
     }
+    else if(mode == 8){
+      emptySidePanel();
+      let sidePanel = document.getElementById("sidePanelLog");
+      let createBtn = document.createElement("div");
+      createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
+      sidePanel.appendChild(createBtn);
+    }
+    
   }
 }
 
@@ -58,6 +69,38 @@ function toggleSelectedIcon(iconName){
   closeChatBox();
 }
 
+//---------------------------(temp)group---------------------------------//
+// function createDragSelector(){
+//   const ds = new DragSelect({
+//     // selectables: document.querySelectorAll('*')
+//     area: document.getElementById('area')
+//   });
+//   ds.subscribe("callback", (e) => {
+//     console.log('hi');
+//     console.log(e);
+//     console.log(ds.getSelection());
+//   })
+  
+// }
+
+function createGroupSelector(ele){
+  ele.classList.add('border');
+  ele.style.border = '2px dashed #ccc';
+  logSelectedElement(ele);
+
+}
+
+function logSelectedElement(ele){
+  var elmntRid = getRID(ele);
+  if (elmntRid){
+    getLogByRID("user1", elmntRid).then(data => {
+      if (data.length > 0){
+        createSidePanel([data[0]], false, true);
+      }
+      //TODO: add no data me
+    });
+  }
+}
 //---------------------------variables for attribute editor tool---------------------------------//
 var widget;
 var widgetInitX;
@@ -126,6 +169,9 @@ document.addEventListener("click", function(event){
     }
     else if (mode == 7){
       logElementHistory(event.target);
+    }
+    else if (mode == 8){
+      createGroupSelector(event.target);
     }
   }
   else if (event.target.tagName !== "HTML"){
@@ -299,7 +345,7 @@ function emptySidePanel(){
 
 function reloadSidePanel(){
   getLog("user1").then(data => {
-    createSidePanel(data);
+    createSidePanel(data, false, false);
   }
   );
 }
@@ -332,7 +378,7 @@ function createInputBox(x, y, style){
         if (data.success){
           let length = Math.min(3, data.all.length);
           let logData = data.all.slice(0, length);
-          createSidePanel(logData, true);
+          createSidePanel(logData, true, false);
 
           let hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
@@ -378,7 +424,7 @@ function createInputBox(x, y, style){
           }
         }
         else{
-          createSidePanel([]);
+          createSidePanel([], false, false);
         }
           
           let declineBtn = document.createElement("button");
@@ -767,10 +813,12 @@ function dragEnd(e) {
 }
 
 //---------------------------SidePanel(test)---------------------------------//
-function createSidePanel(logData, insert){
+function createSidePanel(logData, insert, remain){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
-    removeAllChildNodes(sidePanel);
+    if (!remain){
+      removeAllChildNodes(sidePanel);
+    }
     logData.forEach((element, index) => {
       let hstBlock = document.createElement('div');
       //hstBlock.id = 'hstBlock';
@@ -848,7 +896,7 @@ function logElementHistory(ele){
   if (elmntRid){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
-        createSidePanel(data);
+        createSidePanel(data, false, false);
         let hstBlocks = document.getElementsByClassName("hstBlock");
         for (var i = 0; i < hstBlocks.length; i++){
           let hstBlock = hstBlocks[i];
