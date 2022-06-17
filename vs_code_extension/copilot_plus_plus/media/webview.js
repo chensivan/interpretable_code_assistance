@@ -85,9 +85,11 @@ function toggleSelectedIcon(iconName){
 // }
 
 function createGroupSelector(ele){
-  ele.classList.add('border');
-  ele.style.border = '2px dashed #ccc';
-  logSelectedElement(ele);
+  if (!ele.classList.contains(className)){
+    ele.classList.add('border');
+    ele.style.border = '2px dashed #ccc';
+    logSelectedElement(ele);
+  }
 
 }
 
@@ -339,16 +341,18 @@ function closeChatBox(){
 
 function closeGroupBox(){
   const boxes = document.getElementsByClassName("border");
-  const boxesLen = document.getElementsByClassName("border").length;
-  for (let i = 0; i < boxesLen; i++) {
-    let old = boxes[i];
-    console.log(i);
-    console.log(boxesLen);
-    console.log(old);
-    old.style.border = null;
-    old.style.cursor = null;
-  }
+  // const boxesLen = document.getElementsByClassName("border").length;
+  // for (let i = 0; i < boxesLen; i++) {
+  //   let old = boxes[i];
+  //   console.log(i);
+  //   console.log(boxesLen);
+  //   console.log(old);
+  //   old.style.border = null;
+  //   old.style.cursor = null;
+  // }
   while(boxes.length > 0){
+    boxes[0].style.border = null;
+    boxes[0].style.cursor = null;
     boxes[0].classList.remove('border');
 }
 
