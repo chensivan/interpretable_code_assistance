@@ -266,6 +266,11 @@ function closeBorder(ele){
     old.style.border = null;
     old.style.cursor = null;
     old.classList.remove("border");
+
+    let parent = getElement(ele); //This is going to cause a lot of trouble later on :(
+    parent.style.width = old.style.width;
+    parent.style.height = old.style.height;
+
     vscode.postMessage({
       type: 'onResize',
       new: getElement(old).outerHTML,
@@ -448,7 +453,7 @@ function createEditBox(x, y, element){
     let close = document.getElementById("inputbox-close");
     submit.addEventListener("click", function(){
       let input = document.getElementById("inputbox-input");
-      let temp = getElement(element).outerHTML
+      let temp = element.outerHTML
       let label = getNLP(element);
       let rid = getRID(element);
       //let newEle = document.createElement(element.tagName);
@@ -456,12 +461,13 @@ function createEditBox(x, y, element){
       //newEle.outerHTML = input.value;
       vscode.postMessage({
         type: "onEdit",
-        new: getElement(element).outerHTML,
+        new: element.outerHTML,
         old: temp,
         nlp: label,
         text: getCopilotText(element),
         inner: input.value,
-        rid: rid
+        rid: rid,
+        newHTML: getElement(element).outerHTML
       });
       
       closeInputBox();
@@ -527,10 +533,11 @@ function createInputBoxJs(x, y, element){
   submit.addEventListener("click", function() {
     let temp = element.cloneNode(true);
     temp.setAttribute(event.value, name.value);
+    let tempHTML = getElement(element).outerHTML.replace(element.outerHTML, temp.outerHTML)
     vscode.postMessage({
       type: "createjs",
       old: getElement(element).outerHTML,
-      new: getElement(temp).outerHTML,
+      new: tempHTML,
       event: event.value,
       name: name.value,
       script: script.value,
@@ -647,15 +654,16 @@ function createInputBoxAttr(x, y, element){
       if(change !== "Changed attributes: "){
         total += change.substring(0, change.length - 2) + "\n";
       }
-      
+      let newHTML = getElement(element).outerHTML.replace(element.outerHTML, newEle.outerHTML);
       vscode.postMessage({
         type: "changeAttr",
-        old: getElement(element).outerHTML,
-        new: getElement(newEle).outerHTML,
+        old: element.outerHTML,
+        new: newEle.outerHTML,
         nlp: getNLP(element),
         rid: getRID(element),
         text: getCopilotText(newEle),
-        changes: total
+        changes: total,
+        newHTML: newHTML,
       })
       element.parentElement.replaceChild(newEle, element);
       element = newEle;
@@ -727,13 +735,18 @@ function dragEnd(e) {
   e.returnValue = true;
   if (moving) {
     moving = false;
-    div.style.position = "absolute";
+    let parent = getElement(div); //the nlp div of div
+    parent.style.position = "absolute";
     // div.style.transform = null;x
-    div.style.left = rectX + translateX;
-    div.style.top = rectY + translateY;
+    parent.style.left = rectX + translateX;
+    parent.style.top = rectY + translateY;
+    console.log(div.style.transform);
+    parent.style.transform = div.style.transform
+    div.style.transform = "translate(" + 0 + "px, " + 0 + "px)"
+
     vscode.postMessage({
       type: 'onDrag',
-      new: defineSelector(div),
+      new: parent.outerHTML,
       old: selector,
       nlp: getNLP(div),
       rid: getRID(div),

@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
+const jsdom = require("jsdom");
 
 const URL = "http://127.0.0.1:5000"
 
@@ -88,6 +89,7 @@ class CodePanel {
             if (!data.new) {
               return;
             }
+            console.log(data);
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
               this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text, data.new, data.rid);
@@ -98,6 +100,7 @@ class CodePanel {
             if (!data.new) {
               return;
             }
+            console.log(data)
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
               this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text, data.new, data.rid);
@@ -144,7 +147,8 @@ class CodePanel {
             }
             this._replaceInEditor(data.new,data.old);
             if(data.nlp){
-              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, data.nlp, data.text, data.new, data.rid);
+              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, 
+              data.nlp, data.text, data.newHTML, data.rid);
             }
             break;
           }
@@ -154,7 +158,8 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if(data.nlp){
-              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, data.nlp, data.text, data.new, data.rid);
+              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, 
+              data.nlp, data.text, data.newHTML, data.rid);
             }
             break;
           }
@@ -341,7 +346,11 @@ completeJSLogs(userId, inserted){
                 pos = new vscode.Position(lineNumber,newText.length-1);
               }
               
-              let newDoc = text.replace(oldText, newText);
+              //parse newDoc into an html document
+              const dom = new jsdom.JSDOM(text);
+              let html = dom.window.document.querySelector("html").outerHTML;
+              let newDoc = html.replace(oldText, newText);
+
               var firstLine = editor.document.lineAt(0);
               var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
               var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
