@@ -41,8 +41,6 @@ function handleSelectedIcon(event){
       if (sidePanel){
         removeAllChildNodes(sidePanel);
       }
-    }else{
-      reloadSidePanel();
     }
   }
 }
@@ -860,7 +858,7 @@ function logElementHistory(ele){
             let element = data[targetHst.getAttribute("index")]
             let event = element.event;
             if (event != 'reset'){
-              actionBtn.innerHTML =  "<button id='viewBtn'>View</button>";
+              actionBtn.innerHTML =  "<button id='viewBtn'>Preview</button>";
               // console.log(document.getElementById("viewBtn"))
               document.getElementById("viewBtn").addEventListener('click', function(){
                 // let element = data[targetHst.getAttribute("index")]
@@ -885,7 +883,7 @@ function logElementHistory(ele){
               document.getElementById("resetBtn").addEventListener('click', function(){
                 var idList = [];
                 var i = 0; 
-                while (data[i]._id != resetId){
+                while (data[i]._id != resetId && data[i]._id != element._id){
                   idList.push(data[i]._id);
                   i++;
                 }
