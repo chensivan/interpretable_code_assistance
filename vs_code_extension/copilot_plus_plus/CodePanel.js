@@ -386,6 +386,7 @@ completeJSLogs(userId, inserted){
         const deleteIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "delete.png"));
         const chatIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.png"));
         const html2canvas = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "html2canvas.min.js"));
+        const groupIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
         // Use a nonce to only allow specific scripts to be run
         const nonce = getNonce();
         
@@ -413,6 +414,7 @@ completeJSLogs(userId, inserted){
           <img class="icon" id="icon-js" src="${showIcon}"/>
           <img class="icon" id="icon-delete" src="${deleteIcon}"/>
           <img class="icon" id="icon-chat" src="${chatIcon}"/>
+          <img class="icon" id="icon-group" src="${groupIcon}"/>
           </div>
           <button class="openbtn" id="openbtn">&#9776;</button>
           <div class="sidePanel" id="sidePanel">

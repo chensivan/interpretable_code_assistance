@@ -21,7 +21,7 @@ document.getElementById("reload").addEventListener("click", function(){
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
-"icon-delete", "icon-js", "icon-chat"];
+"icon-delete", "icon-js", "icon-chat", "icon-group"];
 
 var icons = document.getElementsByClassName('icon');
 document.getElementById("icon-tip").classList.add("selected");
