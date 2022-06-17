@@ -21,6 +21,7 @@ document.getElementById("reload").addEventListener("click", function(){
 //----------initiate grouping------------//
 
 
+
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
@@ -47,7 +48,7 @@ function handleSelectedIcon(event){
     }
     else if(mode == 8){
       emptySidePanel();
-      let sidePanel = document.getElementById("sidePanelLog");
+      let sidePanel = document.getElementById("sidePanel");
       let createBtn = document.createElement("div");
       createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
       sidePanel.appendChild(createBtn);
@@ -129,6 +130,10 @@ function submitGrouping(){
         message: 'Please input the label of the template.',
       })
     }
+    // reloadGroupTemplate(); //TODO
+    emptySidePanel();
+    closeGroupBox();
+    document.getElementById('inputbox-group').value = '';
   });
 }
 //---------------------------variables for attribute editor tool---------------------------------//
@@ -389,6 +394,14 @@ function reloadSidePanel(){
     createSidePanel(data, false, false);
   }
   );
+}
+
+function reloadGroupTemplate(){
+  // getLogGroup("user1").then(data => {
+  //   createSidePanel(data, false, false);
+  // }
+  // );
+  //TODO
 }
 
 //---------------------------create basic box element---------------------------------//
