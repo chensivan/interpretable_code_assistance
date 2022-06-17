@@ -43,7 +43,7 @@ html {
   }
 
   .sidePanel {
-    position: absolute;
+    position: fixed;
     top: 0;
     right: 0;
     width: 250px;
@@ -53,10 +53,36 @@ html {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     z-index: 1;
     overflow: scroll;
+    transition: 0.5s;
+  }
+
+  .sidePanel .closebtn {
+    position: absolute;
+    top: 0;
+    right: 15px;
+    font-size: 18px;
+    margin-left: 50px;
+    text-decoration: none;
+    color: black;
+  }
+
+  .reload {
+    position: absolute;
+    top: 0;
+    right: 30px;
+    font-size: 18px;
+    font-family: Lucida Sans Unicode
   }
 
   .hstBlock{
-    overflow-wrap: break-word;
+    /* overflow-wrap: break-word; */
+    overflow: auto;
+    overflow-x: scroll;
+    overflow-y: hidden;
+  }
+
+  .hstBlock::-webkit-scrollbar {
+    display: none;
   }
 
   .openbtn {

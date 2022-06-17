@@ -407,7 +407,8 @@ completeJSLogs(userId, inserted){
           </div>
           <button class="openbtn" id="openbtn">&#9776;</button>
           <div class="sidePanel" id="sidePanel">
-          <a href="javascript:void(0)" class="closebtn">&times;</a>
+          <span class="reload">&#x21bb;</span>
+          <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
           <h1> History </h1>
           <div class="sidePanelLog" id="sidePanelLog">
           </div>
