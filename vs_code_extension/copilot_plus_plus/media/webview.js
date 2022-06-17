@@ -67,6 +67,7 @@ function toggleSelectedIcon(iconName){
   closeWidget();
   closeBorder(oldElmnt); 
   closeChatBox();
+  closeGroupBox();
 }
 
 //---------------------------(temp)group---------------------------------//
@@ -334,6 +335,23 @@ function closeBorder(ele){
 
 function closeChatBox(){
   closeById("chatBotOuter");
+}
+
+function closeGroupBox(){
+  const boxes = document.getElementsByClassName("border");
+  const boxesLen = document.getElementsByClassName("border").length;
+  for (let i = 0; i < boxesLen; i++) {
+    let old = boxes[i];
+    console.log(i);
+    console.log(boxesLen);
+    console.log(old);
+    old.style.border = null;
+    old.style.cursor = null;
+  }
+  while(boxes.length > 0){
+    boxes[0].classList.remove('border');
+}
+
 }
 
 function emptySidePanel(){
