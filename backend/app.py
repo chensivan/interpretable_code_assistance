@@ -43,6 +43,25 @@ def insertLog():
     result = logCol.insert_one(log)
     return str(result.inserted_id) # return the id of the inserted document
 
+@flask_app.route("/db/insertGroup", methods = ["POST"])
+def insertGroup():
+    logCol = db["template"]
+    body = request.json
+
+    log = {
+        "userId": body["userId"], # user id
+        "event": body["event"], # event title
+        "label": body["label"], # label that user entered
+        "memberRId": body["memberRId"],
+        "memberLabel": body["memberLabel"],
+        # "details": body["details"] , # human readable comment
+        "createDate": datetime.datetime.now(), # timestamp
+        "rId": body["rId"]
+        }
+
+    result = logCol.insert_one(log)
+    return str(result.inserted_id) # return the id of the inserted document
+
 @flask_app.route("/db/completeLog", methods = ["POST"])
 def completeLog():
     logCol = db["log"]
