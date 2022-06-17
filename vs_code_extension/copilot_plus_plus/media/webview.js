@@ -270,7 +270,7 @@ function closeBorder(ele){
     old.style.cursor = null;
     old.classList.remove("border");
 
-    let parent = getElement(ele); //This is going to cause a lot of trouble later on :(
+    let parent = getElement(old); //This is going to cause a lot of trouble later on :(
     parent.style.width = old.style.width;
     parent.style.height = old.style.height;
 
