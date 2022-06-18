@@ -75,14 +75,16 @@ function toggleSelectedIcon(iconName){
 //---------------------------(temp)group---------------------------------//
 let memberRId = [];
 let memberLabel = [];
+let memberIndex = 0;
 
 function createGroupSelector(ele){
   if (!ele.classList.contains("group-border")){
     let selected = logSelectedElement(ele);
-    if (selected){
+    if (selected ){
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
     }
+
   }else{
 
   }
@@ -90,14 +92,14 @@ function createGroupSelector(ele){
 }
 
 function logSelectedElement(ele){
-  var elmntRid = getRID(ele);
+  let elmntRid = getRID(ele);
   if (elmntRid){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
-        createSidePanel([data[0]], false, true);
+        createSidePanel([data[0]], false, true, memberIndex);
         memberRId.push(data[0].rId);
         memberLabel.push(data[0].label);
-        return true;
+        memberIndex += 1;
       }else{
         vscode.postMessage({
           type: "onGroup",
@@ -107,9 +109,9 @@ function logSelectedElement(ele){
           memberLabel: '', 
           message: 'Element cannot be selected.',
         })
-        return false;
       }
     });
+    return true;
   }else{
     vscode.postMessage({
       type: "onGroup",
@@ -403,6 +405,7 @@ function closeGroupBox(){
   }
   memberRId = [];
   memberLabel = [];
+  memberIndex = 0;
 }
 
 function emptySidePanel(){
@@ -890,7 +893,7 @@ function dragEnd(e) {
 }
 
 //---------------------------SidePanel(test)---------------------------------//
-function createSidePanel(logData, insert, remain){
+function createSidePanel(logData, insert, remain, memberId){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     if (!remain){
@@ -898,9 +901,12 @@ function createSidePanel(logData, insert, remain){
     }
     logData.forEach((element, index) => {
       let hstBlock = document.createElement('div');
-      //hstBlock.id = 'hstBlock';
       hstBlock.setAttribute('index', index);
       hstBlock.classList.add('hstBlock');
+      if (memberId){
+        console.log('hstBlock'+memberId);
+        hstBlock.classList.add('hstBlock'+memberId);
+      }
       hstBlock.style.padding = '20px';
       hstBlock.style.margin = '10px';
       hstBlock.style.backgroundColor = '#ededed';
