@@ -78,9 +78,15 @@ let memberLabel = [];
 
 function createGroupSelector(ele){
   if (!ele.classList.contains("group-border")){
-    ele.classList.add('group-border');
-    ele.style.border = '2px dashed #ccc';
-    logSelectedElement(ele);
+    let selected = logSelectedElement(ele);
+    if (selected){
+      ele.classList.add('group-border');
+      ele.style.border = '2px dashed #ccc';
+    }
+
+    
+  }else{
+
   }
 
 }
@@ -93,10 +99,19 @@ function logSelectedElement(ele){
         createSidePanel([data[0]], false, true);
         memberRId.push(data[0].rId);
         memberLabel.push(data[0].label);
-
+        return true;
       }
-      //TODO: add no data me
     });
+  }else{
+    vscode.postMessage({
+      type: "onGroup",
+      success: false,
+      label: '',
+      memberRId: '', 
+      memberLabel: '', 
+      message: 'Element cannot be selected.',
+    })
+    return false;
   }
 }
 
