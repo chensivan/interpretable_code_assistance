@@ -83,8 +83,6 @@ function createGroupSelector(ele){
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
     }
-
-    
   }else{
 
   }
@@ -100,6 +98,16 @@ function logSelectedElement(ele){
         memberRId.push(data[0].rId);
         memberLabel.push(data[0].label);
         return true;
+      }else{
+        vscode.postMessage({
+          type: "onGroup",
+          success: false,
+          label: '',
+          memberRId: '', 
+          memberLabel: '', 
+          message: 'Element cannot be selected.',
+        })
+        return false;
       }
     });
   }else{
