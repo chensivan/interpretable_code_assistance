@@ -52,8 +52,7 @@ def insertGroup():
         "userId": body["userId"], # user id
         "event": body["event"], # event title
         "label": body["label"], # label that user entered
-        "memberRId": body["memberRId"],
-        "memberLabel": body["memberLabel"],
+        "member": body["member"],
         # "details": body["details"] , # human readable comment
         "createDate": datetime.datetime.now(), # timestamp
         "rId": body["rId"]

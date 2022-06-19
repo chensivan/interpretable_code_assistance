@@ -74,10 +74,7 @@ function toggleSelectedIcon(iconName){
 }
 
 //---------------------------(temp)group---------------------------------//
-// let memberRId = [];
-// let memberLabel = [];
 let member = {};
-// let memberIndex = 0; //TOBEDELETED
 
 function createGroupSelector(ele){
   if (!ele.classList.contains("group-border")){
@@ -136,8 +133,7 @@ function logSelectedElement(ele){
           type: "onGroup",
           success: false,
           label: '',
-          memberRId: '', 
-          memberLabel: '', 
+          member: '',
           message: 'Element cannot be selected.',
         });
         return false;
@@ -150,8 +146,7 @@ function logSelectedElement(ele){
       type: "onGroup",
       success: false,
       label: '',
-      memberRId: '', 
-      memberLabel: '', 
+      member: '',
       message: 'Element cannot be selected.',
     })
     return false;
@@ -171,8 +166,7 @@ function submitGrouping(){
         type: "onGroup",
         success: success,
         label: text.value,
-        memberRId: memberRId.join("#"), 
-        memberLabel: memberLabel.join("/"), 
+        member: member, 
         message: 'Please select template elements.',
       })
     }else{
@@ -182,8 +176,7 @@ function submitGrouping(){
         type: "onGroup",
         success: success,
         label: '',
-        memberRId: '', 
-        memberLabel: '', 
+        member: '',
         message: 'Please input the label of the template.',
       })
     }
