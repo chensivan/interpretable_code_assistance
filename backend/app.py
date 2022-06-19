@@ -1,5 +1,6 @@
 # import numpy as np
 from sqlite3 import Timestamp
+from turtle import clone
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 import json
@@ -199,6 +200,39 @@ def getLogByNLP():
         return json.dumps({"success": True, "all": results}, default=str)
     else:
         return json.dumps({"success": False})
+
+@flask_app.route("/db/getSuggestedGroups", methods = ["POST"])
+def getSuggestedGroups():
+    logCol = db["template"]
+    body = request.json
+    cursor = logCol.find({"userId": body["userId"]})
+    results = []
+    for group in cursor:
+        member = group["member"]
+        repeated = []
+        rids = list(member.keys())
+        labels = list(member.values())
+        allLabels =body["all"]
+        allLabels.insert(0, body["inserted"])
+        
+        for i in range(len(allLabels)):
+            similarity = embeddings.similarity(allLabels[i], labels)[0]
+            if similarity[1] > 0.5:
+                oldLabel = labels[similarity[0]]
+                repeated.append({"old": oldLabel, "new": allLabels[i]})
+                labels.remove(oldLabel)
+                rids.remove(rids[similarity[0]])
+            elif i == 0:
+               break
+            
+        if len(repeated) > 0:
+            remaining = []
+            for i in range(len(labels)): # TODO get the code of this element
+                remaining.append({"label": labels[i], "rid": rids[i]})
+            if len(remaining) > 0:
+                results.append({"group": group, "repeated": repeated, "remaining": remaining})
+    sortedList = sorted(results, key=lambda x: len(x["repeated"]), reverse=True)
+    return json.dumps(sortedList, default=str)
 
 if __name__ == "__main__":
     flask_app.run(debug=True)
