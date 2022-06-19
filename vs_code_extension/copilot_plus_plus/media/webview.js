@@ -16,6 +16,7 @@ document.getElementById("openbtn").addEventListener("click", function(){
 
 document.getElementById("reload").addEventListener("click", function(){
   reloadSidePanel();
+  closeGroupBox();
 });
 
 //----------initiate grouping------------//
@@ -73,20 +74,19 @@ function toggleSelectedIcon(iconName){
 }
 
 //---------------------------(temp)group---------------------------------//
-let memberRId = [];
-let memberLabel = [];
-let memberIndex = 0;
+// let memberRId = [];
+// let memberLabel = [];
+let member = {};
+// let memberIndex = 0; //TOBEDELETED
 
 function createGroupSelector(ele){
   if (!ele.classList.contains("group-border")){
     let selected = logSelectedElement(ele);
-    if (selected ){
+    if (selected){
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
     }
-
   }else{
-
   }
 
 }
@@ -96,10 +96,41 @@ function logSelectedElement(ele){
   if (elmntRid){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
-        createSidePanel([data[0]], false, true, memberIndex);
-        memberRId.push(data[0].rId);
-        memberLabel.push(data[0].label);
-        memberIndex += 1;
+        createSidePanel([data[0]], false, true, elmntRid);
+        // memberRId.push(data[0].rId);
+        // memberLabel.push(data[0].label);
+        member[data[0].rId] = data[0].label;
+
+        let hstBlock = document.getElementsByClassName("hstBlock-"+elmntRid)[0];
+        if (hstBlock){
+          hstBlock.addEventListener('click', function(e){
+            let targetHst = e.target;
+            while (!targetHst.classList.contains("hstBlock")){
+              targetHst = targetHst.parentElement;
+            }
+  
+            let slides = document.getElementsByClassName('actionBtn');
+            for (let j = 0; j < slides.length; j++) {
+              slides[j].parentNode.style.position = 'null';
+              slides[j].parentNode.removeChild(slides[j]);
+            }
+            let actionBtn = document.createElement('div');
+            actionBtn.classList.add('actionBtn');
+            actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
+            targetHst.style.position = 'relative';
+            targetHst.appendChild(actionBtn);
+            actionBtn.innerHTML =  "<button id='deleteBtn'>Delete</button>";
+            if (document.getElementById('deleteBtn')){
+              document.getElementById('deleteBtn').addEventListener('click', function() {
+                targetHst.parentNode.removeChild(targetHst);
+                ele.classList.remove('group-border');
+                ele.style.border = null;
+              });
+            }
+
+          });
+        }
+
       }else{
         vscode.postMessage({
           type: "onGroup",
@@ -108,11 +139,13 @@ function logSelectedElement(ele){
           memberRId: '', 
           memberLabel: '', 
           message: 'Element cannot be selected.',
-        })
+        });
+        return false;
       }
     });
     return true;
-  }else{
+  }
+  else{
     vscode.postMessage({
       type: "onGroup",
       success: false,
@@ -122,8 +155,7 @@ function logSelectedElement(ele){
       message: 'Element cannot be selected.',
     })
     return false;
-  }
-}
+  }}
 
 function submitGrouping(){
   let groupBtn = document.getElementById('submit-group');
@@ -893,7 +925,7 @@ function dragEnd(e) {
 }
 
 //---------------------------SidePanel(test)---------------------------------//
-function createSidePanel(logData, insert, remain, memberId){
+function createSidePanel(logData, insert, remain, memberRid){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     if (!remain){
@@ -903,9 +935,8 @@ function createSidePanel(logData, insert, remain, memberId){
       let hstBlock = document.createElement('div');
       hstBlock.setAttribute('index', index);
       hstBlock.classList.add('hstBlock');
-      if (memberId){
-        console.log('hstBlock'+memberId);
-        hstBlock.classList.add('hstBlock'+memberId);
+      if (memberRid){
+        hstBlock.classList.add('hstBlock-'+memberRid);
       }
       hstBlock.style.padding = '20px';
       hstBlock.style.margin = '10px';
