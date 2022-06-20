@@ -91,7 +91,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
-              this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text, data.new, data.rid);
+              this.log("user1", "drag", `Drag element with label [${data.nlp}], ${data.transform}`, data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -101,7 +101,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
-              this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text, data.new, data.rid);
+              this.log("user1", "resize", `Resize element with label [${data.nlp}] to ${data.size}`, data.nlp, data.text, data.new, data.rid);
             }
             break;
           }
@@ -110,7 +110,7 @@ class CodePanel {
               return;
             }
             let rId = getNonce();
-            this.log("user1", "insert", "insert object with prompt/label: "+data.value+" and style "+data.style, data.value, "style=\""+data.style+"\"", rId);
+            this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, data.value, "style=\""+data.style+"\"", rId);
             
             if(data.opt == 0){
               var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
@@ -166,7 +166,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new,data.old);
             if(data.nlp){
-              this.log("user1", "change attribues", `change attributes with label <${data.nlp}> with ${data.changes}`, 
+              this.log("user1", "change attribues", `change attributes with label [${data.nlp}] with ${data.changes}`, 
               data.nlp, data.text, data.newHTML, data.rid);
             }
             break;
@@ -177,7 +177,7 @@ class CodePanel {
             }
             this._replaceInEditor(data.new, data.old);
             if(data.nlp){
-              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: <${data.nlp}>`, 
+              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: [${data.nlp}]`, 
               data.nlp, data.text, data.newHTML, data.rid);
             }
             break;
@@ -206,7 +206,7 @@ class CodePanel {
               this._replaceInEditor(data.new, data.old);
             }
             if(data.nlp){
-              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: <${data.nlp}>`, 
+              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: [${data.nlp}]`, 
               data.nlp, data.text, data.new, data.rid);
             }
             break;
@@ -223,7 +223,7 @@ class CodePanel {
               return;
             }
             this._replaceInEditor(data.new, data.old);
-            this.log("user1", "reset", `Reset element with label <${data.nlp}> back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.text, data.new, data.rid);
+            this.log("user1", "reset", `Reset element with label [${data.nlp}] back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.text, data.new, data.rid);
             break;
           }
           case "onReset": {
