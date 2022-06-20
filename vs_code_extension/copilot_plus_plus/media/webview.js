@@ -146,6 +146,10 @@ function logSelectedElement(elmntRid, ele){
                   ele.classList.remove('group-border');
                   ele.style.border = null;
                 }
+                if (elmntRid in member){
+                  delete member[elmntRid];
+                }
+
               });
             }
 
