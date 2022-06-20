@@ -48,13 +48,7 @@ function handleSelectedIcon(event){
       }
     }
     else if(mode == 8){
-      // emptySidePanel();
       reloadGroupPanel();
-      // let sidePanel = document.getElementById("sidePanel");
-      // let createBtn = document.createElement("div");
-      // createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
-      // sidePanel.appendChild(createBtn);
-      // submitGrouping();
     }
     
   }
@@ -76,37 +70,54 @@ function toggleSelectedIcon(iconName){
 
 //---------------------------(temp)group---------------------------------//
 let member = {};
-let groupStart = 0;
+let groupStart = 0; // 0: 
+let currGroupRid;
 
 function createGroupSelector(ele){
+  let sidePanel = document.getElementById("sidePanel");
   if (groupStart == 0){
     emptySidePanel();
-    let sidePanel = document.getElementById("sidePanel");
-    let createBtn = document.createElement("div");
-    createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
-    sidePanel.appendChild(createBtn);
-    submitGrouping();
+  }else if (groupStart == 2){
+    if (!document.getElementById("editTool-group")){
+      let createBtn = document.createElement("div");
+      createBtn.id = "editTool-group";
+      createBtn.innerHTML = "<button id='edit-group' style='float: right;'>Confirm</button>";
+      sidePanel.appendChild(createBtn);
+      editGrouping(createBtn);
+    }
   }
   if (!ele.classList.contains("group-border")){
-    let selected = logSelectedElement(ele);
-    if (selected){
+    let elmntRid = getRID(ele);
+    if (elmntRid){
+      logSelectedElement(elmntRid, ele);
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
       groupStart = 1;
+      if (!document.getElementById("submitTool-group")){
+        let createBtn = document.createElement("div");
+        createBtn.id = "submitTool-group";
+        createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
+        sidePanel.appendChild(createBtn);
+        submitGrouping(createBtn);
+      }
     }
   }else{
+    vscode.postMessage({
+      type: "onGroup",
+      success: false,
+      label: '',
+      member: '',
+      message: 'Element cannot be selected: No RID matched.',
+    });
   }
 
 }
 
-function logSelectedElement(ele, elmntRid){
-  if (!elmntRid){
-    let elmntRid = getRID(ele);
-  }
-  if (elmntRid){
+function logSelectedElement(elmntRid, ele){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
         createSidePanel([data[0]], 1, true, elmntRid);
+        
         member[data[0].rId] = data[0].label;
 
         let hstBlock = document.getElementsByClassName("hstBlock-"+elmntRid)[0];
@@ -131,8 +142,10 @@ function logSelectedElement(ele, elmntRid){
             if (document.getElementById('deleteBtn')){
               document.getElementById('deleteBtn').addEventListener('click', function() {
                 targetHst.parentNode.removeChild(targetHst);
-                ele.classList.remove('group-border');
-                ele.style.border = null;
+                if (ele){
+                  ele.classList.remove('group-border');
+                  ele.style.border = null;
+                }
               });
             }
 
@@ -146,25 +159,30 @@ function logSelectedElement(ele, elmntRid){
           success: false,
           label: '',
           member: '',
-          message: 'Element cannot be selected: No RID matched.',
+          message: 'Element cannot be selected: No history stored.',
         });
-        return false;
       }
     });
-    return true;
   }
-  else{
-    vscode.postMessage({
-      type: "onGroup",
-      success: false,
-      label: '',
-      member: '',
-      message: 'Element cannot be selected.',
-    })
-    return false;
-  }}
 
-function submitGrouping(){
+  function editGrouping(createBtn){
+    let editBtn = document.getElementById('edit-group');
+    editBtn.addEventListener("click", function(){
+      vscode.postMessage({
+        type: "onEditGroup",
+        rId: currGroupRid,
+        member: member,
+      })
+      reloadGroupPanel();
+      closeGroupBox();
+      groupStart = 0;
+      currGroupRid = null;
+      member = {};
+      createBtn.parentNode.removeChild(createBtn);
+    })
+  }
+
+function submitGrouping(createBtn){
   let groupBtn = document.getElementById('submit-group');
   groupBtn.addEventListener('click', function(){
     let text = document.getElementById("inputbox-group");
@@ -195,41 +213,10 @@ function submitGrouping(){
     reloadGroupPanel();
     closeGroupBox();
     groupStart = 0;
-    document.getElementById('inputbox-group').value = '';
+    createBtn.parentNode.removeChild(createBtn);
   });
 }
 
-//TODO: delete(?)
-function showGroupDetails(){
-  let hstBlocks = document.getElementsByClassName("hstBlock");
-  for (var i = 0; i < hstBlocks.length; i++){
-    let hstBlock = hstBlocks[i];
-    hstBlock.addEventListener('click', function(e){
-      let targetHst = e.target;
-      while (!targetHst.classList.contains("hstBlock")){
-        targetHst = targetHst.parentElement;
-      }
-
-      let slides = document.getElementsByClassName('actionBtn');
-      for (let j = 0; j < slides.length; j++) {
-        slides[j].parentNode.style.position = 'null';
-        slides[j].parentNode.removeChild(slides[j]);
-      }
-      let actionBtn = document.createElement('div');
-      actionBtn.classList.add('actionBtn');
-      actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
-      targetHst.style.position = 'relative';
-      targetHst.appendChild(actionBtn);
-      actionBtn.innerHTML =  "<button id='detailBtn'>Details</button>";
-      if (document.getElementById('detailBtn')){
-        document.getElementById('detailBtn').addEventListener('click', function() {
-
-        });
-      }
-
-    });
-  }
-}
 //---------------------------variables for attribute editor tool---------------------------------//
 var widget;
 var widgetInitX;
@@ -1065,6 +1052,7 @@ function createSidePanel(logData, insert, remain, memberRid){
           if (document.getElementById('detailBtn')){
             document.getElementById('detailBtn').addEventListener('click', function() {
               let elements = Object.keys(element.member);
+              currGroupRid = element.rId;
               // let details = document.createElement('div');
               // details.class = "dropdown-container";
               // hstBlock.parentNode.insertBefore(details, hstBlock.nextSibling);
@@ -1088,9 +1076,14 @@ function createSidePanel(logData, insert, remain, memberRid){
               // }
               // )
               emptySidePanel();
-              element.forEach((element) => {
+              member = {};
+
+              groupStart = 2;
+              elements.forEach((element) => {
                 logSelectedElement(element);
+                
               })
+              console.log(member);
             });
           }
     

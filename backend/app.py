@@ -261,5 +261,24 @@ def getGroupLogs():
     newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
     return json.dumps(newList, default=str)
 
+@flask_app.route("/db/editGroupLog", methods = ["POST"])
+@cross_origin()
+def editGroupLog():
+    logCol = db["template"]
+    body = request.json
+    cursor = logCol.find({"userId": body["userId"], "rId": body["rId"]})
+    count = 0
+    for result in cursor:
+        count += 1
+        logCol.update_one({
+            '_id': result['_id']
+                },{
+                '$set': {
+                    'member': body["member"],
+                    'createDate': datetime.datetime.now(),
+                    }
+                }, upsert=False)
+    return str(count)
+
 if __name__ == "__main__":
     flask_app.run(debug=True)

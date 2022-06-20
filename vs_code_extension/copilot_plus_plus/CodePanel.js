@@ -145,6 +145,13 @@ class CodePanel {
             
             break;
           }
+          case "onEditGroup":{
+            if (data.rId){
+              this.editGroup("user1", data.member, data.rId);
+            }
+            
+            break;
+          }
           case "onComplete": {
             //loop data.inserted
             for (var prop in data.inserted) {
@@ -267,6 +274,14 @@ class CodePanel {
     method: 'POST', 
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({userId: userId, inserted:inserted})
+    })
+}
+
+editGroup(userId, member, rId){
+  fetch(URL+"/db/editGroupLog", {
+    method: 'POST', 
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({userId: userId, member:member, rId:rId})
     })
 }
 
