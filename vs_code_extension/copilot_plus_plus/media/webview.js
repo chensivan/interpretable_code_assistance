@@ -80,7 +80,6 @@ let groupStart = 0;
 
 function createGroupSelector(ele){
   if (groupStart == 0){
-    groupStart = 1;
     emptySidePanel();
     let sidePanel = document.getElementById("sidePanel");
     let createBtn = document.createElement("div");
@@ -93,18 +92,21 @@ function createGroupSelector(ele){
     if (selected){
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
+      groupStart = 1;
     }
   }else{
   }
 
 }
 
-function logSelectedElement(ele){
-  let elmntRid = getRID(ele);
+function logSelectedElement(ele, elmntRid){
+  if (!elmntRid){
+    let elmntRid = getRID(ele);
+  }
   if (elmntRid){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
-        createSidePanel([data[0]], false, true, elmntRid);
+        createSidePanel([data[0]], 1, true, elmntRid);
         member[data[0].rId] = data[0].label;
 
         let hstBlock = document.getElementsByClassName("hstBlock-"+elmntRid)[0];
@@ -192,8 +194,41 @@ function submitGrouping(){
     }
     reloadGroupPanel();
     closeGroupBox();
+    groupStart = 0;
     document.getElementById('inputbox-group').value = '';
   });
+}
+
+//TODO: delete(?)
+function showGroupDetails(){
+  let hstBlocks = document.getElementsByClassName("hstBlock");
+  for (var i = 0; i < hstBlocks.length; i++){
+    let hstBlock = hstBlocks[i];
+    hstBlock.addEventListener('click', function(e){
+      let targetHst = e.target;
+      while (!targetHst.classList.contains("hstBlock")){
+        targetHst = targetHst.parentElement;
+      }
+
+      let slides = document.getElementsByClassName('actionBtn');
+      for (let j = 0; j < slides.length; j++) {
+        slides[j].parentNode.style.position = 'null';
+        slides[j].parentNode.removeChild(slides[j]);
+      }
+      let actionBtn = document.createElement('div');
+      actionBtn.classList.add('actionBtn');
+      actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
+      targetHst.style.position = 'relative';
+      targetHst.appendChild(actionBtn);
+      actionBtn.innerHTML =  "<button id='detailBtn'>Details</button>";
+      if (document.getElementById('detailBtn')){
+        document.getElementById('detailBtn').addEventListener('click', function() {
+
+        });
+      }
+
+    });
+  }
 }
 //---------------------------variables for attribute editor tool---------------------------------//
 var widget;
@@ -451,14 +486,14 @@ function emptySidePanel(){
 
 function reloadSidePanel(){
   getLog("user1").then(data => {
-    createSidePanel(data, false, false);
+    createSidePanel(data, 1, false);
   }
   );
 }
 
 function reloadGroupPanel(){
   getGroupLog("user1").then(data => {
-    createSidePanel(data, false, false);
+    createSidePanel(data, 2, false);
   }
   );
 }
@@ -492,7 +527,7 @@ function createInputBox(x, y, style){
         if (data.success){
           let length = Math.min(3, data.all.length);
           let logData = data.all.slice(0, length);
-          createSidePanel(logData, true, false);
+          createSidePanel(logData, 0, false);
 
           let hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
@@ -539,7 +574,7 @@ function createInputBox(x, y, style){
           }
         }
         else{
-          createSidePanel([], false, false);
+          createSidePanel([], 1, false);
         }
           
           let declineBtn = document.createElement("button");
@@ -977,7 +1012,7 @@ function createSidePanel(logData, insert, remain, memberRid){
         hstBlock.style.backgroundColor = '#ededed';
       });
 
-      if(insert){
+      if(insert == 0){
       hstBlock.innerHTML = `
       <table>
       <tr>
@@ -987,7 +1022,7 @@ function createSidePanel(logData, insert, remain, memberRid){
       Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
       </td></tr></table>`;
       }
-      else{
+      else if (insert == 1){
         hstBlock.innerHTML = `
       <table>
       <tr>
@@ -998,6 +1033,68 @@ function createSidePanel(logData, insert, remain, memberRid){
       Details: ${element.details}<br/>
       Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
       </td></tr></table>`;
+      }
+      else if (insert == 2){
+        hstBlock.innerHTML = `
+        <table>
+        <tr>
+        <td id="test${index}"></td>
+        <td>
+        Event: ${element.event}<br/>
+        Label: ${element.label}<br/>
+        Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
+        </td></tr></table>`;
+       
+        hstBlock.addEventListener('click', function(e){
+          let targetHst = e.target;
+          while (!targetHst.classList.contains("hstBlock")){
+            targetHst = targetHst.parentElement;
+          }
+    
+          let slides = document.getElementsByClassName('actionBtn');
+          for (let j = 0; j < slides.length; j++) {
+            slides[j].parentNode.style.position = 'null';
+            slides[j].parentNode.removeChild(slides[j]);
+          }
+          let actionBtn = document.createElement('div');
+          actionBtn.classList.add('actionBtn');
+          actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
+          targetHst.style.position = 'relative';
+          targetHst.appendChild(actionBtn);
+          actionBtn.innerHTML =  "<button id='detailBtn'>Details</button>";
+          if (document.getElementById('detailBtn')){
+            document.getElementById('detailBtn').addEventListener('click', function() {
+              let elements = Object.keys(element.member);
+              // let details = document.createElement('div');
+              // details.class = "dropdown-container";
+              // hstBlock.parentNode.insertBefore(details, hstBlock.nextSibling);
+              // elements.forEach((ele, eleIndex) =>{
+              //   getLogByRID("user1", ele).then(data =>{ 
+              //     if (data.length > 0) {
+              //       let curr = document.createElement('div');
+              //       details.appendChild(curr);
+              //       curr.innerHTML  = `
+              //       <table>
+              //       <tr>
+              //       <td id="test${eleIndex}"></td>
+              //       <td>
+              //       Event: ${data[0].event}<br/>
+              //       Label: ${data[0].label}<br/>
+              //       Details: ${data[0].details}<br/>
+              //       Create Date: ${data[0].createDate.slice(0, data[0].createDate.indexOf("."))}
+              //       </td></tr></table>`;
+              //     }
+              //   });
+              // }
+              // )
+              emptySidePanel();
+              element.forEach((element) => {
+                logSelectedElement(element);
+              })
+            });
+          }
+    
+        });
       }
 
      let wrapper= document.createElement('div');
@@ -1099,7 +1196,7 @@ function logElementHistory(ele){
   if (elmntRid){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
-        createSidePanel(data, false, false);
+        createSidePanel(data, 1, false);
         let hstBlocks = document.getElementsByClassName("hstBlock");
         for (var i = 0; i < hstBlocks.length; i++){
           let hstBlock = hstBlocks[i];
