@@ -514,14 +514,15 @@ function createInputBox(x, y, style){
               codeBlock.removeAttribute("eid");
               codeBlock.setAttribute("rid", "rid-placeholder");
               codeBlock.setAttribute("nlp", text.value);
-              vscode.postMessage({
-                  type: "onInsert",
-                  //success: true,
-                  value: text.value,
-                  style: `${replaceStyle}`,
-                  code: codeBlock.outerHTML,
-                  opt: 2 // "copy & paste" old elements
-              });
+              let insertOpt = {
+                type: "onInsert",
+                //success: true,
+                value: text.value,
+                style: `${replaceStyle}`,
+                code: codeBlock.outerHTML,
+                opt: 2 // "copy & paste" old elements
+            };
+              giveGroupSuggestions(text.value, insertOpt)
                 targetHst.style.backgroundColor = 'white';
                 reloadSidePanel();
               });
@@ -536,13 +537,14 @@ function createInputBox(x, y, style){
           declineBtn.innerHTML = "Create New";
           sidePanel.appendChild(declineBtn);
           declineBtn.addEventListener("click", function() {
-            vscode.postMessage({
+            let insertOpt = {
               type: "onInsert",
               //success: true,
               value: text.value,
               style: `style="${style}"`,
               opt: 0 // create new
-            });
+            };
+            giveGroupSuggestions(text.value, insertOpt)
             reloadSidePanel();
           });
 
@@ -550,13 +552,14 @@ function createInputBox(x, y, style){
           copilotbtn.innerHTML = "Create New Using Copilot";
           sidePanel.appendChild(copilotbtn);
           copilotbtn.addEventListener("click", function() {
-            vscode.postMessage({
+            let insertOpt = {
               type: "onInsert",
               //success: true,
               value: text.value,
               style: `style="${style}"`,
               opt: 1 // create new using copilot
-            });
+            };
+            giveGroupSuggestions(text.value, insertOpt)
             reloadSidePanel();
           });
       });
@@ -573,6 +576,27 @@ function createInputBox(x, y, style){
   });
 }
 
+function giveGroupSuggestions(insertedLabel, insertOpts){
+  //get all elements and if they have attribute nlp get all their values
+  let elements = document.getElementsByTagName("*");
+  let all = [];
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i].hasAttribute("nlp")){
+      all.push(elements[i].getAttribute("nlp"));
+    }
+  }
+  getSuggestedGroups("user1", insertedLabel, all).then(data => {
+    //display to sidepanel
+    if(data.length > 0){
+      createSidePanelForSuggestedGroups(data, insertOpts);
+
+    }
+    else{
+      vscode.postMessage(insertOpts)
+    }
+  });
+
+}
 //---------------------------info tool---------------------------------//
 function createInfoBox(x, y, element){
   closeInputBox();
@@ -894,7 +918,6 @@ function dragEnd(e) {
     // div.style.transform = null;x
     parent.style.left = rectX + translateX;
     parent.style.top = rectY + translateY;
-    console.log(div.style.transform);
     parent.style.transform = div.style.transform
     div.style.transform = "translate(" + 0 + "px, " + 0 + "px)"
 
@@ -993,6 +1016,70 @@ html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
 }
 
 
+}
+
+function createSidePanelForSuggestedGroups(logData, insertOpt){
+  let sidePanel = document.getElementById("sidePanelLog");
+  if (sidePanel){
+    removeAllChildNodes(sidePanel);
+    logData.forEach((element, index) => {
+      let hstBlock = document.createElement('div');
+      //hstBlock.setAttribute('index', index);
+      hstBlock.classList.add('hstBlock');
+      hstBlock.style.padding = '20px';
+      hstBlock.style.margin = '10px';
+      hstBlock.style.backgroundColor = '#ededed';
+      hstBlock.style.radius = '5px';
+      
+      sidePanel.appendChild(hstBlock);
+      hstBlock.addEventListener('mouseover', function(){
+        hstBlock.style.backgroundColor = '#e6e6e6';
+      });
+      
+      hstBlock.addEventListener('mouseout', function(){
+        hstBlock.style.backgroundColor = '#ededed';
+      });
+
+      let label = element.group.label;
+
+      let repeatedText = "";
+      for(let i = 0; i < element.repeated.length; i++){
+        if(element.repeated[i].old !== element.repeated[i].new){
+          repeatedText += " "+element.repeated[i].new + " ("+element.repeated[i].old+"?),";
+        }
+        else{
+          repeatedText += " "+element.repeated[i].new + ",";
+        }
+      }
+      repeatedText = repeatedText.slice(0, repeatedText.length-1);
+
+      let remainingText = "";
+      for(let i = 0; i < element.remaining.length; i++){
+        remainingText += element.remaining[i].label + ",";
+      }
+      remainingText = remainingText.slice(0, remainingText.length-1);
+      
+      let button = document.createElement("Input");
+      button.type = "button";
+      button.value = "Insert Missing";
+      button.addEventListener("click", function(){
+        insertOpt.remaining = element.remaining;
+        vscode.postMessage(insertOpt);
+        reloadSidePanel();
+      });
+
+      //<input type="button" class='insertMissingBtn' value='Insert Missing' />
+      hstBlock.innerHTML = `
+      <strong>Inserting a [${label}]?</strong><br/>
+      Inserted: ${repeatedText} <br/>
+      Missing: ${remainingText}
+      `
+
+      hstBlock.appendChild(button);
+
+    });
+  return;
+}
 }
 
 //---------------------------Log element history tool--------------------------//
@@ -1300,6 +1387,23 @@ function getLogByRID(userId, rId) {
       method: 'POST',
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({userId: userId, rId: rId})
+      })
+      .then(res => res.json())
+      .then(data => {
+        return resolve(data);
+      })
+      .catch(err => {
+        return reject(err);
+      })
+    })
+}
+
+function getSuggestedGroups(userId, inserted, all) {
+  return new Promise((resolve, reject) => {
+    fetch(URL+"/db/getSuggestedGroups", {
+      method: 'POST',
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({userId: userId, inserted: inserted, all: all})
       })
       .then(res => res.json())
       .then(data => {

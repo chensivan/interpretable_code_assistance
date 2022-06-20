@@ -89,7 +89,6 @@ class CodePanel {
             if (!data.new) {
               return;
             }
-            console.log(data);
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
               this.log("user1", "drag", `Drag element with label <${data.nlp}>, ${data.transform}`, data.nlp, data.text, data.new, data.rid);
@@ -100,7 +99,6 @@ class CodePanel {
             if (!data.new) {
               return;
             }
-            console.log(data)
             this._replaceInEditor(data.new, data.old);
             if (data.nlp){
               this.log("user1", "resize", `Resize element with label <${data.nlp}> to ${data.size}`, data.nlp, data.text, data.new, data.rid);
@@ -123,6 +121,17 @@ class CodePanel {
             else if(data.opt == 2){
               var comment = data.code.replace("rid-placeholder", rId);
             }
+
+            if(data.remaining){
+              for(let i = 0; i < data.remaining.length; i++){
+                let rId = getNonce();
+                this.log("user1", "insert", "", data.remaining[i].label, "", rId);
+                let otherElement = data.remaining[i].code.replace("eid=\""+data.remaining[i].rid, "rid=\""+rId);
+                otherElement = otherElement.replace("rid=\""+data.remaining[i].rid, "rid=\""+rId);
+                comment += "\n\n" + otherElement;
+              }
+            }
+
             this._replaceInEditor(comment+"\n</body>", "</body>");
             break;
           }
