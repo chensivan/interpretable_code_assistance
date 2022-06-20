@@ -48,12 +48,13 @@ function handleSelectedIcon(event){
       }
     }
     else if(mode == 8){
-      emptySidePanel();
-      let sidePanel = document.getElementById("sidePanel");
-      let createBtn = document.createElement("div");
-      createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
-      sidePanel.appendChild(createBtn);
-      submitGrouping();
+      // emptySidePanel();
+      reloadGroupPanel();
+      // let sidePanel = document.getElementById("sidePanel");
+      // let createBtn = document.createElement("div");
+      // createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
+      // sidePanel.appendChild(createBtn);
+      // submitGrouping();
     }
     
   }
@@ -75,8 +76,18 @@ function toggleSelectedIcon(iconName){
 
 //---------------------------(temp)group---------------------------------//
 let member = {};
+let groupStart = 0;
 
 function createGroupSelector(ele){
+  if (groupStart == 0){
+    groupStart = 1;
+    emptySidePanel();
+    let sidePanel = document.getElementById("sidePanel");
+    let createBtn = document.createElement("div");
+    createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
+    sidePanel.appendChild(createBtn);
+    submitGrouping();
+  }
   if (!ele.classList.contains("group-border")){
     let selected = logSelectedElement(ele);
     if (selected){
@@ -94,8 +105,6 @@ function logSelectedElement(ele){
     getLogByRID("user1", elmntRid).then(data => {
       if (data.length > 0){
         createSidePanel([data[0]], false, true, elmntRid);
-        // memberRId.push(data[0].rId);
-        // memberLabel.push(data[0].label);
         member[data[0].rId] = data[0].label;
 
         let hstBlock = document.getElementsByClassName("hstBlock-"+elmntRid)[0];
@@ -129,12 +138,13 @@ function logSelectedElement(ele){
         }
 
       }else{
+        //TODO: add on button
         vscode.postMessage({
           type: "onGroup",
           success: false,
           label: '',
           member: '',
-          message: 'Element cannot be selected.',
+          message: 'Element cannot be selected: No RID matched.',
         });
         return false;
       }
@@ -180,8 +190,7 @@ function submitGrouping(){
         message: 'Please input the label of the template.',
       })
     }
-    // reloadGroupTemplate(); //TODO
-    emptySidePanel();
+    reloadGroupPanel();
     closeGroupBox();
     document.getElementById('inputbox-group').value = '';
   });
@@ -447,13 +456,13 @@ function reloadSidePanel(){
   );
 }
 
-function reloadGroupTemplate(){
-  // getLogGroup("user1").then(data => {
-  //   createSidePanel(data, false, false);
-  // }
-  // );
-  //TODO
+function reloadGroupPanel(){
+  getGroupLog("user1").then(data => {
+    createSidePanel(data, false, false);
+  }
+  );
 }
+
 
 //---------------------------create basic box element---------------------------------//
 function createBasicBox(x, y){
@@ -1362,6 +1371,21 @@ function getLog(userId){
       return reject(err);
     })
   })
+}
+
+function getGroupLog(userId){
+  return new Promise((resolve, reject) => {
+    fetch(URL+"/db/getGroupLogs?userId="+userId, {
+      method: 'GET'
+      })
+      .then(res => res.json())
+      .then(data => {
+        return resolve(data);
+      })
+      .catch(err => {
+        return reject(err);
+      })
+    })
 }
 
 function getLogByNLP(userId, nlp) {

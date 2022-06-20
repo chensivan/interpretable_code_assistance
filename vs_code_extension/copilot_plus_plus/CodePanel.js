@@ -293,6 +293,21 @@ completeJSLogs(userId, inserted){
       })
   }
 
+  getGroupLog(userId){
+    return new Promise((resolve, reject) => {
+      fetch(URL+"/db/getGroupLogs?userId="+userId, {
+        method: 'GET'
+        })
+        .then(res => res.json())
+        .then(data => {
+          return resolve(data);
+        })
+        .catch(err => {
+          return reject(err);
+        })
+      })
+  }
+
   deleteLog(dataId){
     return new Promise((resolve, reject) => {
       fetch(URL+"/db/deleteLogs?dataId="+dataId, {

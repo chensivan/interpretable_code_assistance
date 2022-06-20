@@ -248,5 +248,18 @@ def getNewestCodeByRID(userId, rid):
     newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
     return newlist[0]["code"]
 
+@flask_app.route("/db/getGroupLogs", methods = ["GET"])
+@cross_origin()
+def getGroupLogs():
+    logCol = db["template"]
+    userId = request.args.get('userId')
+
+    cursor = logCol.find({"userId": userId})
+    results = []
+    for result in cursor:
+        results.append(result)
+    newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
+    return json.dumps(newList, default=str)
+
 if __name__ == "__main__":
     flask_app.run(debug=True)
