@@ -1078,6 +1078,14 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
       hstBlock.appendChild(button);
 
     });
+  let rejectButton = document.createElement("Input");
+  rejectButton.type = "button";
+  rejectButton.value = "Reject";
+  rejectButton.addEventListener("click", function(){
+    vscode.postMessage(insertOpt);
+    reloadSidePanel();
+  });
+  sidePanel.appendChild(rejectButton);
   return;
 }
 }
