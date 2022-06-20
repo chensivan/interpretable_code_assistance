@@ -224,15 +224,29 @@ def getSuggestedGroups():
                 rids.remove(rids[similarity[0]])
             elif i == 0:
                break
+
+            if len(labels) == 0:
+                break
             
         if len(repeated) > 0:
             remaining = []
             for i in range(len(labels)): # TODO get the code of this element
-                remaining.append({"label": labels[i], "rid": rids[i]})
+                code = getNewestCodeByRID(body["userId"], rids[i])
+                remaining.append({"label": labels[i], "rid": rids[i], "code": code})
             if len(remaining) > 0:
                 results.append({"group": group, "repeated": repeated, "remaining": remaining})
     sortedList = sorted(results, key=lambda x: len(x["repeated"]), reverse=True)
     return json.dumps(sortedList, default=str)
+
+def getNewestCodeByRID(userId, rid):
+    logCol = db["log"]
+
+    cursor = logCol.find({"userId": userId, "rId": rid})
+    results = []
+    for result in cursor:
+        results.append(result)
+    newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
+    return newlist[0]["code"]
 
 if __name__ == "__main__":
     flask_app.run(debug=True)
