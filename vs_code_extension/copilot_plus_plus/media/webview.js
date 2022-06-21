@@ -15,7 +15,20 @@ document.getElementById("openbtn").addEventListener("click", function(){
 });
 
 document.getElementById("reload").addEventListener("click", function(){
-  reloadSidePanel();
+  emptySidePanel();
+  if (mode == 8){
+    reloadGroupPanel();
+    groupStart = 0;
+    //TODO: refactor this (should not be here :)
+    if (document.getElementById("submitTool-group")){
+      document.getElementById("submitTool-group").parentNode.removeChild(document.getElementById("submitTool-group"));
+    }
+    if (document.getElementById("editTool-group")){
+      document.getElementById("editTool-group").parentNode.removeChild(document.getElementById("editTool-group"));
+    }
+  }else{
+    reloadSidePanel();
+  }
   closeGroupBox();
 });
 
@@ -92,14 +105,14 @@ function createGroupSelector(ele){
       logSelectedElement(elmntRid, ele);
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
-      groupStart = 1;
-      if (!document.getElementById("submitTool-group")){
+      if (groupStart == 0 && !document.getElementById("submitTool-group")){
         let createBtn = document.createElement("div");
         createBtn.id = "submitTool-group";
         createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
         sidePanel.appendChild(createBtn);
         submitGrouping(createBtn);
       }
+      groupStart = 1;
     }
   }else{
     vscode.postMessage({
