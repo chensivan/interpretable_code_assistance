@@ -12,6 +12,7 @@ class CodePanel {
   */
   static currentPanel = undefined;
   static viewType = "code-panel";
+  static lastLog = 0;
   
   static createOrShow(extensionUri) {
     const column = vscode.ViewColumn.Two;
@@ -84,6 +85,14 @@ class CodePanel {
       this._panel.webview.html = this._getHtmlForWebview(webview);
       //Messages passed from the webview to the extension
       webview.onDidReceiveMessage(async (data) => {
+        console.log(data);
+        var d = new Date();
+        var n = d.getTime();
+        if(n - this.lastLog < 50){
+          this.lastLog = n;
+          return;
+        }
+        this.lastLog = n;
         switch (data.type) {
           case "onDrag":{
             if (!data.new) {

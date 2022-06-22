@@ -272,8 +272,8 @@ function findAncestor (el, cls) {
 
 
 document.addEventListener("click", function(event){
-  if (event.target.id !== "inputbox" && (!event.target.parentElement || event.target.parentElement.id !== "inputbox")
-  && event.target.id !== "navbar" && (!event.target.parentElement ||event.target.parentElement.id !== "navbar")
+  if (!findAncestor(event.target, "inputbox")
+  && !findAncestor(event.target, "navbar")
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
   && event.target.id !== "inputbox-event"
@@ -968,7 +968,6 @@ function dragEnd(e) {
     parent.style.top = rectY + translateY;
     parent.style.transform = div.style.transform
     div.style.transform = "translate(" + 0 + "px, " + 0 + "px)"
-
     vscode.postMessage({
       type: 'onDrag',
       new: parent.outerHTML,
