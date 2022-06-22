@@ -133,8 +133,11 @@ def deleteLogs():
 #@flask_app.route("/similarity", methods = ["GET"])
 def similarity(userId, txt):
     data = getAllLabels(userId)
-    results = embeddings.similarity(txt, data)
-    return results, data#json.dumps(uid, default=str), 
+    if len(data) > 0:
+        results = embeddings.similarity(txt, data)
+        return True, results, data#json.dumps(uid, default=str), 
+    print("...")
+    return False, False, False
 
 def getAllLabels(userId):
     key = {'userId':userId}
@@ -154,7 +157,10 @@ def getTextByNLP():
     body = request.json
 
     cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
-    similarities, allLabels = similarity(body["userId"], body["nlp"])
+    success, similarities, allLabels = similarity(body["userId"], body["nlp"])
+    if not success:
+        return json.dumps({"success": False})
+
     if similarities[0][1] > 0.5:
         cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[0][0]]})
         results = []
@@ -184,8 +190,13 @@ def getLogByNLP():
     body = request.json
 
     cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
-    similarities, allLabels = similarity(body["userId"], body["nlp"])
+    success, similarities, allLabels = similarity(body["userId"], body["nlp"])
     results = []
+    
+    if not success:
+        print("not success")
+        return json.dumps({"success": False})
+    print("success")
     for i in range(len(similarities)):
         if similarities[i][1] > 0.5:
             cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[i][0]]})
