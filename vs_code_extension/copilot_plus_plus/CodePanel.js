@@ -154,12 +154,17 @@ class CodePanel {
           }
           case "onComplete": {
             //loop data.inserted
+            let eids = []
+            let rids = []
             for (var prop in data.inserted) {
               if (Object.prototype.hasOwnProperty.call(data.inserted, prop)) {
                   //this._replaceInEditor(data.replaced[prop], data.inserted[prop]);
-                  this._replaceInEditor(`eid="${prop}"`, `rid="${prop}"`);
+                  eids.push(`eid="${prop}"`)
+                  rids.push(`rid="${prop}"`)
               }
+              
           }
+          this._replaceInEditor(eids, rids);
           this.completeLogs("user1", data.inserted);
           break;
           }
@@ -242,7 +247,9 @@ class CodePanel {
               this.deleteLog(data.id);
             }
             var ids = data.id;
+            console.log(ids);
             for (var i = 0; i < ids.length; i++) {
+              console.log("delete")
               this.deleteLog(ids[i]);
             }
 
@@ -406,8 +413,16 @@ completeJSLogs(userId, inserted){
               //parse newDoc into an html document
               const dom = new jsdom.JSDOM(text);
               let html = dom.window.document.querySelector("html").outerHTML;
-              let newDoc = html.replace(oldText, newText);
-
+              let newDoc = html;
+              if(Array.isArray(oldText)){
+                for(let i = 0; i<oldText.length; i++){
+                  newDoc = newDoc.replace(oldText[i], newText[i]);
+                }
+              }
+              else{
+                newDoc = html.replace(oldText, newText);
+              }
+              
               var firstLine = editor.document.lineAt(0);
               var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
               var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);

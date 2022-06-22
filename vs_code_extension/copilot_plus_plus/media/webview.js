@@ -1208,7 +1208,7 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
 
 //---------------------------Log element history tool--------------------------//
 function logElementHistory(ele){
-  var origin = ele.outerHTML;
+  var origin = getElement(ele).outerHTML;
   emptySidePanel();
   var elmntRid = getRID(ele);
   if (elmntRid){
@@ -1262,9 +1262,11 @@ function logElementHistory(ele){
               document.getElementById("resetBtn").addEventListener('click', function(){
                 var idList = [];
                 var i = 0; 
-                while (data[i]._id != resetId && data[i]._id != element._id){
-                  idList.push(data[i]._id);
-                  i++;
+                while (data[i]._id != resetId){
+                  if (data[i]._id != element._id){
+                    idList.push(data[i]._id);
+                    i++;
+                  }
                 }
                 vscode.postMessage({
                     type: "onReset",
@@ -1441,6 +1443,9 @@ function getInsertedElements(){
       clone.removeAttribute("rid");
       clone.setAttribute("eid", elements[i].getAttribute("rid"));
       inserted[elements[i].getAttribute("rid")] = clone.outerHTML;
+
+      elements[i].setAttribute("eid", elements[i].getAttribute("rid"));
+      elements[i].removeAttribute("rid");
     }
   }
   if(inserted !== {}){
@@ -1626,7 +1631,7 @@ function handleTextReplace(insertStyle, replaceStyle) {
           }
 
           function getElement(element){
-            while(element.tagName !== "BODY"){
+            while(element && element.tagName && element.tagName !== "BODY"){
               if(element.hasAttribute("nlp")){
                 return element;
               }
