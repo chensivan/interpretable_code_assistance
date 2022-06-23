@@ -151,6 +151,18 @@ def getAllLabels(userId):
     return results
 
 
+def getAllGroups(userId):
+    key = {'userId':userId}
+
+    templateCol = db["template"]
+    cursor = templateCol.find(key); 
+    results = []
+    for result in cursor:
+        if "label" in result and result["label"] not in results:
+            results.append(result["label"])
+    return results
+    
+
 @flask_app.route("/db/getTextByNLP", methods = ["POST"])
 def getTextByNLP():
     logCol = db["log"]
@@ -193,22 +205,43 @@ def getLogByNLP():
     success, similarities, allLabels = similarity(body["userId"], body["nlp"])
     results = []
     
-    if not success:
-        print("not success")
-        return json.dumps({"success": False})
-    print("success")
-    for i in range(len(similarities)):
-        if similarities[i][1] > 0.5:
-            cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[i][0]]})
-            newest = {}
-            for log in cursor:
-                rId = log["rId"]
-                if rId not in newest or newest[rId]["createDate"] < log["createDate"]:
-                    newest[rId] = log
-            for log in newest.values():
-                results.append(log)
-    if len(results) > 0:
-        return json.dumps({"success": True, "all": results}, default=str)
+    if success:
+        for i in range(len(similarities)):
+            if similarities[i][1] > 0.5:
+                cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[i][0]]})
+                newest = {}
+                for log in cursor:
+                    rId = log["rId"]
+                    if rId not in newest or newest[rId]["createDate"] < log["createDate"]:
+                        newest[rId] = log
+                for log in newest.values():
+                    log["isGroup"] = False
+                    results.append(log)
+    
+    groups = getAllGroups(body["userId"])
+    groupResults = []
+    templateCol = db["template"]
+    if len(groups) > 0:
+        similarities = embeddings.similarity(body["nlp"], groups)
+        for i in range(len(similarities)):
+            if similarities[i][1] > 0.5:
+                cursor = templateCol.find({"userId": body["userId"], "label":groups[similarities[i][0]]})
+                newest = {}
+                for log in cursor:
+                    rId = log["rId"]
+                    if rId not in newest or newest[rId]["createDate"] < log["createDate"]:
+                        newest[rId] = log
+                for log in newest.values():
+                    members = log["member"].keys()
+                    codes = []
+                    for member in members:
+                        codes.append(getNewestCodeByRID(body["userId"], member))
+                    log["codes"] = codes
+                    log["isGroup"] = True
+                    groupResults.append(log)
+        
+    if len(results) > 0 or len(groupResults) > 0:
+        return json.dumps({"success": True, "all": results, "groups": groupResults}, default=str)
     else:
         return json.dumps({"success": False})
 
