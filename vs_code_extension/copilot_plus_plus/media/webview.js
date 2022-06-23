@@ -529,11 +529,14 @@ function createInputBox(x, y, style){
       getLogByNLP("user1", text.value).then(data => {
         let sidePanel = document.getElementById("sidePanelLog");
         if (data.success){
-          let length = Math.min(3, data.all.length);
+          let length = Math.min(4, data.all.length);
           let logData = data.all.slice(0, length);
-          createSidePanel(logData, 0, false);
 
-          let hstBlocks = document.getElementsByClassName("hstBlock");
+          let lengthGroup = Math.min(2, data.groups.length);
+          let groupData = data.groups.slice(0, lengthGroup);
+          createSidePanelForInsert(logData, groupData, text.value, style);
+
+          /*let hstBlocks = document.getElementsByClassName("hstBlock");
           for (var i = 0; i < hstBlocks.length; i++){
             let hstBlock = hstBlocks[i];
             hstBlock.addEventListener('click', function(e){
@@ -575,7 +578,7 @@ function createInputBox(x, y, style){
                 reloadSidePanel();
               });
             });
-          }
+          }*/
         }
         else{
           createSidePanel([], 1, false);
@@ -634,6 +637,7 @@ function giveGroupSuggestions(insertedLabel, insertOpts){
     }
   }
   getSuggestedGroups("user1", insertedLabel, all).then(data => {
+    console.log(data);
     //display to sidepanel
     if(data.length > 0){
       createSidePanelForSuggestedGroups(data, insertOpts);
@@ -1131,6 +1135,168 @@ html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
 }
 
 
+}
+
+function makeHstBlock(sidePanel){
+  let hstBlock = document.createElement('div');
+      hstBlock.classList.add('hstBlock');
+      hstBlock.style.padding = '20px';
+      hstBlock.style.margin = '10px';
+      hstBlock.style.backgroundColor = '#ededed';
+      hstBlock.style.radius = '5px';
+      
+      sidePanel.appendChild(hstBlock);
+      hstBlock.addEventListener('mouseover', function(){
+        hstBlock.style.backgroundColor = '#e6e6e6';
+      });
+      
+      hstBlock.addEventListener('mouseout', function(){
+        hstBlock.style.backgroundColor = '#ededed';
+      });
+      return hstBlock;
+}
+function createSidePanelForInsert(logData, groupData, nlp, style){
+  let sidePanel = document.getElementById("sidePanelLog");
+  let data = [...logData, ...groupData];
+  console.log(groupData);
+  console.log(data);
+  if (sidePanel){
+    removeAllChildNodes(sidePanel);
+    logData.forEach((element, index) => {
+      console.log(element)
+      let hstBlock = makeHstBlock(sidePanel);
+      hstBlock.setAttribute('index', index);
+        hstBlock.innerHTML = `
+        <table>
+        <tr>
+        <td id="test${index}"></td>
+        <td style="word-wrap: break-word;">
+        <strong>${element.label}</strong><br/>
+        Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
+        </td></tr></table>`;
+
+        
+     let wrapper= document.createElement('div');
+     wrapper.innerHTML= element.code;
+     //let codeBlock= wrapper.firstChild;
+    wrapper.style.display = "none";
+    wrapper.id = "historyIndex-"+index;
+    document.body.appendChild(wrapper);
+
+    html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
+ allowTaint : true,
+ onclone: function (clonedDoc) {
+     let temp = clonedDoc.getElementById('historyIndex-'+index);
+     temp.style.display = "block";
+ }
+}).then(canvas => {
+ canvas.style.height = "auto"
+ canvas.style.width = "50px"
+ document.querySelector("#test"+index).appendChild(canvas)
+ document.body.removeChild(document.querySelector("#historyIndex-"+index))
+});
+
+hstBlockEventListnerForInsert(hstBlock, element, nlp, style)
+      });
+      sidePanel.appendChild(document.createTextNode("Groups"));
+      groupData.forEach((element, index) => {
+        console.log(element)
+          let hstBlock = makeHstBlock(sidePanel);
+            let elementLabels = Object.values(element.member);
+            //make a string with , seperated
+            let labels = elementLabels.join(', ');
+            console.log(elementLabels)
+            console.log(labels)
+            hstBlock.innerHTML = `
+            <table>
+            <tr>
+            <td id="test${index+10}"></td>
+            <td style="word-wrap: break-word;">
+            <strong>${element.label}</strong><br/>
+            Elements: ${labels}<br/>
+            Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
+            </td></tr></table>`;
+            hstBlockEventListnerForInsertGroup(hstBlock, element)
+            });
+      }
+  return;
+}
+
+function hstBlockEventListnerForInsert(hstBlock, element, nlp, style){
+  hstBlock.addEventListener('click', function(e){
+    let targetHst = e.target;
+    while (!targetHst.classList.contains("hstBlock")){
+      targetHst = targetHst.parentElement;
+    }
+    console.log(targetHst)
+    targetHst.style.backgroundColor = '#e6e6e6';
+    let slides = document.getElementsByClassName('confirmation');
+    for (let j = 0; j < slides.length; j++) {
+      slides[j].parentNode.style.position = 'null';
+      slides[j].parentNode.removeChild(slides[j]);
+    }
+    let confirmation = document.createElement('div');
+    confirmation.classList.add('confirmation');
+    confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
+    targetHst.style.position = 'relative';
+    targetHst.appendChild(confirmation);
+    confirmation.addEventListener('click', function(){
+    let wrapper= document.createElement('div');
+    wrapper.innerHTML= element.code;
+    let codeBlock= wrapper.firstChild;
+    let replaceStyle = handleTextReplace(style, "style=\""+codeBlock.getAttribute("style")+"\"");
+    codeBlock.style = replaceStyle.substring("style=\"".length, replaceStyle.length - 2);
+    codeBlock.removeAttribute("eid");
+    codeBlock.setAttribute("rid", "rid-placeholder");
+    codeBlock.setAttribute("nlp", nlp);
+    let insertOpt = {
+      type: "onInsert",
+      //success: true,
+      value: nlp,
+      style: `${replaceStyle}`,
+      code: codeBlock.outerHTML,
+      opt: 2 // "copy & paste" old elements
+  };
+    giveGroupSuggestions(nlp, insertOpt)
+      targetHst.style.backgroundColor = 'white';
+      reloadSidePanel();
+    });
+  });
+}
+
+function hstBlockEventListnerForInsertGroup(hstBlock, element){
+  hstBlock.addEventListener('click', function(e){
+    let targetHst = e.target;
+    while (!targetHst.classList.contains("hstBlock")){
+      targetHst = targetHst.parentElement;
+    }
+    console.log(targetHst)
+    targetHst.style.backgroundColor = '#e6e6e6';
+    let slides = document.getElementsByClassName('confirmation');
+    for (let j = 0; j < slides.length; j++) {
+      slides[j].parentNode.style.position = 'null';
+      slides[j].parentNode.removeChild(slides[j]);
+    }
+    let confirmation = document.createElement('div');
+    confirmation.classList.add('confirmation');
+    confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
+    targetHst.style.position = 'relative';
+    targetHst.appendChild(confirmation);
+    confirmation.addEventListener('click', function(){
+    
+    let remaining = []
+    for(let i = 0; i<Object.keys(element.member).length; i++){
+      remaining.push({"label": element.member[i], "rid": Object.keys(element.member)[i], "code": element.codes[i]})
+    }
+    console.log(remaining);
+    vscode.postMessage({
+      type: "onInsert",
+      remaining, remaining
+  });
+      targetHst.style.backgroundColor = 'white';
+      reloadSidePanel();
+    });
+  });
 }
 
 function createSidePanelForSuggestedGroups(logData, insertOpt){

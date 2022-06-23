@@ -115,10 +115,9 @@ class CodePanel {
             break;
           }
           case "onInsert": {
-            if (!data.value) {
-              return;
-            }
-            let rId = getNonce();
+            var comment = ""
+            if (data.value) {
+              let rId = getNonce();
             this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, data.value, "style=\""+data.style+"\"", rId);
             
             if(data.opt == 0){
@@ -129,6 +128,7 @@ class CodePanel {
             }
             else if(data.opt == 2){
               var comment = data.code.replace("rid-placeholder", rId);
+            }
             }
 
             if(data.remaining){
@@ -141,7 +141,9 @@ class CodePanel {
               }
             }
 
-            this._replaceInEditor(comment+"\n</body>", "</body>");
+            if(comment){
+              this._replaceInEditor(comment+"\n</body>", "</body>");
+            }
             break;
           }
           case "onGroup":{
