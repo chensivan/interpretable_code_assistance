@@ -37,10 +37,15 @@ def insertLog():
     if body["event"] == "insert":
         log["done"] = False
         log["rId"] = body["code"]
+        log["scripts"] = []
     else:
         log["code"] = body["code"]
         log["rId"] = body["rid"]
-
+        newest = getNewestLogByRID(body["userId"], body["rid"])
+        if "scripts" in newest:
+            log["scripts"] = newest["scripts"]
+        else:
+            log["scripts"] = []
     result = logCol.insert_one(log)
     return str(result.inserted_id) # return the id of the inserted document
 
@@ -80,6 +85,26 @@ def completeLog():
                     }, upsert=False)
             count += 1
     return str(count) # return the id of the inserted document
+
+@flask_app.route("/db/appendScript", methods = ["POST"])
+def appendScript():
+    logCol = db["log"]
+    body = request.json
+    newest = getNewestLogByRID(body["userId"], body["rid"])
+    if "scripts" in newest:
+        newest["scripts"].append(body["script"])
+    else:
+        newest["scripts"] = [body["script"]]
+    newest["event"] = body["event"]
+    newest["code"] = body["code"]
+    newest["details"] = body["details"]
+    newest["createDate"] = datetime.datetime.now()
+
+    # remove newest["_id"]
+    newest.pop('_id', None)
+
+    result = logCol.insert_one(newest)
+    return str(result.inserted_id)
 
 @flask_app.route("/db/completeJSLog", methods = ["POST"])
 def completeJSLog():
@@ -216,6 +241,11 @@ def getLogByNLP():
                         newest[rId] = log
                 for log in newest.values():
                     log["isGroup"] = False
+                    scripts = {}
+                    if "scripts" in log:
+                        for rid in log["scripts"]:
+                            scripts[rid] = getNewestCodeByRID(body["userId"], rid)
+                    log["scripts"] = scripts
                     results.append(log)
     
     groups = getAllGroups(body["userId"])
@@ -238,6 +268,11 @@ def getLogByNLP():
                         codes.append(getNewestCodeByRID(body["userId"], member))
                     log["codes"] = codes
                     log["isGroup"] = True
+                    scripts = {}
+                    if "scripts" in log:
+                        for rid in log["scripts"]:
+                            scripts[rid] = getNewestCodeByRID(body["userId"], rid)
+                    log["scripts"] = scripts
                     groupResults.append(log)
         
     if len(results) > 0 or len(groupResults) > 0:
@@ -291,6 +326,18 @@ def getNewestCodeByRID(userId, rid):
         results.append(result)
     newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
     return newlist[0]["code"]
+
+
+def getNewestLogByRID(userId, rid):
+    logCol = db["log"]
+
+    cursor = logCol.find({"userId": userId, "rId": rid})
+    results = []
+    for result in cursor:
+        results.append(result)
+    newlist = sorted(results, key=lambda x: x["createDate"], reverse=True)
+    return newlist[0]
+
 
 @flask_app.route("/db/getGroupLogs", methods = ["GET"])
 @cross_origin()
