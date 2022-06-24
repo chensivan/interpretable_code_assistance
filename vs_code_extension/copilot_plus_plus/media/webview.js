@@ -274,6 +274,7 @@ function findAncestor (el, cls) {
 document.addEventListener("click", function(event){
   if (!findAncestor(event.target, "inputbox")
   && !findAncestor(event.target, "navbar")
+  && !event.target.parentElement.classList.contains("autocomplete-items")
   && (event.target.tagName !== "HTML") 
   && event.target.id !== "chatBotOuter" && (!event.target.parentElement ||event.target.parentElement.id !== "chatBotOuter")
   && event.target.id !== "inputbox-event"
@@ -1631,6 +1632,7 @@ function getInsertedScripts(){
       inserted[elements[i].getAttribute("sid")] = elements[i].outerHTML;
     }
   }
+  console.log(inserted);
   if(inserted !== {}){
     vscode.postMessage({
       type: "onCompleteJS",

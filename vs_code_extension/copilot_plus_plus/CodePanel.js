@@ -88,7 +88,9 @@ class CodePanel {
         console.log(data);
         var d = new Date();
         var n = d.getTime();
-        if(n - this.lastLog < 50){
+        if(n - this.lastLog < 50 
+          && data.type !== "onCompleteJS" 
+          && data.type !== "onComplete"){
           this.lastLog = n;
           return;
         }
@@ -220,8 +222,8 @@ class CodePanel {
             if (!data.old || !data.new || !data.event || !data.name) {
               return;
             }
+            let sId = getNonce();
             if(data.script){
-              let sId = getNonce();
               this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
               this.log("user1", "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", sId);
             }
@@ -229,8 +231,13 @@ class CodePanel {
               this._replaceInEditor(data.new, data.old);
             }
             if(data.nlp){
-              this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: [${data.nlp}]`, 
-              data.nlp, data.text, data.new, data.rid);
+              /*this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: [${data.nlp}]`, 
+              data.nlp, data.text, data.new, data.rid);*/
+            }
+            if(data.nlp && data.script){
+              console.log("append");
+              this.appendScript("user1", "appendJS", `append action listener ${data.event}=${data.name} (${sId}), where ${data.name} is a function that ${data.script}`, 
+              data.new, data.rid, sId)
             }
             break;
           }
@@ -279,6 +286,14 @@ class CodePanel {
       })
   }
 
+  appendScript(userId, event, details, code, rid, script){
+    fetch(URL+"/db/appendScript", {
+    method: 'POST', 
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({userId: userId, code:code, event: event, details:details, rid:rid, script:script})
+    })
+}
+
   logGroup(userId, event, label, member, rid){
     fetch(URL+"/db/insertGroup", {
       method: 'POST', 
@@ -304,6 +319,7 @@ editGroup(userId, member, rId){
 }
 
 completeJSLogs(userId, inserted){
+  console.log("completeJSLogs");
   fetch(URL+"/db/completeJSLog", {
   method: 'POST', 
   headers: {"Content-Type": "application/json"},
