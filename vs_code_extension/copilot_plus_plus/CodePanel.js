@@ -120,7 +120,9 @@ class CodePanel {
             var comment = ""
             if (data.value) {
               let rId = getNonce();
-            this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, data.value, "style=\""+data.style+"\"", rId);
+              console.log(data.oldRid);
+            this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, 
+            data.value, "style=\""+data.style+"\"", "", rId, data.oldRid);
             
             if(data.opt == 0){
               var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
@@ -136,9 +138,19 @@ class CodePanel {
             if(data.remaining){
               for(let i = 0; i < data.remaining.length; i++){
                 let rId = getNonce();
-                this.log("user1", "insert", "", data.remaining[i].label, "", rId);
+                console.log(data.remaining[i].rid);
+                this.log("user1", "insert", "", data.remaining[i].label, "", "", rId, data.remaining[i].rid);
+
                 let otherElement = data.remaining[i].code.replace("eid=\""+data.remaining[i].rid, "rid=\""+rId);
                 otherElement = otherElement.replace("rid=\""+data.remaining[i].rid, "rid=\""+rId);
+                comment += "\n\n" + otherElement;
+              }
+            }
+
+            if(data.scripts){//Just not going to record for now...
+              for(let i = 0; i < Object.keys(data.scripts).length; i++){
+                let key = Object.keys(data.scripts)[i];
+                let otherElement = data.scripts[key];
                 comment += "\n\n" + otherElement;
               }
             }
@@ -278,11 +290,12 @@ class CodePanel {
       });
     }
 
-    log(userId, event, details, label, text, code, rid){
+    log(userId, event, details, label, text, code, rid, madeFrom){
+      console.log(madeFrom);
       fetch(URL+"/db/insertLog", {
       method: 'POST', 
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid})
+      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid, madeFrom:madeFrom?madeFrom:""})
       })
   }
 
@@ -505,6 +518,7 @@ completeJSLogs(userId, inserted){
           <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
           </head>
           <div class="navbar" id="navbar">Tools
+          <img class="icon" id="icon-none" src="${inlineIcon}"/>
           <img class="icon" id="icon-tip" src="${inlineIcon}"/>
           <img class="icon" id="icon-insert" src="${selectIcon}"/>
           <img class="icon" id="icon-drag" src="${dragIcon}"/>

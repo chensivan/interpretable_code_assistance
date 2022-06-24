@@ -36,8 +36,12 @@ def insertLog():
         }
     if body["event"] == "insert":
         log["done"] = False
-        log["rId"] = body["code"]
+        log["rId"] = body["rid"]
         log["scripts"] = []
+        if body["madeFrom"] != "":
+            newestLog = getNewestLogByRID(body["userId"], body["madeFrom"])
+            if "scripts" in newestLog:
+                log["scripts"] = newestLog["scripts"]
     else:
         log["code"] = body["code"]
         log["rId"] = body["rid"]

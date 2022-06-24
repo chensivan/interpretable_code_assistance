@@ -39,7 +39,7 @@ document.getElementById("reload").addEventListener("click", function(){
 //---------------------------tool bar functions---------------------------------//
 var mode = 0;
 const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
-"icon-delete", "icon-js", "icon-chat", "icon-group"];
+"icon-delete", "icon-js", "icon-chat", "icon-group", "icon-none"];
 
 var icons = document.getElementsByClassName('icon');
 document.getElementById("icon-tip").classList.add("selected");
@@ -1173,6 +1173,7 @@ function createSidePanelForInsert(logData, groupData, nlp, style){
         <td id="test${index}"></td>
         <td style="word-wrap: break-word;">
         <strong>${element.label}</strong><br/>
+        Scripts: ${Object.keys(element.scripts).length}<br/>
         Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
         </td></tr></table>`;
 
@@ -1215,6 +1216,7 @@ hstBlockEventListnerForInsert(hstBlock, element, nlp, style)
             <td style="word-wrap: break-word;">
             <strong>${element.label}</strong><br/>
             Elements: ${labels}<br/>
+            Scripts: ${Object.keys(element.scripts).length}<br/>
             Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
             </td></tr></table>`;
             hstBlockEventListnerForInsertGroup(hstBlock, element)
@@ -1256,6 +1258,8 @@ function hstBlockEventListnerForInsert(hstBlock, element, nlp, style){
       value: nlp,
       style: `${replaceStyle}`,
       code: codeBlock.outerHTML,
+      scripts: element.scripts? element.scripts : {},
+      oldRid: element.rId,
       opt: 2 // "copy & paste" old elements
   };
     giveGroupSuggestions(nlp, insertOpt)
@@ -1292,7 +1296,8 @@ function hstBlockEventListnerForInsertGroup(hstBlock, element){
     console.log(remaining);
     vscode.postMessage({
       type: "onInsert",
-      remaining, remaining
+      remaining: remaining,
+      scripts: element.scripts,
   });
       targetHst.style.backgroundColor = 'white';
       reloadSidePanel();
@@ -1346,6 +1351,7 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
       button.value = "Insert Missing";
       button.addEventListener("click", function(){
         insertOpt.remaining = element.remaining;
+        insertOpt.scripts = {...insertOpt.scripts, ...element.scripts};
         vscode.postMessage(insertOpt);
         reloadSidePanel();
       });
@@ -1354,7 +1360,8 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
       hstBlock.innerHTML = `
       <strong>Inserting a [${label}]?</strong><br/>
       Inserted: ${repeatedText} <br/>
-      Missing: ${remainingText}
+      Missing: ${remainingText} <br />
+      Scripts: ${Object.keys(element.scripts).length}<br/>
       `
 
       hstBlock.appendChild(button);
