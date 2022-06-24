@@ -264,14 +264,15 @@ def getLogByNLP():
                 for log in newest.values():
                     members = log["member"].keys()
                     codes = []
+                    scripts = {}
                     for member in members:
                         codes.append(getNewestCodeByRID(body["userId"], member))
+                        memberLog = getNewestLogByRID(body["userId"], member)
+                        if "scripts" in memberLog:
+                            for sid in memberLog["scripts"]:
+                                scripts[sid] = getNewestCodeByRID(body["userId"], sid)
                     log["codes"] = codes
                     log["isGroup"] = True
-                    scripts = {}
-                    if "scripts" in log:
-                        for rid in log["scripts"]:
-                            scripts[rid] = getNewestCodeByRID(body["userId"], rid)
                     log["scripts"] = scripts
                     groupResults.append(log)
         
@@ -313,7 +314,14 @@ def getSuggestedGroups():
                 code = getNewestCodeByRID(body["userId"], rids[i])
                 remaining.append({"label": labels[i], "rid": rids[i], "code": code})
             if len(remaining) > 0:
-                results.append({"group": group, "repeated": repeated, "remaining": remaining})
+                # For Now Just assume no repeated scripts and all that stuff :(
+                scripts = {}
+                for m in remaining:
+                    memberLog = getNewestLogByRID(body["userId"], m["rid"])
+                    if "scripts" in memberLog:
+                        for sid in memberLog["scripts"]:
+                            scripts[sid] = getNewestCodeByRID(body["userId"], sid)
+                results.append({"group": group, "repeated": repeated, "remaining": remaining, "scripts":scripts})
     sortedList = sorted(results, key=lambda x: len(x["repeated"]), reverse=True)
     return json.dumps(sortedList, default=str)
 
