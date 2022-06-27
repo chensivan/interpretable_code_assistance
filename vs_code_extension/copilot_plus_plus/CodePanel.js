@@ -177,6 +177,15 @@ class CodePanel {
             
             break;
           }
+          case "onUpdate":{
+            if (!data.rId){
+              let rId = getNonce();
+              let comment = `<div nlp="${data.nlp}" rid="${rId}">\n${data.code}\n</div>`;
+              this._replaceInEditor(comment, data.code);
+              this.log("user1", "insert", "", data.nlp, "", data.code, rId);
+            }
+            break;
+          }
           case "onComplete": {
             //loop data.inserted
             let eids = []

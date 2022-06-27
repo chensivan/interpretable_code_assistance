@@ -670,14 +670,61 @@ function createInfoBox(x, y, element){
 function createEditBox(x, y, element){
   closeInputBox();
   let inputbox = createBasicBox(x, y);
-  if(element.tagName !== "BODY"){
+  /*if(element.tagName !== "BODY"){
     inputbox.innerHTML = "<textarea style='background:white' id='inputbox-input' rows='2' cols='20' placeholder='innerHTML'></textarea><br/><button id='inputbox-submit'>Submit</button><button id='inputbox-close'>X</button>";
   }
   else{
     inputbox.innerText = "document body";
+  }*/
+  let parent = getElement(element);
+  inputbox.style.border = "1px solid black";
+  inputbox.style.backgroundColor = "white";
+  if(parent){//Update
+    /*inputbox.innerHTML = `<div id="inputbox-el"></div>
+    <br/><button id='inputbox-save'>Update</button><button id='inputbox-close'>X</button>`;
+    document.body.appendChild(inputbox);
+    let el = document.getElementById("inputbox-el");
+    el.innerText = parent.outerHTML;
+    let submit = document.getElementById("inputbox-save");
+
+    console.log(submit);
+    
+    submit.addEventListener("click", function(){
+      vscode.postMessage({
+        type: "onUpdate",
+        code: parent.outerHTML,
+        nlp: getNLP(parent),  
+        rid: getRID(parent)
+      });
+      closeInputBox();
+    });*/
+    return;
+    
   }
-  document.body.appendChild(inputbox);
-  if(element.tagName !== "BODY"){
+  else{//Create
+    inputbox.innerHTML = `<div id="inputbox-el"></div>
+    <br/><input type="text" id='inputbox-text'/><button id='inputbox-save'>Save</button><button id='inputbox-close'>X</button>`;
+    document.body.appendChild(inputbox);
+    let el = document.getElementById("inputbox-el");
+    el.innerText = element.outerHTML;
+    let submit = document.getElementById("inputbox-save");
+    
+    submit.addEventListener("click", function(){
+      vscode.postMessage({
+        type: "onUpdate",
+        code: element.outerHTML,
+        nlp: document.getElementById("inputbox-text").value
+      });
+      closeInputBox();
+    });
+  }
+  let close = document.getElementById("inputbox-close");
+  console.log(close);
+  close.addEventListener("click", function(){
+    closeInputBox();
+  });
+  
+  /*if(element.tagName !== "BODY"){
     let input = document.getElementById("inputbox-input");
     input.value = element.innerHTML;
     let submit = document.getElementById("inputbox-submit");
@@ -703,10 +750,9 @@ function createEditBox(x, y, element){
       
       closeInputBox();
     });
-    close.addEventListener("click", function(){
-      closeInputBox();
-    });
-  }
+  */
+   
+  //}
 }
 
 //---------------------------delete tool---------------------------------//
@@ -1797,8 +1843,8 @@ function handleTextReplace(insertStyle, replaceStyle) {
           
           function getRID(element){
             while(element.tagName !== "BODY"){
-              if(element.hasAttribute("eid")){
-                return element.getAttribute("eid");
+              if(element.hasAttribute("eid") || element.hasAttribute("rid")){
+                return element.getAttribute("eid")?element.getAttribute("eid"):element.getAttribute("rid");
               }
               element = element.parentNode;
             }
