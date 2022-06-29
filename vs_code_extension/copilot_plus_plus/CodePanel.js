@@ -91,331 +91,339 @@ class CodePanel {
         if(n - this.lastLog < 50 
           && data.type !== "onCompleteJS" 
           && data.type !== "onComplete"){
+            this.lastLog = n;
+            return;
+          }
           this.lastLog = n;
-          return;
-        }
-        this.lastLog = n;
-        switch (data.type) {
-          case "onDrag":{
-            if (!data.new) {
-              return;
+          switch (data.type) {
+            case "onDrag":{
+              if (!data.new) {
+                return;
+              }
+              this._replaceInEditor(data.new, data.old);
+              if (data.nlp){
+                this.log("user1", "drag", `Drag element with label [${data.nlp}], ${data.transform}`, data.nlp, data.text, data.new, data.rid);
+              }
+              break;
             }
-            this._replaceInEditor(data.new, data.old);
-            if (data.nlp){
-              this.log("user1", "drag", `Drag element with label [${data.nlp}], ${data.transform}`, data.nlp, data.text, data.new, data.rid);
+            case "onResize":{
+              if (!data.new) {
+                return;
+              }
+              this._replaceInEditor(data.new, data.old);
+              if (data.nlp){
+                this.log("user1", "resize", `Resize element with label [${data.nlp}] to ${data.size}`, data.nlp, data.text, data.new, data.rid);
+              }
+              break;
             }
-            break;
-          }
-          case "onResize":{
-            if (!data.new) {
-              return;
-            }
-            this._replaceInEditor(data.new, data.old);
-            if (data.nlp){
-              this.log("user1", "resize", `Resize element with label [${data.nlp}] to ${data.size}`, data.nlp, data.text, data.new, data.rid);
-            }
-            break;
-          }
-          case "onInsert": {
-            var comment = ""
-            if (data.value) {
-              let rId = getNonce();
-              console.log(data.oldRid);
-            this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, 
-            data.value, "style=\""+data.style+"\"", "", rId, data.oldRid);
-            
-            if(data.opt == 0){
-              var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
-            }
-            else if(data.opt == 1){
-              var comment = `<div ${data.style} nlp="${data.value}" rid="${rId}">\n<!-- ${data.value} -->\n</div>`;
-            }
-            else if(data.opt == 2){
-              var comment = data.code.replace("rid-placeholder", rId);
-            }
-            }
-
-            if(data.remaining){
-              for(let i = 0; i < data.remaining.length; i++){
+            case "onInsert": {
+              var comment = ""
+              if (data.value) {
                 let rId = getNonce();
-                console.log(data.remaining[i].rid);
-                this.log("user1", "insert", "", data.remaining[i].label, "", "", rId, data.remaining[i].rid);
-
-                let otherElement = data.remaining[i].code.replace("eid=\""+data.remaining[i].rid, "rid=\""+rId);
-                otherElement = otherElement.replace("rid=\""+data.remaining[i].rid, "rid=\""+rId);
-                comment += "\n\n" + otherElement;
+                console.log(data.oldRid);
+                this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, 
+                data.value, "style=\""+data.style+"\"", "", rId, data.oldRid);
+                
+                if(data.opt == 0){
+                  var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
+                }
+                else if(data.opt == 1){
+                  var comment = `<div ${data.style} nlp="${data.value}" rid="${rId}">\n<!-- ${data.value} -->\n</div>`;
+                }
+                else if(data.opt == 2){
+                  var comment = data.code.replace("rid-placeholder", rId);
+                }
               }
-            }
-
-            if(data.scripts){//Just not going to record for now...
-              for(let i = 0; i < Object.keys(data.scripts).length; i++){
-                let key = Object.keys(data.scripts)[i];
-                let otherElement = data.scripts[key];
-                comment += "\n\n" + otherElement;
+              
+              if(data.remaining){
+                for(let i = 0; i < data.remaining.length; i++){
+                  let rId = getNonce();
+                  console.log(data.remaining[i].rid);
+                  this.log("user1", "insert", "", data.remaining[i].label, "", "", rId, data.remaining[i].rid);
+                  
+                  //let otherElement = data.remaining[i].code.replace("eid=\""+data.remaining[i].rid, "rid=\""+rId);
+                  //otherElement = otherElement.replace("rid=\""+data.remaining[i].rid, "rid=\""+rId);
+                  let otherElement = data.remaining[i].code;
+                  comment += "\n\n" + otherElement;
+                }
               }
+              
+              if(data.scripts){//Just not going to record for now...
+                for(let i = 0; i < Object.keys(data.scripts).length; i++){
+                  let key = Object.keys(data.scripts)[i];
+                  let otherElement = data.scripts[key];
+                  comment += "\n\n" + otherElement;
+                }
+              }
+              
+              if(comment){
+                this._replaceInEditor(comment+"\n</body>", "</body>");
+              }
+              break;
             }
-
-            if(comment){
-              this._replaceInEditor(comment+"\n</body>", "</body>");
-            }
-            break;
-          }
-          case "onGroup":{
-            let rId = getNonce();
-            if (data.success) {
-              this.logGroup("user1", "group", data.label, data.member, rId);
-            }else{
-              vscode.window.showInformationMessage(data.message);
-            }
-            
-            break;
-          }
-          case "onEditGroup":{
-            if (data.rId){
-              this.editGroup("user1", data.member, data.rId);
-            }
-            
-            break;
-          }
-          case "onUpdate":{
-            if (!data.rId){
+            case "onGroup":{
               let rId = getNonce();
-              let comment = `<div nlp="${data.nlp}" rid="${rId}">\n${data.code}\n</div>`;
-              this._replaceInEditor(comment, data.code);
-              this.log("user1", "insert", "", data.nlp, "", data.code, rId);
+              if (data.success) {
+                this.logGroup("user1", "group", data.label, data.member, rId);
+              }else{
+                vscode.window.showInformationMessage(data.message);
+              }
+              
+              break;
             }
-            break;
-          }
-          case "onComplete": {
-            //loop data.inserted
-            let eids = []
-            let rids = []
-            for (var prop in data.inserted) {
-              if (Object.prototype.hasOwnProperty.call(data.inserted, prop)) {
+            case "onEditGroup":{
+              if (data.rId){
+                this.editGroup("user1", data.member, data.rId);
+              }
+              
+              break;
+            }
+            case "onUpdate":{
+              if (!data.rId){
+                let rId = getNonce();
+                let comment = `<div nlp="${data.nlp}" rid="${rId}">\n${data.code}\n</div>`;
+                this._replaceInEditor(comment, data.code);
+                this.log("user1", "insert", "", data.nlp, "", data.code, rId);
+              }
+              break;
+            }
+            case "onComplete": {
+              //loop data.inserted
+              let eids = []
+              let rids = []
+              for (var prop in data.inserted) {
+                if (Object.prototype.hasOwnProperty.call(data.inserted, prop)) {
                   //this._replaceInEditor(data.replaced[prop], data.inserted[prop]);
                   eids.push(`eid="${prop}"`)
                   rids.push(`rid="${prop}"`)
+                }
+                
+              }
+              //this._replaceInEditor(eids, rids);
+              this.completeLogs("user1", data.inserted);
+              break;
+            }
+            case "onCompleteJS": {
+              this.completeJSLogs("user1", data.inserted);
+              break;
+            }
+            case "changeAttr": {
+              if (!data.old || !data.new) {
+                return;
+              }
+              this._replaceInEditor(data.new,data.old);
+              if(data.nlp){
+                this.log("user1", "change attribues", `change attributes with label [${data.nlp}] with ${data.changes}`, 
+                data.nlp, data.text, data.newHTML, data.rid);
+              }
+              break;
+            }
+            case "onEdit": {
+              if (!data.old || !data.new) {
+                return;
+              }
+              this._replaceInEditor(data.new, data.old);
+              if(data.nlp){
+                this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: [${data.nlp}]`, 
+                data.nlp, data.text, data.newHTML, data.rid);
+              }
+              break;
+            }
+            case "delete":{
+              if (!data.value) {
+                return;
+              }
+              this._replaceInEditor(" ",data.value);
+              if(data.nlp){
+                //this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "", data.rid);
+              }
+              //this.log("user1", "delete", data.value);
+              break;
+            }
+            case "insertScript":{
+              let sId = getNonce();
+              let comment = data.new.replace("sid-placeholder", sId);
+              console.log(comment);
+              this._replaceInEditor(comment, data.old);
+              this.log("user1", "insert", "insert js script to db", "[JSScript] "+data.nlp, "", "", sId);
+            }
+            case "createjs":{
+              if (!data.old || !data.new || !data.event || !data.name) {
+                return;
+              }
+              let sId = getNonce();
+              if(data.script){
+                this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
+                this.log("user1", "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", "", sId);
+              }
+              else{
+                this._replaceInEditor(data.new, data.old);
+              }
+              if(data.nlp){
+                /*this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: [${data.nlp}]`, 
+                data.nlp, data.text, data.new, data.rid);*/
+              }
+              if(data.nlp && data.script){
+                console.log("append");
+                this.appendScript("user1", "appendJS", `append action listener ${data.event}=${data.name} (${sId}), where ${data.name} is a function that ${data.script}`, 
+                data.new, data.rid, sId)
+              }
+              break;
+            }
+            case "onError": {
+              if (!data.value) {
+                return;
+              }
+              vscode.window.showErrorMessage(data.value);
+              break;
+            } 
+            case "onView": {
+              if (!data.new) {
+                return;
+              }
+              this._replaceInEditor(data.new, data.old);
+              this.log("user1", "reset", `Reset element with label [${data.nlp}] back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.text, data.new, data.rid);
+              break;
+            }
+            case "onReset": {
+              if (!data.new) {
+                return;
+              }
+              if (data.opt === 0){
+                this._replaceInEditor(data.new, data.old);
+                this.deleteLog(data.id);
+              }
+              var ids = data.id;
+              console.log(ids);
+              for (var i = 0; i < ids.length; i++) {
+                console.log("delete")
+                this.deleteLog(ids[i]);
               }
               
+              
+              
+            }
           }
-          this._replaceInEditor(eids, rids);
-          this.completeLogs("user1", data.inserted);
-          break;
-          }
-          case "onCompleteJS": {
-            this.completeJSLogs("user1", data.inserted);
-            break;
-          }
-          case "changeAttr": {
-            if (!data.old || !data.new) {
-              return;
-            }
-            this._replaceInEditor(data.new,data.old);
-            if(data.nlp){
-              this.log("user1", "change attribues", `change attributes with label [${data.nlp}] with ${data.changes}`, 
-              data.nlp, data.text, data.newHTML, data.rid);
-            }
-            break;
-          }
-          case "onEdit": {
-            if (!data.old || !data.new) {
-              return;
-            }
-            this._replaceInEditor(data.new, data.old);
-            if(data.nlp){
-              this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: [${data.nlp}]`, 
-              data.nlp, data.text, data.newHTML, data.rid);
-            }
-            break;
-          }
-          case "delete":{
-            if (!data.value) {
-              return;
-            }
-            this._replaceInEditor(" ",data.value);
-            if(data.nlp){
-              //this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "", data.rid);
-            }
-            //this.log("user1", "delete", data.value);
-            break;
-          }
-          case "createjs":{
-            if (!data.old || !data.new || !data.event || !data.name) {
-              return;
-            }
-            let sId = getNonce();
-            if(data.script){
-              this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
-              this.log("user1", "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", sId);
-            }
-            else{
-              this._replaceInEditor(data.new, data.old);
-            }
-            if(data.nlp){
-              /*this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: [${data.nlp}]`, 
-              data.nlp, data.text, data.new, data.rid);*/
-            }
-            if(data.nlp && data.script){
-              console.log("append");
-              this.appendScript("user1", "appendJS", `append action listener ${data.event}=${data.name} (${sId}), where ${data.name} is a function that ${data.script}`, 
-              data.new, data.rid, sId)
-            }
-            break;
-          }
-          case "onError": {
-            if (!data.value) {
-              return;
-            }
-            vscode.window.showErrorMessage(data.value);
-            break;
-          } 
-          case "onView": {
-            if (!data.new) {
-              return;
-            }
-            this._replaceInEditor(data.new, data.old);
-            this.log("user1", "reset", `Reset element with label [${data.nlp}] back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.text, data.new, data.rid);
-            break;
-          }
-          case "onReset": {
-            if (!data.new) {
-              return;
-            }
-            if (data.opt === 0){
-              this._replaceInEditor(data.new, data.old);
-              this.deleteLog(data.id);
-            }
-            var ids = data.id;
-            console.log(ids);
-            for (var i = 0; i < ids.length; i++) {
-              console.log("delete")
-              this.deleteLog(ids[i]);
-            }
-
-            
-
-          }
-        }
-      });
-    }
-
-    log(userId, event, details, label, text, code, rid, madeFrom){
-      console.log(madeFrom);
-      fetch(URL+"/db/insertLog", {
-      method: 'POST', 
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid, madeFrom:madeFrom?madeFrom:""})
-      })
-  }
-
-  appendScript(userId, event, details, code, rid, script){
-    fetch(URL+"/db/appendScript", {
-    method: 'POST', 
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({userId: userId, code:code, event: event, details:details, rid:rid, script:script})
-    })
-}
-
-  logGroup(userId, event, label, member, rid){
-    fetch(URL+"/db/insertGroup", {
-      method: 'POST', 
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId: userId, event:event, label:label, member:member, rId:rid})
-      })
-  }
-
-  completeLogs(userId, inserted){
-    fetch(URL+"/db/completeLog", {
-    method: 'POST', 
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({userId: userId, inserted:inserted})
-    })
-}
-
-editGroup(userId, member, rId){
-  fetch(URL+"/db/editGroupLog", {
-    method: 'POST', 
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({userId: userId, member:member, rId:rId})
-    })
-}
-
-completeJSLogs(userId, inserted){
-  console.log("completeJSLogs");
-  fetch(URL+"/db/completeJSLog", {
-  method: 'POST', 
-  headers: {"Content-Type": "application/json"},
-  body: JSON.stringify({userId: userId, inserted:inserted})
-  })
-}
-
-  getLog(userId){
-    return new Promise((resolve, reject) => {
-      fetch(URL+"/db/getLogs?userId="+userId, {
-        method: 'GET'
+        });
+      }
+      
+      log(userId, event, details, label, text, code, rid, madeFrom){
+        console.log(madeFrom);
+        fetch(URL+"/db/insertLog", {
+          method: 'POST', 
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid, madeFrom:madeFrom?madeFrom:""})
         })
-        .then(res => res.json())
-        .then(data => {
-          return resolve(data);
+      }
+      
+      appendScript(userId, event, details, code, rid, script){
+        fetch(URL+"/db/appendScript", {
+          method: 'POST', 
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, code:code, event: event, details:details, rid:rid, script:script})
         })
-        .catch(err => {
-          return reject(err);
+      }
+      
+      logGroup(userId, event, label, member, rid){
+        fetch(URL+"/db/insertGroup", {
+          method: 'POST', 
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, event:event, label:label, member:member, rId:rid})
         })
-      })
-  }
-
-  getGroupLog(userId){
-    return new Promise((resolve, reject) => {
-      fetch(URL+"/db/getGroupLogs?userId="+userId, {
-        method: 'GET'
+      }
+      
+      completeLogs(userId, inserted){
+        fetch(URL+"/db/completeLog", {
+          method: 'POST', 
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, inserted:inserted})
         })
-        .then(res => res.json())
-        .then(data => {
-          return resolve(data);
+      }
+      
+      editGroup(userId, member, rId){
+        fetch(URL+"/db/editGroupLog", {
+          method: 'POST', 
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, member:member, rId:rId})
         })
-        .catch(err => {
-          return reject(err);
+      }
+      
+      completeJSLogs(userId, inserted){
+        console.log("completeJSLogs");
+        fetch(URL+"/db/completeJSLog", {
+          method: 'POST', 
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, inserted:inserted})
         })
-      })
-  }
-
-  deleteLog(dataId){
-    return new Promise((resolve, reject) => {
-      fetch(URL+"/db/deleteLogs?dataId="+dataId, {
-        method: 'GET'
+      }
+      
+      getLog(userId){
+        return new Promise((resolve, reject) => {
+          fetch(URL+"/db/getLogs?userId="+userId, {
+            method: 'GET'
+          })
+          .then(res => res.json())
+          .then(data => {
+            return resolve(data);
+          })
+          .catch(err => {
+            return reject(err);
+          })
         })
-        .then(data => {
-          return resolve(data);
+      }
+      
+      getGroupLog(userId){
+        return new Promise((resolve, reject) => {
+          fetch(URL+"/db/getGroupLogs?userId="+userId, {
+            method: 'GET'
+          })
+          .then(res => res.json())
+          .then(data => {
+            return resolve(data);
+          })
+          .catch(err => {
+            return reject(err);
+          })
         })
-        .catch(err => {
-          return reject(err);
+      }
+      
+      deleteLog(dataId){
+        return new Promise((resolve, reject) => {
+          fetch(URL+"/db/deleteLogs?dataId="+dataId, {
+            method: 'GET'
+          })
+          .then(data => {
+            return resolve(data);
+          })
+          .catch(err => {
+            return reject(err);
+          })
         })
-      })
-  }
-
-  getTextByNLP(userId, nlp) {
-    return new Promise((resolve, reject) => {
-      fetch(URL+"/db/getTextByNLP", {
-        method: 'POST',
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({userId: userId, nlp: nlp})
+      }
+      
+      getTextByNLP(userId, nlp) {
+        return new Promise((resolve, reject) => {
+          fetch(URL+"/db/getTextByNLP", {
+            method: 'POST',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({userId: userId, nlp: nlp})
+          })
+          .then(res => res.json())
+          .then(data => {
+            return resolve(data);
+          })
+          .catch(err => {
+            return reject(err);
+          })
         })
-        .then(res => res.json())
-        .then(data => {
-          return resolve(data);
-        })
-        .catch(err => {
-          return reject(err);
-        })
-      })
-  }
-
-  //Print comment to the editor
-  _printCommentToEditor(comment, sId){
-    var openPath = vscode.Uri.file(CodePanel.filePath);
-    if(openPath){
-      vscode.workspace.openTextDocument(openPath).then(doc => {
-          vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
+      }
+      
+      //Print comment to the editor
+      _printCommentToEditor(comment, sId){
+        var openPath = vscode.Uri.file(CodePanel.filePath);
+        if(openPath){
+          vscode.workspace.openTextDocument(openPath).then(doc => {
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
               var text = editor.document.getText();
               var index = text.lastIndexOf('</html>');
               
@@ -475,7 +483,7 @@ completeJSLogs(userId, inserted){
               var firstLine = editor.document.lineAt(0);
               var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
               var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
-
+              
               var range = new vscode.Range(pos, pos);
               // Line added - by having a selection at the same position twice, the cursor jumps there
               editor.edit(editBuilder => {
@@ -520,42 +528,43 @@ completeJSLogs(userId, inserted){
         //Parse the file into a string
         CodePanel.nonce = nonce;
         var html;
-          html = 
-          `
-          <head>
-          <meta charset="UTF-8">
-          <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-          </head>
-          <div class="navbar" id="navbar">Tools
-          <img class="icon" id="icon-none" src="${inlineIcon}"/>
-          <img class="icon" id="icon-tip" src="${inlineIcon}"/>
-          <img class="icon" id="icon-insert" src="${selectIcon}"/>
-          <img class="icon" id="icon-drag" src="${dragIcon}"/>
-          <img class="icon" id="icon-resize" src="${resizeIcon}"/>
-          <img class="icon" id="icon-edit" src="${showIcon}"/>
-          <img class="icon" id="icon-js" src="${showIcon}"/>
-          <img class="icon" id="icon-delete" src="${deleteIcon}"/>
-          <img class="icon" id="icon-chat" src="${chatIcon}"/>
-          <img class="icon" id="icon-group" src="${groupIcon}"/>
-          </div>
-          <button class="openbtn" id="openbtn">&#9776;</button>
-          <div class="sidePanel" id="sidePanel">
-          <span class="reload" id="reload">&#x21bb;</span>
-          <a href="javascript:void(0)" class="closebtn">&times;</a>
-          <h1> History </h1>
-          <div class="sidePanelLog" id="sidePanelLog">
-          </div>
-          </div>
-          `+file.toString()+` 
-          <link href="${stylesResetUri}" rel="stylesheet">
-          <link href="${chatBotUri}" rel="stylesheet">
-          <script src="${chatBotSrc}"></script>
-          <script src="${html2canvas}"></script>
-          // <script src="https://dragselect.com/v2/ds.min.js"></script>
-          <script nonce="${nonce}">
-          ` + jsFile.toString() + `
-          </script>`;
-          return html;
+        html = 
+        `
+        <head>
+        <meta charset="UTF-8">
+        <script class="ignore" src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+        </head>
+        <div class="navbar" id="navbar">Tools
+        <img class="icon" id="icon-none" src="${inlineIcon}"/>
+        <img class="icon" id="icon-tip" src="${inlineIcon}"/>
+        <img class="icon" id="icon-insert" src="${selectIcon}"/>
+        <img class="icon" id="icon-drag" src="${dragIcon}"/>
+        <img class="icon" id="icon-resize" src="${resizeIcon}"/>
+        <img class="icon" id="icon-edit" src="${showIcon}"/>
+        <img class="icon" id="icon-js" src="${showIcon}"/>
+        <img class="icon" id="icon-delete" src="${deleteIcon}"/>
+        <img class="icon" id="icon-chat" src="${chatIcon}"/>
+        <img class="icon" id="icon-group" src="${groupIcon}"/>
+        <img class="icon" id="icon-script" src="${inlineIcon}"/>
+        </div>
+        <button class="openbtn" id="openbtn">&#9776;</button>
+        <div class="sidePanel" id="sidePanel">
+        <span class="reload" id="reload">&#x21bb;</span>
+        <a href="javascript:void(0)" class="closebtn">&times;</a>
+        <h1> History </h1>
+        <div class="sidePanelLog" id="sidePanelLog">
+        </div>
+        </div>
+        `+file.toString()+` 
+        <link href="${stylesResetUri}" rel="stylesheet">
+        <link href="${chatBotUri}" rel="stylesheet">
+        <script class="ignore" src="${chatBotSrc}"></script>
+        <script class="ignore" src="${html2canvas}"></script>
+        <script class="ignore" src="https://dragselect.com/v2/ds.min.js"></script>
+        <script class="ignore" nonce="${nonce}">
+        ` + jsFile.toString() + `
+        </script>`;
+        return html;
         
       }
     }
