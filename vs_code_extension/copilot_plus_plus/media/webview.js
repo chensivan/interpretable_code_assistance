@@ -99,10 +99,13 @@ let groupStart = 0; // 0:
 let currGroupRid;
 
 function createGroupSelector(ele){
+  console.log("createGroupSelector");
   let sidePanel = document.getElementById("sidePanel");
   if (groupStart == 0){
+    console.log("groupStart == 0");
     emptySidePanel();
   }else if (groupStart == 2){
+    console.log("groupStart == 2");
     if (!document.getElementById("editTool-group")){
       let createBtn = document.createElement("div");
       createBtn.id = "editTool-group";
@@ -112,12 +115,15 @@ function createGroupSelector(ele){
     }
   }
   if (!ele.classList.contains("group-border")){
+    console.log("not have border");
     let elmntRid = getRID(ele);
     if (elmntRid){
+      console.log("have the rid");
       logSelectedElement(elmntRid, ele);
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
       if (groupStart == 0 && !document.getElementById("submitTool-group")){
+        console.log("have the weird other stuff");
         let createBtn = document.createElement("div");
         createBtn.id = "submitTool-group";
         createBtn.innerHTML = "<input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>";
@@ -127,6 +133,7 @@ function createGroupSelector(ele){
       groupStart = 1;
     }
   }else{
+    console.log("onGroup");
     vscode.postMessage({
       type: "onGroup",
       success: false,
@@ -1176,7 +1183,7 @@ function createEditBox(x, y, element){
         wrapper.id = "historyIndex-"+index;
         document.body.appendChild(wrapper);
         
-        if(wrapper.firstChild.tagName !== "SCRIPT"){
+        //if(wrapper.firstChild.tagName !== "SCRIPT"){
           html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
             //useCORS: true,
             allowTaint : true,
@@ -1190,7 +1197,7 @@ function createEditBox(x, y, element){
             document.querySelector("#test"+index).appendChild(canvas)
             document.body.removeChild(document.querySelector("#historyIndex-"+index))
           });
-        }
+       // }
       });
       return;
     }
@@ -1297,7 +1304,7 @@ function createEditBox(x, y, element){
         wrapper.id = "historyIndex-"+index;
         document.body.appendChild(wrapper);
         
-        if(wrapper.firstChild.tagName !== "SCRIPT"){
+       // if(wrapper.firstChild.tagName !== "SCRIPT"){
           html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
             allowTaint : true,
             onclone: function (clonedDoc) {
@@ -1310,7 +1317,7 @@ function createEditBox(x, y, element){
             document.querySelector("#test"+index).appendChild(canvas)
             document.body.removeChild(document.querySelector("#historyIndex-"+index))
           });
-        }
+       // }
         
         hstBlockEventListnerForInsert(hstBlock, element, nlp, style)
       });

@@ -535,17 +535,17 @@ class CodePanel {
         <script class="ignore" src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
         </head>
         <div class="navbar" id="navbar">Tools
-        <img class="icon" id="icon-none" src="${inlineIcon}"/>
-        <img class="icon" id="icon-tip" src="${inlineIcon}"/>
-        <img class="icon" id="icon-insert" src="${selectIcon}"/>
-        <img class="icon" id="icon-drag" src="${dragIcon}"/>
-        <img class="icon" id="icon-resize" src="${resizeIcon}"/>
-        <img class="icon" id="icon-edit" src="${showIcon}"/>
-        <img class="icon" id="icon-js" src="${showIcon}"/>
-        <img class="icon" id="icon-delete" src="${deleteIcon}"/>
-        <img class="icon" id="icon-chat" src="${chatIcon}"/>
-        <img class="icon" id="icon-group" src="${groupIcon}"/>
-        <img class="icon" id="icon-script" src="${inlineIcon}"/>
+        <img class="icon" id="icon-none" title="none" src="${inlineIcon}"/>
+        <img class="icon" id="icon-tip" title="add nlp to elements"  src="${inlineIcon}"/>
+        <img class="icon" id="icon-insert" title="insert elements"  src="${selectIcon}"/>
+        <img class="icon" id="icon-drag" title="drag elements"  src="${dragIcon}"/>
+        <img class="icon" id="icon-resize" title="resize elements" src="${resizeIcon}"/>
+        <img class="icon" id="icon-edit" title="edit attributes" src="${showIcon}"/>
+        <img class="icon" id="icon-js" title="add event listeners" src="${showIcon}"/>
+        <img class="icon" id="icon-delete" title="delete tool" src="${deleteIcon}"/>
+        <img class="icon" id="icon-chat" title="history viewer" src="${chatIcon}"/>
+        <img class="icon" id="icon-group" title="groups tool" src="${groupIcon}"/>
+        <img class="icon" id="icon-script" title="add nlp to scripts" src="${inlineIcon}"/>
         </div>
         <button class="openbtn" id="openbtn">&#9776;</button>
         <div class="sidePanel" id="sidePanel">
