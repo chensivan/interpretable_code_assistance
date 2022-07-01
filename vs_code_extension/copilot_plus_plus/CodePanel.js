@@ -207,6 +207,9 @@ class CodePanel {
               this.completeJSLogs("user1", data.inserted);
               break;
             }
+            case "onUpdateCode": {
+              this.updateCode("user1", "update code", "update code in editor", data.code, data.rid); //don't change nlp for now
+            }
             case "changeAttr": {
               if (!data.old || !data.new) {
                 return;
@@ -330,6 +333,14 @@ class CodePanel {
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({userId: userId, event:event, label:label, member:member, rId:rid})
         })
+      }
+
+      updateCode(userId, event, details, code, rid){
+        fetch(URL+"/db/updateCode", {
+          method: 'POST',
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({userId: userId, event:event, details:details, code:code, rid:rid})
+        });
       }
       
       completeLogs(userId, inserted){

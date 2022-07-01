@@ -53,6 +53,23 @@ def insertLog():
     result = logCol.insert_one(log)
     return str(result.inserted_id) # return the id of the inserted document
 
+
+@flask_app.route("/db/updateCode", methods = ["POST"])
+def updateCode():
+    logCol = db["log"]
+    body = request.json
+    newest = getNewestLogByRID(body["userId"], body["rid"])
+
+    newest["event"] = body["event"]
+    newest["code"] = body["code"]
+    newest["details"] = body["details"]
+    newest["createDate"] = datetime.datetime.now()
+
+    newest.pop('_id', None)
+
+    result = logCol.insert_one(newest)
+    return str(result.inserted_id)
+
 @flask_app.route("/db/insertGroup", methods = ["POST"])
 def insertGroup():
     logCol = db["template"]
@@ -104,7 +121,6 @@ def appendScript():
     newest["details"] = body["details"]
     newest["createDate"] = datetime.datetime.now()
 
-    # remove newest["_id"]
     newest.pop('_id', None)
 
     result = logCol.insert_one(newest)
