@@ -19,8 +19,8 @@
 				"command": "visual.openVisual",
 				"title": "Open Visual",
 				"icon": {
-					"dark": "./media/view.png",
-					"light": "./media/icon.png"
+					"dark": "./media/icons/view.png",
+					"light": "./media/icons/icon.png"
 				}
 			}
 		],

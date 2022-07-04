@@ -2,11 +2,6 @@
 const vscode = acquireVsCodeApi();
 const URL = "http://127.0.0.1:5000";
 
-var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
-"onmousedown", "onmouseup", "onkeydown", "onkeypress", "onkeyup",
-"onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
-"onresize", "onscroll", "onselect", "onreset"]
-
 //----------initiate side panel button------------//
 reloadSidePanel();
 
@@ -21,7 +16,7 @@ document.getElementById("openbtn").addEventListener("click", function(){
 
 document.getElementById("reload").addEventListener("click", function(){
   emptySidePanel();
-  if (mode == 8){
+  if (mode == iconDic["icon-group"]){
     reloadGroupPanel();
     groupStart = 0;
     //TODO: refactor this (should not be here :)
@@ -37,17 +32,94 @@ document.getElementById("reload").addEventListener("click", function(){
   closeGroupBox();
 });
 
-//----------initiate grouping------------//
+document.getElementById("help").addEventListener("mouseover", function(event){
+  if(!document.getElementById("help-text")){
+  let x = event.clientX;
+  let y = event.clientY+20;
 
+  let div = document.createElement("div");
+  div.style = "position: absolute; top: "+y+"px; background: white; border: 1px solid black; padding: 10px; z-index: 9999;";
+  div.id = "sidePanel-helper"
+  div.style.left = x - 150 + "px";
+  div.style.width = "200px";
+  console.log(groupStart)
+  if(mode == iconDic["icon-group"] && groupStart == 0){
+    div.innerHTML = `
+    Click on an element to create a grouping.<br/>
+    Click on the grouping and click "Details" to edit it.`;
+  }
+  else if(mode == iconDic["icon-group"] && groupStart == 1){
+    div.innerHTML = `
+    Click on an element to add to group.<br/>
+    Click on an element and click "Delete" to remove.<br/>
+    Add scripts by entering the script sid.<br/>
+    Enter a label for this group and click "Create" to create the group`;
+  }
+  else if(mode == iconDic["icon-group"] && groupStart == 2){
+    div.innerHTML = `
+    Click on an element to add to group.<br/>
+    Click on an element and click "Delete" to remove.<br/>
+    Add scripts by entering the script sid.<br/>
+    Click "confirm" to save the group`;
+  }
+  else if(mode == iconDic["icon-history"]){
+    div.innerHTML = `
+    Click on an element to see its history.<br/>
+    To view the element in the log's state, click on the log and then "Preview"`;
+  }
+  else if(mode == iconDic["icon-js"]){
+    div.innerHTML = `
+    List of Scripts.<br/>
+    New Scripts can be added by entering a label and clicking "Save"<br/>
+    Changes to an existing script can be made by clicking "Update"<br/>`;
+  }
+  else if(mode == iconDic["icon-insert"] && InsertState == 1){
+    div.innerHTML = `
+    Insert element from Database by clicking on one of the logs<br/>
+    Insert element by hand or copilot by clicking on their options`;
+  }
+  else if(mode == iconDic["icon-insert"] && InsertState == 2){
+    div.innerHTML = `
+    Add remaining elements of the group by clicking on "Insert Missing" for the respective group<br/>
+    To ignore click "Reject"`;
+  }
+  else{
+    div.style.left = x - 70 + "px";
+    div.style.width = "150px";
+    div.innerHTML = "List of Logs";
+  }
+  document.body.appendChild(div);
+}
+});
 
+document.getElementById("help").addEventListener("mouseleave", function(event){
+  if(document.getElementById("sidePanel-helper")){
+  document.body.removeChild(document.getElementById("sidePanel-helper"));
+  }
+});
 
 //---------------------------tool bar functions---------------------------------//
-var mode = 0;
-const iconIds = ["icon-tip", "icon-drag", "icon-insert", "icon-edit", "icon-resize", 
-"icon-delete", "icon-js", "icon-chat", "icon-group", "icon-none", "icon-script"];
+const iconDic = {
+  "icon-save": 0, 
+  "icon-drag": 1, 
+  "icon-insert": 2, 
+  //"icon-edit": 3, 
+  "icon-resize": 4, 
+  "icon-delete": 5, 
+  "icon-js": 6, 
+  "icon-history": 7, 
+  "icon-group": 8, 
+  "icon-none": 9, 
+  //"icon-script": 10
+};
 
-var icons = document.getElementsByClassName('icon');
-document.getElementById("icon-tip").classList.add("selected");
+const iconIds = Object.keys(iconDic);
+
+const icons = document.getElementsByClassName('icon');
+
+var mode = iconDic["icon-none"];
+document.getElementById("icon-none").classList.add("selected");
+
 for (var i = 0; i < icons.length; i++) {
   icons[i].addEventListener('click', handleSelectedIcon);
 }
@@ -57,18 +129,19 @@ function handleSelectedIcon(event){
   var icon = event.target;
   
   if (iconIds.includes(icon.id)){
-    mode = iconIds.indexOf(icon.id); 
+    mode = iconDic[icon.id]; 
     toggleSelectedIcon(icon.id);
-    if(mode == 7){
+    if(mode == iconDic["icon-history"]){
       var sidePanel = document.getElementById("sidePanelLog");
       if (sidePanel){
         removeAllChildNodes(sidePanel);
+        sidePanel.appendChild(document.createTextNode("Click on an element to see its history."));
       }
     }
-    else if(mode == 8){
+    else if(mode == iconDic["icon-group"]){
       reloadGroupPanel();
     }
-    else if(mode == 10){
+    else if(mode == iconDic["icon-js"]){
       let scripts = document.getElementsByTagName("script");
       scripts = Array.prototype.slice.call( scripts )
       scriptsCleaned = []
@@ -79,6 +152,9 @@ function handleSelectedIcon(event){
       });
       console.log(scriptsCleaned)
       createSidePanelForScripts(scriptsCleaned);
+    }
+    else{
+      reloadSidePanel();
     }
     
   }
@@ -131,17 +207,32 @@ function createGroupSelector(ele){
       let createBtn = document.createElement("div");
       createBtn.id = "editTool-group";
       createBtn.innerHTML = `
-      Script: <input type='text' id='inputbox-script-sid' style="width:50%"/><button id='submit-script'>Submit</button><br/>
-      <button id='edit-group' style='float: right;'>Confirm</button>`;
+      Add Script: <input type='text' id='inputbox-script-sid' style="width:50%" placeholder="sid of script"/><button id='submit-script'>Submit</button><br/><br/>
+      <button id='back-group' style='float: right;'>Back</button><button id='edit-group' style='float: right;'>Confirm</button>`;
       sidePanel.appendChild(createBtn);
+
+      let back = document.getElementById("back-group");
+      back.addEventListener("click", function(){
+        reloadGroupPanel();
+        groupStart = 0;
+        //TODO: refactor this (should not be here :)
+        if (document.getElementById("submitTool-group")){
+          document.getElementById("submitTool-group").parentNode.removeChild(document.getElementById("submitTool-group"));
+        }
+        if (document.getElementById("editTool-group")){
+          document.getElementById("editTool-group").parentNode.removeChild(document.getElementById("editTool-group"));
+        }
+      });
       
       addScriptToGroupBySid();
       editGrouping(createBtn);
+
     }
   }
   if (!ele.classList.contains("group-border")){
     let elmntRid = getRID(ele);
     if (elmntRid){
+      document.getElementById("sidePanel-title").innerText = "Create Group";
       logSelectedElement(elmntRid, ele);
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
@@ -149,8 +240,9 @@ function createGroupSelector(ele){
         let createBtn = document.createElement("div");
         createBtn.id = "submitTool-group";
         createBtn.innerHTML = `
-        Script: <input type='text' id='inputbox-script-sid' style="width:50%"/><button id='submit-script'>Submit</button><br/>
-        <input type='text' id='inputbox-group'/><button id='submit-group'>Submit</button>`;
+        Add Script: <input type='text' id='inputbox-script-sid' style="width:50%" placeholder="sid of script"/><button id='submit-script'>Submit</button>
+        <br/><br/>
+        <input type='text' id='inputbox-group' placeholder="Group Label"/><button id='submit-group'>Create</button>`;
         sidePanel.appendChild(createBtn);
         
         addScriptToGroupBySid();
@@ -315,8 +407,6 @@ function findAncestor (el, cls) {
   }
 }
 
-
-
 document.addEventListener("click", function(event){
   if (!findAncestor(event.target, "inputbox")
   && !findAncestor(event.target, "navbar")
@@ -327,13 +417,13 @@ document.addEventListener("click", function(event){
   && !findAncestor(event.target, "sidePanel")
   && event.target.id !== "openbtn"
   && event.target.id !== "hstBlock"){
-    if (mode == 0){
+    if (mode == iconDic["icon-save"]){
       createEditBox(event.pageX, event.pageY, event.target);
     }
-    else if (mode == 5 && event.target.tagName !== "BODY"){
+    else if (mode == iconDic["icon-delete"] && event.target.tagName !== "BODY"){
       createDeleteBox(event.pageX, event.pageY, event.target)
     }
-    else if (mode == 4 && event.target.tagName !== "BODY"){
+    else if (mode == iconDic["icon-resize"] && event.target.tagName !== "BODY"){
       closeBorder(oldElmnt);
       var target = event.target;
       oldElmnt = getElement(target).outerHTML;
@@ -341,16 +431,16 @@ document.addEventListener("click", function(event){
       target.style.border = '2px dashed #ccc';
       resizeStart();
     }
-    else if (mode == 3){
+    else if (mode == iconDic["icon-edit"]){
       createInputBoxAttr(event.pageX, event.pageY, event.target)
     }
-    else if(mode == 6){
+    else if(mode == iconDic["icon-js"]){
       createInputBoxJs(event.pageX, event.pageY, event.target)
     }
-    else if (mode == 7){
+    else if (mode == iconDic["icon-history"]){
       logElementHistory(event.target);
     }
-    else if (mode == 8){
+    else if (mode == iconDic["icon-group"]){
       createGroupSelector(event.target);
     }
   }
@@ -361,8 +451,10 @@ document.addEventListener("click", function(event){
 
 //---------------------------mousedown handler---------------------------------//
 document.addEventListener("mousedown", function(event) {
-  if(mode == 2 && event.target.id !== "inputbox" && (!event.target.parentElement || event.target.parentElement.id !== "inputbox") && 
-  event.target.id !== "navbar" && (!event.target.parentElement || event.target.parentElement.id !== "navbar")){
+  if(mode == iconDic["icon-insert"] && 
+  !findAncestor(event.target, "sidePanel")
+  && !findAncestor(event.target, "inputbox")
+  && !findAncestor(event.target, "navbar")){
     closeInputBox();
     closeWidget();
     
@@ -410,7 +502,7 @@ function resizeStart(){
 }
 //---------------------------mousedown handler for resize---------------------------------//
 function initResize(e) {
-  if (mode == 4 && resizeAble && resizeElmnt && dir != "" && resizeElmnt.id !== "navbar" && resizeElmnt.parentElement.id !== "navbar"){
+  if (mode == iconDic["icon-resize"] && resizeAble && resizeElmnt && dir != "" && resizeElmnt.id !== "navbar" && resizeElmnt.parentElement.id !== "navbar"){
     e.preventDefault();
     startX = e.clientX;
     startY = e.clientY;
@@ -460,7 +552,7 @@ function doResize(e){
 }
 //---------------------------mouseup handler for resize---------------------------------//
 function stopResize(e){
-  if (onResize && mode === 4 && resizeElmnt){
+  if (onResize && mode === iconDic["icon-resize"] && resizeElmnt){
     resizeElmnt.style.cursor = 'default';
     onResize = false;
     resizeAble = false;
@@ -505,7 +597,6 @@ function closeBorder(ele){
       new: getElement(old).outerHTML,
       old: ele,
       nlp: getNLP(old),
-      text: getCopilotText(old),
       size: old.style.width + " wide and "+old.style.height+" height",
       rid: getRID(old)
     })
@@ -536,14 +627,18 @@ function emptySidePanel(){
 }
 
 function reloadSidePanel(){
+  showLoading(document.getElementById("sidePanelLog"));
   getLog("user1").then(data => {
+    removeLoading(document.getElementById("sidePanelLog"));
     createSidePanel(data, 1, false);
   }
   );
 }
 
 function reloadGroupPanel(){
+  showLoading(document.getElementById("sidePanelLog"));
   getGroupLog("user1").then(data => {
+    removeLoading(document.getElementById("sidePanelLog"));
     createSidePanel(data, 2, false);
   }
   );
@@ -562,6 +657,8 @@ function createBasicBox(x, y){
   box.style.zIndex = '100';
   return box;
 }
+
+var InsertState = 0;
 //---------------------------insert tools---------------------------------//
 function createInputBox(x, y, style){
   closeInputBox();
@@ -573,8 +670,11 @@ function createInputBox(x, y, style){
   submit.addEventListener("click", function() {
     let text = document.getElementById("inputbox-input");
     if(text.value){
+      showLoading(document.getElementById("sidePanelLog"));
       getLogByNLP("user1", text.value).then(data => {
         let sidePanel = document.getElementById("sidePanelLog");
+        removeLoading(sidePanel);
+        InsertState = 1;
         if (data.success){
           let length = Math.min(4, data.all.length);
           let logData = data.all.slice(0, length);
@@ -599,7 +699,6 @@ function createInputBox(x, y, style){
             opt: 0 // create new
           };
           giveGroupSuggestions(text.value, insertOpt)
-          reloadSidePanel();
         });
         
         let copilotbtn = document.createElement("button");
@@ -614,7 +713,6 @@ function createInputBox(x, y, style){
             opt: 1 // create new using copilot
           };
           giveGroupSuggestions(text.value, insertOpt)
-          reloadSidePanel();
         });
       });
       closeInputBox();
@@ -627,11 +725,12 @@ function createInputBox(x, y, style){
   let close = document.getElementById("inputbox-close");
   close.addEventListener("click", function() {
     closeInputBox();
+    closeWidget();
   });
 }
 
 function giveGroupSuggestions(insertedLabel, insertOpts){
-  //get all elements and if they have attribute nlp get all their values
+  InsertState = 2;
   let elements = document.getElementsByTagName("*");
   let all = [];
   for (let i = 0; i < elements.length; i++) {
@@ -639,15 +738,17 @@ function giveGroupSuggestions(insertedLabel, insertOpts){
       all.push(elements[i].getAttribute("nlp"));
     }
   }
+  showLoading(document.getElementById("sidePanelLog"));
   getSuggestedGroups("user1", insertedLabel, all).then(data => {
-    console.log(data);
+    removeLoading(document.getElementById("sidePanelLog"));
     //display to sidepanel
     if(data.length > 0){
       createSidePanelForSuggestedGroups(data, insertOpts);
-      
     }
     else{
       vscode.postMessage(insertOpts)
+      InsertState = 0;
+      reloadSidePanel();
     }
   });
   
@@ -754,9 +855,7 @@ function createDeleteBox(x, y, element){
       type: "delete",
       value: getElement(element).outerHTML,
       nlp: getNLP(element),
-      rid: getRID(element),
-      text: "", //since the user cleared the element, assume it is not the wanted style???
-      detail: getCopilotText(element)
+      rid: getRID(element)
     })
     //remove child from body
     element.parentNode.removeChild(element);
@@ -807,7 +906,6 @@ function createInputBoxJs(x, y, element){
       script: script.value,
       nlp: getNLP(element),
       rid: getRID(element),
-      text: getCopilotText(temp)
     })
     closeInputBox();
   });
@@ -925,7 +1023,6 @@ function createInputBoxAttr(x, y, element){
         new: newEle.outerHTML,
         nlp: getNLP(element),
         rid: getRID(element),
-        text: getCopilotText(newEle),
         changes: total,
         newHTML: newHTML,
       })
@@ -958,7 +1055,7 @@ divs.forEach(div => {
 
 //---------------------------drag: mousedown handler---------------------------------//
 function dragStart(e) {
-  if (mode == 1 && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
+  if (mode == iconDic["icon-drag"] && e.target.id != "navbar" && e.target.parentNode.id != "navbar"){
     e.preventDefault();
     div = e.target;
     rectX = div.getBoundingClientRect()['x'];
@@ -1012,7 +1109,6 @@ function dragEnd(e) {
       old: selector,
       nlp: getNLP(div),
       rid: getRID(div),
-      text: getCopilotText(div),
       transform: translateX+"px right and "+translateY+"px down"
     })
     
@@ -1026,63 +1122,51 @@ function dragEnd(e) {
 }
 
 //---------------------------SidePanel(test)---------------------------------//
-function createSidePanel(logData, insert, remain, memberRid){
+function createSidePanel(logData, type, remain, memberRid){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     if (!remain){
       removeAllChildNodes(sidePanel);
     }
     logData.forEach((element, index) => {
-      let hstBlock = document.createElement('div');
+      let hstBlock = makeHstBlock(sidePanel);
       hstBlock.setAttribute('index', index);
       hstBlock.classList.add('hstBlock');
       if (memberRid){
         hstBlock.classList.add('hstBlock-'+memberRid);
       }
-      hstBlock.style.padding = '20px';
-      hstBlock.style.margin = '10px';
-      hstBlock.style.backgroundColor = '#ededed';
-      hstBlock.style.radius = '5px';
-      
-      sidePanel.appendChild(hstBlock);
-      hstBlock.addEventListener('mouseover', function(){
-        hstBlock.style.backgroundColor = '#e6e6e6';
-      });
-      
-      hstBlock.addEventListener('mouseout', function(){
-        hstBlock.style.backgroundColor = '#ededed';
-      });
-      
-      if(insert == 0){
+
+      if (type == 1){ //Regular History
+        let nonce = getNonce();
         hstBlock.innerHTML = `
         <table>
         <tr>
-        <td id="test${index}"></td>
-        <td style="word-wrap: break-word;">
-        <strong>${element.label}</strong><br/>
-        Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
-        </td></tr></table>`;
-      }
-      else if (insert == 1){
-        hstBlock.innerHTML = `
-        <table>
-        <tr>
-        <td id="test${index}"></td>
+        <td id="test${nonce}"></td>
         <td>
+        <strong>
         Event: ${element.event}<br/>
         Label: ${element.label}<br/>
+        </strong>
         Details: ${element.details}<br/>
         Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
         </td></tr></table>`;
+
+        appendCanvasForElement(element, "historyIndex-"+nonce, "test"+nonce);
       }
-      else if (insert == 2){
+      else if (type == 2){ //For Groups
+        document.getElementById("sidePanel-title").innerText = "Groups";
+        let elementLabels = Object.values(element.member);
+        let labels = elementLabels.join(', <br/> ');
+
         hstBlock.innerHTML = `
         <table>
         <tr>
         <td id="test${index}"></td>
         <td>
-        Event: ${element.event}<br/>
+        <strong>
         Label: ${element.label}<br/>
+        </strong>
+        Elements:<br/> ${labels}<br/>
         Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
         </td></tr></table>`;
         
@@ -1107,32 +1191,11 @@ function createSidePanel(logData, insert, remain, memberRid){
             document.getElementById('detailBtn').addEventListener('click', function() {
               let elements = Object.keys(element.member);
               currGroupRid = element.rId;
-              // let details = document.createElement('div');
-              // details.class = "dropdown-container";
-              // hstBlock.parentNode.insertBefore(details, hstBlock.nextSibling);
-              // elements.forEach((ele, eleIndex) =>{
-              //   getLogByRID("user1", ele).then(data =>{ 
-              //     if (data.length > 0) {
-              //       let curr = document.createElement('div');
-              //       details.appendChild(curr);
-              //       curr.innerHTML  = `
-              //       <table>
-              //       <tr>
-              //       <td id="test${eleIndex}"></td>
-              //       <td>
-              //       Event: ${data[0].event}<br/>
-              //       Label: ${data[0].label}<br/>
-              //       Details: ${data[0].details}<br/>
-              //       Create Date: ${data[0].createDate.slice(0, data[0].createDate.indexOf("."))}
-              //       </td></tr></table>`;
-              //     }
-              //   });
-              // }
-              // )
               emptySidePanel();
               member = {};
               
               groupStart = 2;
+              document.getElementById("sidePanel-title").innerText = "Group Details";
               elements.forEach((element) => {
                 logSelectedElement(element);
                 
@@ -1144,28 +1207,6 @@ function createSidePanel(logData, insert, remain, memberRid){
         });
       }
       
-      let wrapper= document.createElement('div');
-      wrapper.innerHTML= element.code;
-      //let codeBlock= wrapper.firstChild;
-      wrapper.style.display = "none";
-      wrapper.id = "historyIndex-"+index;
-      document.body.appendChild(wrapper);
-      
-      //if(wrapper.firstChild.tagName !== "SCRIPT"){
-      html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
-        //useCORS: true,
-        allowTaint : true,
-        onclone: function (clonedDoc) {
-          let temp = clonedDoc.getElementById('historyIndex-'+index);
-          temp.style.display = "block";
-        }
-      }).then(canvas => {
-        canvas.style.height = "auto"
-        canvas.style.width = "50px"
-        document.querySelector("#test"+index).appendChild(canvas)
-        document.body.removeChild(document.querySelector("#historyIndex-"+index))
-      });
-      // }
     });
     return;
   }
@@ -1177,7 +1218,8 @@ function createSidePanelForScripts(logData){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     removeAllChildNodes(sidePanel);
-    console.log(logData);
+    document.getElementById("sidePanel-title").innerText = "Scripts";
+
     logData.forEach((element, index) => {
       let hstBlock = makeHstBlock(sidePanel);
       if(element.hasAttribute("sid")){
@@ -1272,8 +1314,9 @@ function createSidePanelForInsert(logData, groupData, nlp, style){
   console.log(data);
   if (sidePanel){
     removeAllChildNodes(sidePanel);
+    document.getElementById("sidePanel-title").innerText = "Insert Options";
+
     logData.forEach((element, index) => {
-      console.log(element)
       let hstBlock = makeHstBlock(sidePanel);
       hstBlock.setAttribute('index', index);
       hstBlock.innerHTML = `
@@ -1287,46 +1330,25 @@ function createSidePanelForInsert(logData, groupData, nlp, style){
       </td></tr></table>`;
       
       
-      let wrapper= document.createElement('div');
-      wrapper.innerHTML= element.code;
-      //let codeBlock= wrapper.firstChild;
-      wrapper.style.display = "none";
-      wrapper.id = "historyIndex-"+index;
-      document.body.appendChild(wrapper);
-      
-      // if(wrapper.firstChild.tagName !== "SCRIPT"){
-      html2canvas(document.querySelector("#historyIndex-"+index).firstChild, {
-        allowTaint : true,
-        onclone: function (clonedDoc) {
-          let temp = clonedDoc.getElementById('historyIndex-'+index);
-          temp.style.display = "block";
-        }
-      }).then(canvas => {
-        canvas.style.height = "auto"
-        canvas.style.width = "50px"
-        document.querySelector("#test"+index).appendChild(canvas)
-        document.body.removeChild(document.querySelector("#historyIndex-"+index))
-      });
-      // }
-      
+      appendCanvasForElement(element, "historyIndex-"+index, "test"+index);
       hstBlockEventListnerForInsert(hstBlock, element, nlp, style)
     });
-    sidePanel.appendChild(document.createTextNode("Groups"));
+    if(groupData.length > 0){
+      sidePanel.appendChild(document.createTextNode("Groups"));
+      sidePanel.appendChild(document.createElement('br'));
+    }
     groupData.forEach((element, index) => {
-      console.log(element)
       let hstBlock = makeHstBlock(sidePanel);
       let elementLabels = Object.values(element.member);
       //make a string with , seperated
-      let labels = elementLabels.join(', ');
-      console.log(elementLabels)
-      console.log(labels)
+      let labels = elementLabels.join(', <br/> ');
       hstBlock.innerHTML = `
       <table>
       <tr>
       <td id="test${index+10}"></td>
       <td style="word-wrap: break-word;">
       <strong>${element.label}</strong><br/>
-      Elements: ${labels}<br/>
+      Elements:<br/> ${labels}<br/>
       Scripts: ${Object.keys(element.scripts).length}<br/>
       Create Date: ${element.createDate.slice(0, element.createDate.indexOf("."))}
       </td></tr></table>`;
@@ -1334,6 +1356,32 @@ function createSidePanelForInsert(logData, groupData, nlp, style){
     });
   }
   return;
+}
+
+function appendCanvasForElement(element, wrapperId, parentId){
+      let wrapper= document.createElement('div');
+      wrapper.innerHTML= element.code;
+      wrapper.style.display = "none";
+      wrapper.id = wrapperId;
+      
+      if(wrapper.firstChild.tagName !== "SCRIPT"){
+        document.body.appendChild(wrapper);
+        html2canvas(document.querySelector("#"+wrapperId).firstChild, {
+          allowTaint : true,
+          onclone: function (clonedDoc) {
+          let temp = clonedDoc.getElementById(wrapperId);
+          temp.style.display = "block";
+          }
+        }).then(canvas => {
+          canvas.style.height = "auto"
+          canvas.style.width = "50px"
+          document.getElementById(parentId).appendChild(canvas)
+          document.body.removeChild(document.querySelector("#"+wrapperId))
+        }).catch(err => {
+          document.body.removeChild(document.querySelector("#"+wrapperId))
+          console.log(err);
+        });
+      }
 }
 
 function hstBlockEventListnerForInsert(hstBlock, element, nlp, style){
@@ -1375,7 +1423,6 @@ function hstBlockEventListnerForInsert(hstBlock, element, nlp, style){
       };
       giveGroupSuggestions(nlp, insertOpt)
       targetHst.style.backgroundColor = 'white';
-      reloadSidePanel();
     });
   });
 }
@@ -1411,6 +1458,7 @@ function hstBlockEventListnerForInsertGroup(hstBlock, element){
         scripts: element.scripts,
       });
       targetHst.style.backgroundColor = 'white';
+      InsertState = 0;
       reloadSidePanel();
     });
   });
@@ -1420,6 +1468,8 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     removeAllChildNodes(sidePanel);
+    document.getElementById("sidePanel-title").innerText = "Suggested Groups";
+
     logData.forEach((element, index) => {
       let hstBlock = document.createElement('div');
       //hstBlock.setAttribute('index', index);
@@ -1464,6 +1514,7 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
         insertOpt.remaining = element.remaining;
         insertOpt.scripts = {...insertOpt.scripts, ...element.scripts};
         vscode.postMessage(insertOpt);
+        InsertState = 0;
         reloadSidePanel();
       });
       
@@ -1483,6 +1534,7 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
     rejectButton.value = "Reject";
     rejectButton.addEventListener("click", function(){
       vscode.postMessage(insertOpt);
+      InsertState = 0;
       reloadSidePanel();
     });
     sidePanel.appendChild(rejectButton);
@@ -1496,7 +1548,9 @@ function logElementHistory(ele){
   emptySidePanel();
   var elmntRid = getRID(ele);
   if (elmntRid){
+    showLoading(document.getElementById("sidePanelLog"));
     getLogByRID("user1", elmntRid).then(data => {
+      removeLoading(document.getElementById("sidePanelLog"));
       if (data.length > 0){
         createSidePanel(data, 1, false);
         let hstBlocks = document.getElementsByClassName("hstBlock");
@@ -1531,7 +1585,6 @@ function logElementHistory(ele){
                   new: element.code,
                   nlp: getNLP(ele),
                   rid: elmntRid,
-                  text: getCopilotText(ele),
                   newId: element._id,
                   oldId: data[0]._id,
                   step: parseInt(targetHst.getAttribute("index")) + 1
@@ -1599,16 +1652,16 @@ function logElementHistory(ele){
 }
 
 
-//---------------------------Helper functions---------------------------------//
+//---------------------------autocomplete---------------------------------//
+var EVENTS = ["onchange", "onclick", "onmouseover", "onmouseout",
+"onmousedown", "onmouseup", "onkeydown", "onkeypress", "onkeyup",
+"onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
+"onresize", "onscroll", "onselect", "onreset"]
 
 function autocomplete(inp, arr) {
-  /*the autocomplete function takes two arguments,
-  the text field element and an array of possible autocompleted values:*/
   var currentFocus;
-  /*execute a function when someone writes in the text field:*/
   inp.addEventListener("input", function(e) {
     var a, b, i, val = this.value;
-    /*close any already open lists of autocompleted values*/
     closeAllLists();
     if (!val) { return false;}
     currentFocus = -1;
@@ -1840,6 +1893,7 @@ function getSuggestedGroups(userId, inserted, all) {
 
 
 function removeAllChildNodes(parent) {
+  document.getElementById("sidePanel-title").innerText = "History";
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
@@ -1905,4 +1959,23 @@ function getElement(element){
     }
     element = element.parentNode;
   }
+}
+
+function showLoading(panel){
+ //panel.innerText = "Loading...";
+ panel.innerHTML = `<img class="loadingIcon" src="${LoadingIcon}"/>`;
+}
+
+function removeLoading(panel){
+  panel.innerText = "";
+}
+
+function getNonce() {
+  let text = "";
+  const possible =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }

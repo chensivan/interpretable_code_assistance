@@ -7,9 +7,6 @@ const jsdom = require("jsdom");
 const URL = "http://127.0.0.1:5000"
 
 class CodePanel {
-  /**
-  * Track the currently panel. Only allow a single panel to exist at a time.
-  */
   static currentPanel = undefined;
   static viewType = "code-panel";
   static lastLog = 0;
@@ -29,7 +26,6 @@ class CodePanel {
       "Code",
       vscode.ViewColumn.Two,
       {
-        // Enable javascript in the webview
         enableScripts: true,
         
         // And restrict the webview to only loading content from our extension's `media` directory.
@@ -56,11 +52,8 @@ class CodePanel {
       this._panel = panel;
       this._extensionUri = extensionUri;
       
-      // Set the webview's initial html content
       this._update();
-      
-      // Listen for when the panel is disposed
-      // This happens when the user closes the panel or when the panel is closed programatically
+
       this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
     
@@ -86,33 +79,33 @@ class CodePanel {
       //Messages passed from the webview to the extension
       webview.onDidReceiveMessage(async (data) => {
         console.log(data);
-        var d = new Date();
-        var n = d.getTime();
-        if(n - this.lastLog < 50 
+        let time = (new Date()).getTime();
+        if(time - this.lastLog < 50 
           && data.type !== "onCompleteJS" 
           && data.type !== "onComplete"){
-            this.lastLog = n;
+            this.lastLog = time;
             return;
           }
-          this.lastLog = n;
+          this.lastLog = time;
+
           switch (data.type) {
             case "onDrag":{
-              if (!data.new) {
+              if (!data.new || !data.old) {
                 return;
               }
               this._replaceInEditor(data.new, data.old);
               if (data.nlp){
-                this.log("user1", "drag", `Drag element with label [${data.nlp}], ${data.transform}`, data.nlp, data.text, data.new, data.rid);
+                this.log("user1", "drag", `Drag element with label [${data.nlp}], ${data.transform}`, data.nlp, data.new, data.rid);
               }
               break;
             }
             case "onResize":{
-              if (!data.new) {
+              if (!data.new || !data.old) {
                 return;
               }
               this._replaceInEditor(data.new, data.old);
               if (data.nlp){
-                this.log("user1", "resize", `Resize element with label [${data.nlp}] to ${data.size}`, data.nlp, data.text, data.new, data.rid);
+                this.log("user1", "resize", `Resize element with label [${data.nlp}] to ${data.size}`, data.nlp, data.new, data.rid);
               }
               break;
             }
@@ -120,9 +113,9 @@ class CodePanel {
               var comment = ""
               if (data.value) {
                 let rId = getNonce();
-                console.log(data.oldRid);
-                this.log("user1", "insert", "insert object with prompt/label: ["+data.value+"] and style "+data.style, 
-                data.value, "style=\""+data.style+"\"", "", rId, data.oldRid);
+                this.log("user1", "insert", 
+                "insert object with prompt/label: ["+data.value+"] and style "+data.style, 
+                data.value, "", rId, data.oldRid);
                 
                 if(data.opt == 0){
                   var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
@@ -139,10 +132,7 @@ class CodePanel {
                 for(let i = 0; i < data.remaining.length; i++){
                   let rId = getNonce();
                   console.log(data.remaining[i].rid);
-                  this.log("user1", "insert", "", data.remaining[i].label, "", "", rId, data.remaining[i].rid);
-                  
-                  //let otherElement = data.remaining[i].code.replace("eid=\""+data.remaining[i].rid, "rid=\""+rId);
-                  //otherElement = otherElement.replace("rid=\""+data.remaining[i].rid, "rid=\""+rId);
+                  this.log("user1", "insert", "", data.remaining[i].label, "", rId, data.remaining[i].rid);
                   let otherElement = data.remaining[i].code;
                   comment += "\n\n" + otherElement;
                 }
@@ -183,23 +173,11 @@ class CodePanel {
                 let rId = getNonce();
                 let comment = `<div nlp="${data.nlp}" rid="${rId}">\n${data.code}\n</div>`;
                 this._replaceInEditor(comment, data.code);
-                this.log("user1", "insert", "", data.nlp, "", data.code, rId);
+                this.log("user1", "insert", "", data.nlp, data.code, rId);
               }
               break;
             }
             case "onComplete": {
-              //loop data.inserted
-              let eids = []
-              let rids = []
-              for (var prop in data.inserted) {
-                if (Object.prototype.hasOwnProperty.call(data.inserted, prop)) {
-                  //this._replaceInEditor(data.replaced[prop], data.inserted[prop]);
-                  eids.push(`eid="${prop}"`)
-                  rids.push(`rid="${prop}"`)
-                }
-                
-              }
-              //this._replaceInEditor(eids, rids);
               this.completeLogs("user1", data.inserted);
               break;
             }
@@ -217,7 +195,7 @@ class CodePanel {
               this._replaceInEditor(data.new,data.old);
               if(data.nlp){
                 this.log("user1", "change attribues", `change attributes with label [${data.nlp}] with ${data.changes}`, 
-                data.nlp, data.text, data.newHTML, data.rid);
+                data.nlp, data.newHTML, data.rid);
               }
               break;
             }
@@ -228,7 +206,7 @@ class CodePanel {
               this._replaceInEditor(data.new, data.old);
               if(data.nlp){
                 this.log("user1", "edit", `Edit the innerHTML to ${data.inner}, where element has label: [${data.nlp}]`, 
-                data.nlp, data.text, data.newHTML, data.rid);
+                data.nlp, data.newHTML, data.rid);
               }
               break;
             }
@@ -237,10 +215,6 @@ class CodePanel {
                 return;
               }
               this._replaceInEditor(" ",data.value);
-              if(data.nlp){
-                //this.log("user1", "delete", "delete element with label: <"+data.nlp+">", data.nlp, data.text, "", data.rid);
-              }
-              //this.log("user1", "delete", data.value);
               break;
             }
             case "insertScript":{
@@ -248,7 +222,7 @@ class CodePanel {
               let comment = data.new.replace("sid-placeholder", sId);
               console.log(comment);
               this._replaceInEditor(comment, data.old);
-              this.log("user1", "insert", "insert js script to db", "[JSScript] "+data.nlp, "", "", sId);
+              this.log("user1", "insert", "insert js script to db", "[JSScript] "+data.nlp, "", sId);
             }
             case "createjs":{
               if (!data.old || !data.new || !data.event || !data.name) {
@@ -257,14 +231,10 @@ class CodePanel {
               let sId = getNonce();
               if(data.script){
                 this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
-                this.log("user1", "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", "", sId);
+                this.log("user1", "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", sId);
               }
               else{
                 this._replaceInEditor(data.new, data.old);
-              }
-              if(data.nlp){
-                /*this.log("user1", "createjs", `Create action listener ${data.event}=${data.name}, where ${data.name} is a function that ${data.script}. Element has label: [${data.nlp}]`, 
-                data.nlp, data.text, data.new, data.rid);*/
               }
               if(data.nlp && data.script){
                 console.log("append");
@@ -285,7 +255,7 @@ class CodePanel {
                 return;
               }
               this._replaceInEditor(data.new, data.old);
-              this.log("user1", "reset", `Reset element with label [${data.nlp}] back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.text, data.new, data.rid);
+              this.log("user1", "reset", `Reset element with label [${data.nlp}] back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.new, data.rid);
               break;
             }
             case "onReset": {
@@ -302,20 +272,17 @@ class CodePanel {
                 console.log("delete")
                 this.deleteLog(ids[i]);
               }
-              
-              
-              
             }
           }
         });
       }
       
-      log(userId, event, details, label, text, code, rid, madeFrom){
+      log(userId, event, details, label, code, rid, madeFrom){
         console.log(madeFrom);
         fetch(URL+"/db/insertLog", {
           method: 'POST', 
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({userId: userId, event:event, details:details, label:label, text:text, code:code, rid:rid, madeFrom:madeFrom?madeFrom:""})
+          body: JSON.stringify({userId: userId, event:event, details:details, label:label, code:code, rid:rid, madeFrom:madeFrom?madeFrom:""})
         })
       }
       
@@ -334,7 +301,7 @@ class CodePanel {
           body: JSON.stringify({userId: userId, event:event, label:label, member:member, rId:rid})
         })
       }
-
+      
       updateCode(userId, event, details, code, rid){
         fetch(URL+"/db/updateCode", {
           method: 'POST',
@@ -368,58 +335,11 @@ class CodePanel {
         })
       }
       
-      getLog(userId){
-        return new Promise((resolve, reject) => {
-          fetch(URL+"/db/getLogs?userId="+userId, {
-            method: 'GET'
-          })
-          .then(res => res.json())
-          .then(data => {
-            return resolve(data);
-          })
-          .catch(err => {
-            return reject(err);
-          })
-        })
-      }
-      
-      getGroupLog(userId){
-        return new Promise((resolve, reject) => {
-          fetch(URL+"/db/getGroupLogs?userId="+userId, {
-            method: 'GET'
-          })
-          .then(res => res.json())
-          .then(data => {
-            return resolve(data);
-          })
-          .catch(err => {
-            return reject(err);
-          })
-        })
-      }
-      
       deleteLog(dataId){
         return new Promise((resolve, reject) => {
           fetch(URL+"/db/deleteLogs?dataId="+dataId, {
             method: 'GET'
           })
-          .then(data => {
-            return resolve(data);
-          })
-          .catch(err => {
-            return reject(err);
-          })
-        })
-      }
-      
-      getTextByNLP(userId, nlp) {
-        return new Promise((resolve, reject) => {
-          fetch(URL+"/db/getTextByNLP", {
-            method: 'POST',
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({userId: userId, nlp: nlp})
-          })
-          .then(res => res.json())
           .then(data => {
             return resolve(data);
           })
@@ -496,9 +416,7 @@ class CodePanel {
               var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
               
               var range = new vscode.Range(pos, pos);
-              // Line added - by having a selection at the same position twice, the cursor jumps there
               editor.edit(editBuilder => {
-                //editBuilder.replace(pos, newText);
                 editBuilder.replace(textRange, newDoc);
               });
               
@@ -515,28 +433,33 @@ class CodePanel {
       _getHtmlForWebview(webview) {
         //icons
         const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
+        
         const chatBotSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.js"));
-        // const webviewSrc = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "webview.js"));
         const chatBotUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.css"));
-        const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
-        const inlineIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "inlineIcon.png"));
-        const dragIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "move.png"));
-        const showIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "text.png"));
-        const resizeIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "resize.png"));
-        const deleteIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "delete.png"));
-        const chatIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "chatbot.png"));
+        
         const html2canvas = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "html2canvas.min.js"));
-        const groupIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "selectw.png"));
-        // Use a nonce to only allow specific scripts to be run
+        
+        const cursorIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "cursor.png"));
+        const groupIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "group.webp"));
+        const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "selectw.png"));
+        const inlineIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "inlineIcon.png"));
+        const dragIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "move.png"));
+        const showIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "text.png"));
+        const resizeIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "resize.png"));
+        const deleteIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "delete.png"));
+        const jsIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "js.png"));
+        const historyIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "history.png"));
+        const saveIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "save.png"));
+
+        const LoadingIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "loading.gif"));
+        
         const nonce = getNonce();
         
         CodePanel.filePath = vscode.window.activeTextEditor.document.fileName;
         
-        //Read the file
         const file = fs.readFileSync(CodePanel.filePath, "utf8");
         const jsFile = fs.readFileSync(path.join(__dirname, "media","webview.js"), "utf8");
         
-        //Parse the file into a string
         CodePanel.nonce = nonce;
         var html;
         html = 
@@ -545,34 +468,46 @@ class CodePanel {
         <meta charset="UTF-8">
         <script class="ignore" src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
         </head>
-        <div class="navbar" id="navbar">Tools
-        <img class="icon" id="icon-none" title="none" src="${inlineIcon}"/>
-        <img class="icon" id="icon-tip" title="add nlp to elements"  src="${inlineIcon}"/>
+        <div class="navbar" id="navbar">
+        Tools &nbsp; 
+        <span></span>
+        <img class="icon" id="icon-none" title="none" src="${cursorIcon}"/>
+        <span></span>
+        <img class="icon" id="icon-save" title="add or update elements" src="${saveIcon}"/>
+        <img class="icon" id="icon-js" title="add event listeners and add or update scripts" src="${jsIcon}"/>
+        <span></span>
         <img class="icon" id="icon-insert" title="insert elements"  src="${selectIcon}"/>
+        <img class="icon" id="icon-group" title="groups tool" src="${groupIcon}"/>
+        <span></span>
         <img class="icon" id="icon-drag" title="drag elements"  src="${dragIcon}"/>
         <img class="icon" id="icon-resize" title="resize elements" src="${resizeIcon}"/>
-        <img class="icon" id="icon-edit" title="edit attributes" src="${showIcon}"/>
-        <img class="icon" id="icon-js" title="add event listeners" src="${showIcon}"/>
+        
+        <!--<img class="icon" id="icon-edit" title="edit attributes" style="display:none;" src="${showIcon}"/>-->
+        <span></span>
+        <img class="icon" id="icon-history" title="history viewer" src="${historyIcon}"/>
+        <span></span>
         <img class="icon" id="icon-delete" title="delete tool" src="${deleteIcon}"/>
-        <img class="icon" id="icon-chat" title="history viewer" src="${chatIcon}"/>
-        <img class="icon" id="icon-group" title="groups tool" src="${groupIcon}"/>
-        <img class="icon" id="icon-script" title="add nlp to scripts" src="${inlineIcon}"/>
+        <!--<img class="icon" id="icon-script" title="add nlp to scripts" src="${jsIcon}"/>-->
         </div>
+        
         <button class="openbtn" id="openbtn">&#9776;</button>
         <div class="sidePanel" id="sidePanel">
-        <span class="reload" id="reload">&#x21bb;</span>
-        <a href="javascript:void(0)" class="closebtn">&times;</a>
-        <h1> History </h1>
-        <div class="sidePanelLog" id="sidePanelLog">
+        <span class="help" id="help">?</span>
+          <span class="reload" id="reload">&#x21bb;</span>
+          <a href="javascript:void(0)" class="closebtn">&times;</a>
+          <h1 id="sidePanel-title"> History </h1>
+          <div class="sidePanelLog" id="sidePanelLog"></div>
         </div>
-        </div>
+        
         `+file.toString()+` 
+
         <link href="${stylesResetUri}" rel="stylesheet">
         <link href="${chatBotUri}" rel="stylesheet">
         <script class="ignore" src="${chatBotSrc}"></script>
         <script class="ignore" src="${html2canvas}"></script>
         <script class="ignore" src="https://dragselect.com/v2/ds.min.js"></script>
         <script class="ignore" nonce="${nonce}">
+        const LoadingIcon = "${LoadingIcon}";
         ` + jsFile.toString() + `
         </script>`;
         return html;

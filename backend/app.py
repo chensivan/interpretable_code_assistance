@@ -30,7 +30,6 @@ def insertLog():
         "userId": body["userId"], # user id
         "event": body["event"], # event title
         "label": body["label"], # label that user entered
-        "text": body["text"], # text to feed to copilot
         "details": body["details"] , # human readable comment
         "createDate": datetime.datetime.now() # timestamp
         }

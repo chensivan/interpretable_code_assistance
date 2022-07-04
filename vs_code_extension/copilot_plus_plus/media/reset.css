@@ -37,10 +37,11 @@ html {
     font-weight: normal;
   }
   
-  img {
+  .icon {
     max-width: 100%;
     height: auto;
   }
+
 
   .sidePanel {
     position: fixed;
@@ -70,6 +71,15 @@ html {
     position: absolute;
     top: 0;
     right: 30px;
+    font-size: 18px;
+    font-family: Lucida Sans Unicode;
+    cursor: pointer;
+  }
+
+  .help {
+    position: absolute;
+    top: 0;
+    right: 60px;
     font-size: 18px;
     font-family: Lucida Sans Unicode;
     cursor: pointer;
@@ -114,6 +124,16 @@ html {
     width:18px;
     height:18px;
     border: 2px solid rgb(54, 54, 54);
+  }
+
+  
+  .navbar > span{
+    font-size:20px;
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+    width:0;
+    margin-left: 1px;
+    margin-right: 1px;
   }
 
   .selected.icon{
