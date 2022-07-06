@@ -36,11 +36,6 @@ html {
     padding: 0;
     font-weight: normal;
   }
-  
-  .icon {
-    max-width: 100%;
-    height: auto;
-  }
 
 
   .sidePanel {
@@ -50,49 +45,135 @@ html {
     width: 250px;
     height: 100%;
     font-size: 10px;
-    background: #f5f5f5;
+    background: #f7f8fb;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     z-index: 1;
     overflow: scroll;
     transition: 0.5s;
+    font-family: cursive;
+  }
+
+  .sidePanel h1{
+    font-size: 16px;
   }
 
   .sidePanel .closebtn {
     position: absolute;
-    top: 0;
-    right: 15px;
-    font-size: 18px;
-    margin-left: 50px;
+    top: -10px;
+    right: 10px;
+    font-size: 30px;
     text-decoration: none;
     color: black;
   }
 
-  .reload {
+  
+  .sidePanel .reload {
     position: absolute;
     top: 0;
-    right: 30px;
+    right: 35px;
     font-size: 18px;
-    font-family: Lucida Sans Unicode;
+    font-weight: bold;
+    font-family: Lucida Sans Unicode, cursive;
     cursor: pointer;
   }
 
-  .help {
+  .sidePanel .help {
     position: absolute;
     top: 0;
     right: 60px;
     font-size: 18px;
-    font-family: Lucida Sans Unicode;
     cursor: pointer;
   }
 
-  .hstBlock{
+  .sidePanel .closebtn:hover {
+    color: rgb(160, 6, 6);
+  }
+
+  .sidePanel .help:hover {
+    color: rgb(8, 18, 205);
+  }
+  
+  .sidePanel .reload:hover {
+    color: rgb(116, 8, 205);
+  }
+
+  .sidePanel .sidePanel-header{
+    position: -webkit-sticky;
+    position: sticky;
+    z-index: 9999;
+    background: #f7f8fb;
+    top: 0;
+  }
+
+  .sidePanel button, .sidePanel input[type=button], .sidePanel input[type=submit] {
+    background-color: white;
+  color: black;
+  border: 2px solid #555555;
+  padding: 2px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-family: cursive;
+  margin: 4px 2px;
+  cursor: pointer;
+  }
+
+  .sidePanel input[type=text] {
+  padding: 2px 5px;
+  font-family: cursive;
+  }
+
+  #inputbox input[type=text], #inputbox textarea {
+    padding: 2px 5px;
+    font-family: cursive;
+    margin: 1px 2px;
+    }
+
+  #inputbox button, #inputbox input[type=button], #inputbox input[type=submit] {
+    background-color: white;
+  color: black;
+  border: 2px solid #555555;
+  padding: 2px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-family: cursive;
+  cursor: pointer;
+  margin: 1px 2px;
+  }
+
+  .sidePanel button:hover, .sidePanel input[type=button]:hover, .sidePanel input[type=submit]:hover,
+  #inputbox button:hover, #inputbox input[type=button]:hover, #inputbox input[type=submit]:hover {
+    background-color: #555555;
+    color: white;
+  }
+
+  .sidePanel h2{
+    margin-left: 10px;
+    font-size: 12px;
+  }
+
+
+  .sidePanel .hstBlock{
     /* overflow-wrap: break-word; */
     overflow: auto;
     overflow-x: scroll;
     overflow-y: hidden;
+    padding: 20px;
+    margin: 10px;
+    background-color: #eaebf0;
+    border-radius: 5px;
   }
 
-  .hstBlock::-webkit-scrollbar {
+  .sidePanel .hstBlock.selected{
+    background-color: #d2d4dc;
+  }
+
+  .sidePanel .hstBlock:hover{
+    background-color: #d2d4dc;
+  }
+
+  .sidePanel .hstBlock::-webkit-scrollbar {
     display: none;
   }
 
@@ -112,38 +193,27 @@ html {
   }
 
   .navbar {
-    padding: 2px 0px;
-    width: 300px;
+    /*width: 300px;*/
     background: rgb(54, 54, 54);
-   
     color: rgb(255, 255, 255);
   }
 
-  .navbar > .icon{
-    margin: 1px;
-    width:18px;
-    height:18px;
-    border: 2px solid rgb(54, 54, 54);
+  .navbar .icon{
+    margin: 0;
+    width:25px;
+    height:25px;
+    border: 2px solid rgb(132, 132, 132);
+    padding: 2px;
   }
 
-  
-  .navbar > span{
-    font-size:20px;
-    border-left: 1px solid white;
-    border-right: 1px solid white;
-    width:0;
-    margin-left: 1px;
-    margin-right: 1px;
-  }
-
-  .selected.icon{
+  .navbar .selected.icon{
     background: rgb(25, 25, 25);
-    border: 2px solid rgb(25, 25, 25);
+    border: 2px solid rgb(0, 0, 0);
   }
 
-  .navbar > .icon:hover{
+  .navbar .icon:hover{
     background: rgb(25, 25, 25);
-    border: 2px solid rgb(25, 25, 25);
+    border: 2px solid rgb(0, 0, 0);
   }
 
   

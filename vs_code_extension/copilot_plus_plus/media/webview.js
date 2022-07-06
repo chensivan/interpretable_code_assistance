@@ -201,15 +201,29 @@ function createGroupSelector(ele){
   console.log("createGroupSelector");
   let sidePanel = document.getElementById("sidePanel");
   if (groupStart == 0){
+    let members = document.getElementsByClassName("group-border");
+    for(let i = 0; i < members.length; i++){
+      members.classList.remove("group-border");
+      if(members.classList.length == 0){
+        members.removeAttribute("class");
+      }
+    }
     emptySidePanel();
   }else if (groupStart == 2){
     if (!document.getElementById("editTool-group")){
       let createBtn = document.createElement("div");
       createBtn.id = "editTool-group";
       createBtn.innerHTML = `
-      Add Script: <input type='text' id='inputbox-script-sid' style="width:50%" placeholder="sid of script"/><button id='submit-script'>Submit</button><br/><br/>
-      <button id='back-group' style='float: right;'>Back</button><button id='edit-group' style='float: right;'>Confirm</button>`;
-      sidePanel.appendChild(createBtn);
+      <br/>
+      <div style="margin-left:10px">
+      Add Script: <br/>
+      <input type='text' id='inputbox-script-sid' style="width:50%" placeholder="sid of script"/><button id='submit-script'>Submit</button>
+      <br/><br/><br/>
+      <button id='edit-group'>Confirm</button><button id='back-group'>Back</button>
+      </div>`;
+      let sidePanelLog = document.getElementById("sidePanelLog");
+      sidePanelLog.insertBefore(createBtn, sidePanelLog.firstChild);
+        
 
       let back = document.getElementById("back-group");
       back.addEventListener("click", function(){
@@ -232,7 +246,7 @@ function createGroupSelector(ele){
   if (!ele.classList.contains("group-border")){
     let elmntRid = getRID(ele);
     if (elmntRid){
-      document.getElementById("sidePanel-title").innerText = "Create Group";
+      editSidePanelTitle("Create Group");
       logSelectedElement(elmntRid, ele);
       ele.classList.add('group-border');
       ele.style.border = '2px dashed #ccc';
@@ -240,10 +254,15 @@ function createGroupSelector(ele){
         let createBtn = document.createElement("div");
         createBtn.id = "submitTool-group";
         createBtn.innerHTML = `
-        Add Script: <input type='text' id='inputbox-script-sid' style="width:50%" placeholder="sid of script"/><button id='submit-script'>Submit</button>
-        <br/><br/>
-        <input type='text' id='inputbox-group' placeholder="Group Label"/><button id='submit-group'>Create</button>`;
-        sidePanel.appendChild(createBtn);
+        <br/>
+        <div style="margin-left:10px">
+        Add Script: <br/>
+        <input type='text' id='inputbox-script-sid' style="width:50%" placeholder="sid of script"/><button id='submit-script'>Submit</button>
+        <br/><br/><br/>
+        <input type='text' id='inputbox-group' placeholder="Group Label"/><button id='submit-group'>Create</button>
+        </div>`;
+        let sidePanelLog = document.getElementById("sidePanelLog");
+        sidePanelLog.insertBefore(createBtn, sidePanelLog.firstChild);
         
         addScriptToGroupBySid();
         submitGrouping(createBtn);
@@ -263,7 +282,7 @@ function createGroupSelector(ele){
 }
 
 function logSelectedElement(elmntRid, ele){
-  getLogByRID("user1", elmntRid).then(data => {
+  getLogByRID(USERID, elmntRid).then(data => {
     if (data.length > 0){
       createSidePanel([data[0]], 1, true, elmntRid);
       
@@ -276,7 +295,7 @@ function logSelectedElement(elmntRid, ele){
           while (!targetHst.classList.contains("hstBlock")){
             targetHst = targetHst.parentElement;
           }
-          
+          focusHstBlock(targetHst);
           let slides = document.getElementsByClassName('actionBtn');
           for (let j = 0; j < slides.length; j++) {
             slides[j].parentNode.style.position = 'null';
@@ -294,6 +313,9 @@ function logSelectedElement(elmntRid, ele){
               if (ele){
                 ele.classList.remove('group-border');
                 ele.style.border = null;
+                if(ele.classList.length == 0){
+                  ele.removeAttribute("class");
+                }
               }
               if (elmntRid in member){
                 delete member[elmntRid];
@@ -587,6 +609,9 @@ function closeBorder(ele){
     old.style.border = null;
     old.style.cursor = null;
     old.classList.remove("border");
+    if(old.classList.length == 0){
+      old.removeAttribute("class");
+    }
     
     let parent = getElement(old); //This is going to cause a lot of trouble later on :(
     parent.style.width = old.style.width;
@@ -613,6 +638,9 @@ function closeGroupBox(){
     boxes[0].style.border = null;
     boxes[0].style.cursor = null;
     boxes[0].classList.remove('group-border');
+    if(boxes[0].classList.length == 0){
+      boxes[0].removeAttribute("class");
+    }
   }
   memberRId = [];
   memberLabel = [];
@@ -627,18 +655,29 @@ function emptySidePanel(){
 }
 
 function reloadSidePanel(){
+  document.getElementById("sidePanelLog").innerHTML = "";
   showLoading(document.getElementById("sidePanelLog"));
-  getLog("user1").then(data => {
+  getLog(USERID).then(data => {
     removeLoading(document.getElementById("sidePanelLog"));
+    console.log("Loaded");
+    console.log(document.getElementById("sidePanelLog").innerHTML);
     createSidePanel(data, 1, false);
   }
   );
 }
 
 function reloadGroupPanel(){
+  document.getElementById("sidePanelLog").innerHTML = "";
   showLoading(document.getElementById("sidePanelLog"));
-  getGroupLog("user1").then(data => {
+  getGroupLog(USERID).then(data => {
     removeLoading(document.getElementById("sidePanelLog"));
+    let members = document.getElementsByClassName("group-border");
+    for(let i = 0; i < members.length; i++){
+      members.classList.remove("group-border");
+      if(members.classList.length == 0){
+        members.removeAttribute("class");
+      }
+    }
     createSidePanel(data, 2, false);
   }
   );
@@ -671,7 +710,7 @@ function createInputBox(x, y, style){
     let text = document.getElementById("inputbox-input");
     if(text.value){
       showLoading(document.getElementById("sidePanelLog"));
-      getLogByNLP("user1", text.value).then(data => {
+      getLogByNLP(USERID, text.value).then(data => {
         let sidePanel = document.getElementById("sidePanelLog");
         removeLoading(sidePanel);
         InsertState = 1;
@@ -689,6 +728,7 @@ function createInputBox(x, y, style){
         
         let declineBtn = document.createElement("button");
         declineBtn.innerHTML = "Create New";
+        declineBtn.style.marginLeft = "10px";
         sidePanel.appendChild(declineBtn);
         declineBtn.addEventListener("click", function() {
           let insertOpt = {
@@ -703,6 +743,7 @@ function createInputBox(x, y, style){
         
         let copilotbtn = document.createElement("button");
         copilotbtn.innerHTML = "Create New Using Copilot";
+        copilotbtn.style.marginLeft = "10px";
         sidePanel.appendChild(copilotbtn);
         copilotbtn.addEventListener("click", function() {
           let insertOpt = {
@@ -738,8 +779,9 @@ function giveGroupSuggestions(insertedLabel, insertOpts){
       all.push(elements[i].getAttribute("nlp"));
     }
   }
+
   showLoading(document.getElementById("sidePanelLog"));
-  getSuggestedGroups("user1", insertedLabel, all).then(data => {
+  getSuggestedGroups(USERID, insertedLabel, all).then(data => {
     removeLoading(document.getElementById("sidePanelLog"));
     //display to sidepanel
     if(data.length > 0){
@@ -777,7 +819,7 @@ function createEditBox(x, y, element){
   inputbox.style.border = "1px solid black";
   inputbox.style.backgroundColor = "white";
   if(parent){//Update
-    getLogByRID("user1", getRID(element)).then(data =>{
+    getLogByRID(USERID, getRID(element)).then(data =>{
       if(data.length > 0 && data[0].code !== parent.outerHTML){
         inputbox.innerHTML = `<div id="inputbox-el"></div>
         <br/><button id='inputbox-save'>Update</button><button id='inputbox-close'>X</button>`;
@@ -872,6 +914,7 @@ function createInputBoxJs(x, y, element){
   let div = document.createElement("div");
   div.classList.add("autocomplete");
   let event = document.createElement("input");
+  event.type = "text";
   event.id = "inputbox-event";
   
   div.appendChild(event);
@@ -882,6 +925,7 @@ function createInputBoxJs(x, y, element){
   
   let name = document.createElement("input");
   name.id = "inputbox-name";
+  name.type = "text";
   name.placeholder = "function name, ex. sendMessage()";
   
   let script = document.createElement("textarea");
@@ -1128,6 +1172,15 @@ function createSidePanel(logData, type, remain, memberRid){
     if (!remain){
       removeAllChildNodes(sidePanel);
     }
+    if(type == 2){
+      let members = document.getElementsByClassName("group-border");
+    for(let i = 0; i < members.length; i++){
+      members.classList.remove("group-border");
+      if(members.classList.length == 0){
+        members.removeAttribute("class");
+      }
+    }
+    }
     logData.forEach((element, index) => {
       let hstBlock = makeHstBlock(sidePanel);
       hstBlock.setAttribute('index', index);
@@ -1154,7 +1207,7 @@ function createSidePanel(logData, type, remain, memberRid){
         appendCanvasForElement(element, "historyIndex-"+nonce, "test"+nonce);
       }
       else if (type == 2){ //For Groups
-        document.getElementById("sidePanel-title").innerText = "Groups";
+        editSidePanelTitle("Groups");
         let elementLabels = Object.values(element.member);
         let labels = elementLabels.join(', <br/> ');
 
@@ -1175,12 +1228,13 @@ function createSidePanel(logData, type, remain, memberRid){
           while (!targetHst.classList.contains("hstBlock")){
             targetHst = targetHst.parentElement;
           }
-          
+          focusHstBlock(targetHst);
           let slides = document.getElementsByClassName('actionBtn');
           for (let j = 0; j < slides.length; j++) {
             slides[j].parentNode.style.position = 'null';
             slides[j].parentNode.removeChild(slides[j]);
           }
+          focusHstBlock(targetHst);
           let actionBtn = document.createElement('div');
           actionBtn.classList.add('actionBtn');
           actionBtn.style = 'position: absolute; top: 0; right: 0; display: inline-block';
@@ -1195,7 +1249,7 @@ function createSidePanel(logData, type, remain, memberRid){
               member = {};
               
               groupStart = 2;
-              document.getElementById("sidePanel-title").innerText = "Group Details";
+              editSidePanelTitle("Group Details");
               elements.forEach((element) => {
                 logSelectedElement(element);
                 
@@ -1218,23 +1272,20 @@ function createSidePanelForScripts(logData){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     removeAllChildNodes(sidePanel);
-    document.getElementById("sidePanel-title").innerText = "Scripts";
+    editSidePanelTitle("Scripts");
 
     logData.forEach((element, index) => {
       let hstBlock = makeHstBlock(sidePanel);
       if(element.hasAttribute("sid")){
         //hstBlock.innerText = element.outerHTML;
-        getLogByRID("user1", element.getAttribute("sid")).then(data =>{
-          console.log("data");
-          console.log(data[0].code);
-          console.log(data.length > 0);
-          console.log(element.outerHTML);
+        getLogByRID(USERID, element.getAttribute("sid")).then(data =>{
+          console.log(data)
           if (data.length > 0 && data[0].code !== element.outerHTML) {
             console.log("update");
             hstBlock.innerHTML = `
             <div id="hstBlock-script${index}"></div>
             <br/>
-            <input type="button" value="Update " id="hstBlock-btn${index}">
+            <button id="hstBlock-btn${index}">Update</button>
             `;
             let btn = document.getElementById("hstBlock-btn"+index);
             let script = document.getElementById("hstBlock-script"+index);
@@ -1257,7 +1308,7 @@ function createSidePanelForScripts(logData){
         <div id="hstBlock-script${index}"></div>
         <br/>
         <input type="text" placeholder="NLP" id="hstBlock-text${index}"/>
-        <input type="button" value="Save" id="hstBlock-btn${index}">
+        <button id="hstBlock-btn${index}">Save</button>
         `;
         //sidePanel.appendChild(hstBlock);
         let btn = document.getElementById("hstBlock-btn"+index);
@@ -1292,29 +1343,31 @@ function createSidePanelForScripts(logData){
 function makeHstBlock(sidePanel){
   let hstBlock = document.createElement('div');
   hstBlock.classList.add('hstBlock');
-  hstBlock.style.padding = '20px';
-  hstBlock.style.margin = '10px';
-  hstBlock.style.backgroundColor = '#ededed';
-  hstBlock.style.radius = '5px';
   
   sidePanel.appendChild(hstBlock);
-  hstBlock.addEventListener('mouseover', function(){
-    hstBlock.style.backgroundColor = '#e6e6e6';
-  });
-  
-  hstBlock.addEventListener('mouseout', function(){
-    hstBlock.style.backgroundColor = '#ededed';
-  });
   return hstBlock;
+}
+
+function focusHstBlock(hstBlock){
+  let hstBlocks = document.getElementsByClassName('hstBlock');
+  for (let i = 0; i < hstBlocks.length; i++) {
+    hstBlocks[i].classList.remove('selected');
+  }
+  hstBlock.classList.add('selected');
 }
 function createSidePanelForInsert(logData, groupData, nlp, style){
   let sidePanel = document.getElementById("sidePanelLog");
   let data = [...logData, ...groupData];
-  console.log(groupData);
-  console.log(data);
   if (sidePanel){
     removeAllChildNodes(sidePanel);
-    document.getElementById("sidePanel-title").innerText = "Insert Options";
+    editSidePanelTitle("Insert Options");
+
+    if(logData.length > 0){
+      let h2 = document.createElement('h2');
+      h2.innerText = "Individual Elements";
+      sidePanel.appendChild(h2);
+      sidePanel.appendChild(document.createElement('br'));
+    }
 
     logData.forEach((element, index) => {
       let hstBlock = makeHstBlock(sidePanel);
@@ -1333,10 +1386,14 @@ function createSidePanelForInsert(logData, groupData, nlp, style){
       appendCanvasForElement(element, "historyIndex-"+index, "test"+index);
       hstBlockEventListnerForInsert(hstBlock, element, nlp, style)
     });
+
     if(groupData.length > 0){
-      sidePanel.appendChild(document.createTextNode("Groups"));
+      let h2 = document.createElement('h2');
+      h2.innerText = "Groups";
+      sidePanel.appendChild(h2);
       sidePanel.appendChild(document.createElement('br'));
     }
+
     groupData.forEach((element, index) => {
       let hstBlock = makeHstBlock(sidePanel);
       let elementLabels = Object.values(element.member);
@@ -1390,8 +1447,7 @@ function hstBlockEventListnerForInsert(hstBlock, element, nlp, style){
     while (!targetHst.classList.contains("hstBlock")){
       targetHst = targetHst.parentElement;
     }
-    console.log(targetHst)
-    targetHst.style.backgroundColor = '#e6e6e6';
+    focusHstBlock(targetHst);
     let slides = document.getElementsByClassName('confirmation');
     for (let j = 0; j < slides.length; j++) {
       slides[j].parentNode.style.position = 'null';
@@ -1399,7 +1455,7 @@ function hstBlockEventListnerForInsert(hstBlock, element, nlp, style){
     }
     let confirmation = document.createElement('div');
     confirmation.classList.add('confirmation');
-    confirmation.innerHTML =  "<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />";
+    confirmation.innerHTML =  "<button class='confirmBtn' style='position: absolute; top: 0; right: 0;'>Confirm</button>";
     targetHst.style.position = 'relative';
     targetHst.appendChild(confirmation);
     confirmation.addEventListener('click', function(){
@@ -1433,8 +1489,7 @@ function hstBlockEventListnerForInsertGroup(hstBlock, element){
     while (!targetHst.classList.contains("hstBlock")){
       targetHst = targetHst.parentElement;
     }
-    console.log(targetHst)
-    targetHst.style.backgroundColor = '#e6e6e6';
+    focusHstBlock(targetHst);
     let slides = document.getElementsByClassName('confirmation');
     for (let j = 0; j < slides.length; j++) {
       slides[j].parentNode.style.position = 'null';
@@ -1442,16 +1497,14 @@ function hstBlockEventListnerForInsertGroup(hstBlock, element){
     }
     let confirmation = document.createElement('div');
     confirmation.classList.add('confirmation');
-    confirmation.innerHTML =  `<input type='submit' class='confirmBtn' style='position: absolute; top: 0; right: 0; background:transparent' value='Confirm' />`;
+    confirmation.innerHTML =  `<button class='confirmBtn' style='position: absolute; top: 0; right: 0;'>Confirm</button>`;
     targetHst.style.position = 'relative';
     targetHst.appendChild(confirmation);
     confirmation.addEventListener('click', function(){
-      
       let remaining = []
       for(let i = 0; i<Object.keys(element.member).length; i++){
-        remaining.push({"label": element.member[i], "rid": Object.keys(element.member)[i], "code": element.codes[i]})
+        remaining.push({"label": element.member[Object.keys(element.member)[i]], "rid": Object.keys(element.member)[i], "code": element.codes[i]})
       }
-      console.log(remaining);
       vscode.postMessage({
         type: "onInsert",
         remaining: remaining,
@@ -1468,7 +1521,7 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
   let sidePanel = document.getElementById("sidePanelLog");
   if (sidePanel){
     removeAllChildNodes(sidePanel);
-    document.getElementById("sidePanel-title").innerText = "Suggested Groups";
+    editSidePanelTitle("Suggested Groups");
 
     logData.forEach((element, index) => {
       let hstBlock = document.createElement('div');
@@ -1507,9 +1560,8 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
       }
       remainingText = remainingText.slice(0, remainingText.length-1);
       
-      let button = document.createElement("Input");
-      button.type = "button";
-      button.value = "Insert Missing";
+      let button = document.createElement("button");
+      button.innerText = "Insert Missing";
       button.addEventListener("click", function(){
         insertOpt.remaining = element.remaining;
         insertOpt.scripts = {...insertOpt.scripts, ...element.scripts};
@@ -1529,9 +1581,8 @@ function createSidePanelForSuggestedGroups(logData, insertOpt){
       hstBlock.appendChild(button);
       
     });
-    let rejectButton = document.createElement("Input");
-    rejectButton.type = "button";
-    rejectButton.value = "Reject";
+    let rejectButton = document.createElement("button");
+    rejectButton.innerText = "Reject";
     rejectButton.addEventListener("click", function(){
       vscode.postMessage(insertOpt);
       InsertState = 0;
@@ -1549,7 +1600,7 @@ function logElementHistory(ele){
   var elmntRid = getRID(ele);
   if (elmntRid){
     showLoading(document.getElementById("sidePanelLog"));
-    getLogByRID("user1", elmntRid).then(data => {
+    getLogByRID(USERID, elmntRid).then(data => {
       removeLoading(document.getElementById("sidePanelLog"));
       if (data.length > 0){
         createSidePanel(data, 1, false);
@@ -1561,7 +1612,7 @@ function logElementHistory(ele){
             while (!targetHst.classList.contains("hstBlock")){
               targetHst = targetHst.parentElement;
             }
-            
+            focusHstBlock(targetHst);
             let slides = document.getElementsByClassName('actionBtn');
             for (let j = 0; j < slides.length; j++) {
               slides[j].parentNode.style.position = 'null';
@@ -1893,7 +1944,7 @@ function getSuggestedGroups(userId, inserted, all) {
 
 
 function removeAllChildNodes(parent) {
-  document.getElementById("sidePanel-title").innerText = "History";
+  editSidePanelTitle("History");
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
@@ -1978,4 +2029,8 @@ function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+function editSidePanelTitle(title){
+  document.getElementById("sidePanel-title").innerHTML = "&nbsp;&nbsp;"+title;
 }

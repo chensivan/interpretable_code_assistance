@@ -17,22 +17,25 @@ embeddings = Embeddings({"path": "sentence-transformers/nli-mpnet-base-v2"})
 # Create flask app
 flask_app = Flask(__name__)
 cors = CORS(flask_app)
-client = nlpcloud.Client("fast-gpt-j", "aba1569138b09087b8a839356381010dd56d6679", gpu=True, lang="en")
-client = pymongo.MongoClient("mongodb://user:user@ac-yuhr5lt-shard-00-00.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-01.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-02.menscjh.mongodb.net:27017/?ssl=true&replicaSet=atlas-n1yyxs-shard-0&authSource=admin&retryWrites=true&w=majority")
+client = nlpcloud.Client(
+    "fast-gpt-j", "aba1569138b09087b8a839356381010dd56d6679", gpu=True, lang="en")
+client = pymongo.MongoClient(
+    "mongodb://user:user@ac-yuhr5lt-shard-00-00.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-01.menscjh.mongodb.net:27017,ac-yuhr5lt-shard-00-02.menscjh.mongodb.net:27017/?ssl=true&replicaSet=atlas-n1yyxs-shard-0&authSource=admin&retryWrites=true&w=majority")
 db = client["copilot_plus_plus"]
 
-@flask_app.route("/db/insertLog", methods = ["POST"])
+
+@flask_app.route("/db/insertLog", methods=["POST"])
 def insertLog():
     logCol = db["log"]
     body = request.json
 
-    log = { 
-        "userId": body["userId"], # user id
-        "event": body["event"], # event title
-        "label": body["label"], # label that user entered
-        "details": body["details"] , # human readable comment
-        "createDate": datetime.datetime.now() # timestamp
-        }
+    log = {
+        "userId": body["userId"],  # user id
+        "event": body["event"],  # event title
+        "label": body["label"],  # label that user entered
+        "details": body["details"],  # human readable comment
+        "createDate": datetime.datetime.now()  # timestamp
+    }
     if body["event"] == "insert":
         log["done"] = False
         log["rId"] = body["rid"]
@@ -50,10 +53,10 @@ def insertLog():
         else:
             log["scripts"] = []
     result = logCol.insert_one(log)
-    return str(result.inserted_id) # return the id of the inserted document
+    return str(result.inserted_id)  # return the id of the inserted document
 
 
-@flask_app.route("/db/updateCode", methods = ["POST"])
+@flask_app.route("/db/updateCode", methods=["POST"])
 def updateCode():
     logCol = db["log"]
     body = request.json
@@ -69,44 +72,48 @@ def updateCode():
     result = logCol.insert_one(newest)
     return str(result.inserted_id)
 
-@flask_app.route("/db/insertGroup", methods = ["POST"])
+
+@flask_app.route("/db/insertGroup", methods=["POST"])
 def insertGroup():
     logCol = db["template"]
     body = request.json
 
     log = {
-        "userId": body["userId"], # user id
-        "event": body["event"], # event title
-        "label": body["label"], # label that user entered
+        "userId": body["userId"],  # user id
+        "event": body["event"],  # event title
+        "label": body["label"],  # label that user entered
         "member": body["member"],
         # "details": body["details"] , # human readable comment
-        "createDate": datetime.datetime.now(), # timestamp
+        "createDate": datetime.datetime.now(),  # timestamp
         "rId": body["rId"]
-        }
+    }
 
     result = logCol.insert_one(log)
-    return str(result.inserted_id) # return the id of the inserted document
+    return str(result.inserted_id)  # return the id of the inserted document
 
-@flask_app.route("/db/completeLog", methods = ["POST"])
+
+@flask_app.route("/db/completeLog", methods=["POST"])
 def completeLog():
     logCol = db["log"]
     body = request.json
-    cursor = logCol.find({"userId": body["userId"], "done": False, "event": "insert"})
+    cursor = logCol.find(
+        {"userId": body["userId"], "done": False, "event": "insert"})
     count = 0
     for result in cursor:
         if result["rId"] in body["inserted"].keys():
             logCol.update_one({
                 '_id': result['_id']
-                    },{
-                    '$set': {
-                        'done': True,
-                        'code': body["inserted"][result["rId"]]
-                        }
-                    }, upsert=False)
+            }, {
+                '$set': {
+                    'done': True,
+                    'code': body["inserted"][result["rId"]]
+                }
+            }, upsert=False)
             count += 1
-    return str(count) # return the id of the inserted document
+    return str(count)  # return the id of the inserted document
 
-@flask_app.route("/db/appendScript", methods = ["POST"])
+
+@flask_app.route("/db/appendScript", methods=["POST"])
 def appendScript():
     logCol = db["log"]
     body = request.json
@@ -125,30 +132,32 @@ def appendScript():
     result = logCol.insert_one(newest)
     return str(result.inserted_id)
 
-@flask_app.route("/db/completeJSLog", methods = ["POST"])
+
+@flask_app.route("/db/completeJSLog", methods=["POST"])
 def completeJSLog():
     logCol = db["log"]
     body = request.json
-    cursor = logCol.find({"userId": body["userId"],  "event": "insert"})
+    cursor = logCol.find(
+        {"userId": body["userId"],  "event": "insert", "done": False})
     count = 0
     for result in cursor:
         if result["rId"] in body["inserted"].keys() and (
-            not result["done"] or 
-            result["code"] != body["inserted"][result["rId"]]):
+                not result["done"] or
+                result["code"] != body["inserted"][result["rId"]]):
             logCol.update_one({
                 '_id': result['_id']
-                    },{
-                    '$set': {
-                        'done': True,
-                        'code': body["inserted"][result["rId"]],
-                        'updateDate': datetime.datetime.now()
-                        }
-                    }, upsert=False)
+            }, {
+                '$set': {
+                    'done': True,
+                    'code': body["inserted"][result["rId"]],
+                    'updateDate': datetime.datetime.now()
+                }
+            }, upsert=False)
             count += 1
-    return str(count) # return the id of the inserted document
+    return str(count)  # return the id of the inserted document
 
 
-@flask_app.route("/db/getLogs", methods = ["GET"])
+@flask_app.route("/db/getLogs", methods=["GET"])
 @cross_origin()
 def getLogs():
     logCol = db["log"]
@@ -161,7 +170,8 @@ def getLogs():
     newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
     return json.dumps(newList, default=str)
 
-@flask_app.route("/db/deleteLogs", methods = ["GET"])
+
+@flask_app.route("/db/deleteLogs", methods=["GET"])
 @cross_origin()
 def deleteLogs():
     logCol = db["log"]
@@ -174,20 +184,21 @@ def deleteLogs():
 
 
 # testing api
-#@flask_app.route("/similarity", methods = ["GET"])
+# @flask_app.route("/similarity", methods = ["GET"])
 def similarity(userId, txt):
     data = getAllLabels(userId)
     if len(data) > 0:
         results = embeddings.similarity(txt, data)
-        return True, results, data#json.dumps(uid, default=str), 
+        return True, results, data  # json.dumps(uid, default=str),
     print("...")
     return False, False, False
 
+
 def getAllLabels(userId):
-    key = {'userId':userId}
+    key = {'userId': userId}
 
     logCol = db["log"]
-    cursor = logCol.find(key); 
+    cursor = logCol.find(key)
     results = []
     for result in cursor:
         if "label" in result and result["label"] not in results:
@@ -196,18 +207,18 @@ def getAllLabels(userId):
 
 
 def getAllGroups(userId):
-    key = {'userId':userId}
+    key = {'userId': userId}
 
     templateCol = db["template"]
-    cursor = templateCol.find(key); 
+    cursor = templateCol.find(key)
     results = []
     for result in cursor:
         if "label" in result and result["label"] not in results:
             results.append(result["label"])
     return results
-    
 
-@flask_app.route("/db/getTextByNLP", methods = ["POST"])
+
+@flask_app.route("/db/getTextByNLP", methods=["POST"])
 def getTextByNLP():
     logCol = db["log"]
     body = request.json
@@ -218,7 +229,8 @@ def getTextByNLP():
         return json.dumps({"success": False})
 
     if similarities[0][1] > 0.5:
-        cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[0][0]]})
+        cursor = logCol.find(
+            {"userId": body["userId"], "label": allLabels[similarities[0][0]]})
         results = []
         for result in cursor:
             results.append(result)
@@ -227,7 +239,8 @@ def getTextByNLP():
     else:
         return json.dumps({"success": False})
 
-@flask_app.route("/db/getLogByRID", methods = ["POST"])
+
+@flask_app.route("/db/getLogByRID", methods=["POST"])
 def getLogByRID():
     logCol = db["log"]
     body = request.json
@@ -240,7 +253,7 @@ def getLogByRID():
     return json.dumps(newlist, default=str)
 
 
-@flask_app.route("/db/getLogByNLP", methods = ["POST"])
+@flask_app.route("/db/getLogByNLP", methods=["POST"])
 def getLogByNLP():
     logCol = db["log"]
     body = request.json
@@ -248,11 +261,12 @@ def getLogByNLP():
     cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
     success, similarities, allLabels = similarity(body["userId"], body["nlp"])
     results = []
-    
+
     if success:
         for i in range(len(similarities)):
             if similarities[i][1] > 0.5:
-                cursor = logCol.find({"userId": body["userId"], "label":allLabels[similarities[i][0]]})
+                cursor = logCol.find(
+                    {"userId": body["userId"], "label": allLabels[similarities[i][0]]})
                 newest = {}
                 for log in cursor:
                     rId = log["rId"]
@@ -263,10 +277,13 @@ def getLogByNLP():
                     scripts = {}
                     if "scripts" in log:
                         for rid in log["scripts"]:
-                            scripts[rid] = getNewestCodeByRID(body["userId"], rid)
+                            newestScript = getNewestLogByRID(
+                                body["userId"], rid)
+                            scripts[rid] = {
+                                "code": newestScript["code"], "nlp": newestScript["label"]}
                     log["scripts"] = scripts
                     results.append(log)
-    
+
     groups = getAllGroups(body["userId"])
     groupResults = []
     templateCol = db["template"]
@@ -274,7 +291,8 @@ def getLogByNLP():
         similarities = embeddings.similarity(body["nlp"], groups)
         for i in range(len(similarities)):
             if similarities[i][1] > 0.5:
-                cursor = templateCol.find({"userId": body["userId"], "label":groups[similarities[i][0]]})
+                cursor = templateCol.find(
+                    {"userId": body["userId"], "label": groups[similarities[i][0]]})
                 newest = {}
                 for log in cursor:
                     rId = log["rId"]
@@ -285,22 +303,27 @@ def getLogByNLP():
                     codes = []
                     scripts = {}
                     for member in members:
-                        codes.append(getNewestCodeByRID(body["userId"], member))
+                        codes.append(getNewestCodeByRID(
+                            body["userId"], member))
                         memberLog = getNewestLogByRID(body["userId"], member)
                         if "scripts" in memberLog:
                             for sid in memberLog["scripts"]:
-                                scripts[sid] = getNewestCodeByRID(body["userId"], sid)
+                                newestScript = getNewestLogByRID(
+                                    body["userId"], sid)
+                                scripts[sid] = {
+                                    "code": newestScript["code"], "nlp": newestScript["label"]}
                     log["codes"] = codes
                     log["isGroup"] = True
                     log["scripts"] = scripts
                     groupResults.append(log)
-        
+
     if len(results) > 0 or len(groupResults) > 0:
         return json.dumps({"success": True, "all": results, "groups": groupResults}, default=str)
     else:
         return json.dumps({"success": False})
 
-@flask_app.route("/db/getSuggestedGroups", methods = ["POST"])
+
+@flask_app.route("/db/getSuggestedGroups", methods=["POST"])
 def getSuggestedGroups():
     logCol = db["template"]
     body = request.json
@@ -309,12 +332,12 @@ def getSuggestedGroups():
     for group in cursor:
         member = group["member"]
         repeated = []
-        rids = list(member.keys())
-        labels = list(member.values())
-        allLabels =body["all"]
+        rids = list(member.keys()).copy()
+        labels = list(member.values()).copy()
+        allLabels = body["all"].copy()
         allLabels.insert(0, body["inserted"])
-        
         for i in range(len(allLabels)):
+            print(allLabels[i])
             similarity = embeddings.similarity(allLabels[i], labels)[0]
             if similarity[1] > 0.5:
                 oldLabel = labels[similarity[0]]
@@ -322,16 +345,18 @@ def getSuggestedGroups():
                 labels.remove(oldLabel)
                 rids.remove(rids[similarity[0]])
             elif i == 0:
-               break
+                break
 
             if len(labels) == 0:
                 break
-            
+        print(repeated)
+
         if len(repeated) > 0:
             remaining = []
-            for i in range(len(labels)): # TODO get the code of this element
+            for i in range(len(labels)):
                 code = getNewestCodeByRID(body["userId"], rids[i])
-                remaining.append({"label": labels[i], "rid": rids[i], "code": code})
+                remaining.append(
+                    {"label": labels[i], "rid": rids[i], "code": code})
             if len(remaining) > 0:
                 # For Now Just assume no repeated scripts and all that stuff :(
                 scripts = {}
@@ -339,10 +364,16 @@ def getSuggestedGroups():
                     memberLog = getNewestLogByRID(body["userId"], m["rid"])
                     if "scripts" in memberLog:
                         for sid in memberLog["scripts"]:
-                            scripts[sid] = getNewestCodeByRID(body["userId"], sid)
-                results.append({"group": group, "repeated": repeated, "remaining": remaining, "scripts":scripts})
-    sortedList = sorted(results, key=lambda x: len(x["repeated"]), reverse=True)
+                            newestScript = getNewestLogByRID(
+                                body["userId"], sid)
+                            scripts[sid] = {
+                                "code": newestScript["code"], "nlp": newestScript["label"]}
+                results.append({"group": group, "repeated": repeated,
+                               "remaining": remaining, "scripts": scripts})
+    sortedList = sorted(results, key=lambda x: len(
+        x["repeated"]), reverse=True)
     return json.dumps(sortedList, default=str)
+
 
 def getNewestCodeByRID(userId, rid):
     logCol = db["log"]
@@ -366,7 +397,7 @@ def getNewestLogByRID(userId, rid):
     return newlist[0]
 
 
-@flask_app.route("/db/getGroupLogs", methods = ["GET"])
+@flask_app.route("/db/getGroupLogs", methods=["GET"])
 @cross_origin()
 def getGroupLogs():
     logCol = db["template"]
@@ -379,7 +410,8 @@ def getGroupLogs():
     newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
     return json.dumps(newList, default=str)
 
-@flask_app.route("/db/editGroupLog", methods = ["POST"])
+
+@flask_app.route("/db/editGroupLog", methods=["POST"])
 @cross_origin()
 def editGroupLog():
     logCol = db["template"]
@@ -390,13 +422,14 @@ def editGroupLog():
         count += 1
         logCol.update_one({
             '_id': result['_id']
-                },{
-                '$set': {
-                    'member': body["member"],
-                    'createDate': datetime.datetime.now(),
-                    }
-                }, upsert=False)
+        }, {
+            '$set': {
+                'member': body["member"],
+                'createDate': datetime.datetime.now(),
+            }
+        }, upsert=False)
     return str(count)
+
 
 if __name__ == "__main__":
     flask_app.run(debug=True)

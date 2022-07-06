@@ -16,6 +16,7 @@ function activate(context) {
 	// create a command called visual.openVisual
 	let openVisual = vscode.commands.registerCommand('visual.openVisual', function () {
 		// The code you place here will be executed every time your command is executed
+		vscode.window.showInformationMessage('Working Like Crazy to open Webview Please Wait...');
 		CodePanel.createOrShow(context.extensionUri, vscode.window.activeTextEditor.document.fileName);
 		//vscode.window.showInformationMessage('Hello World from copilot_plus_plus!');
 	}
