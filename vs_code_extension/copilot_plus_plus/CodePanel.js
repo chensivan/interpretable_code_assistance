@@ -111,7 +111,7 @@ class CodePanel {
               break;
             }
             case "onInsert": {
-              var comment = ""
+              let comment = ""
               if (data.value) {
                 let rId = getNonce();
                 this.log(CodePanel.userId, "insert", 
@@ -119,16 +119,15 @@ class CodePanel {
                 data.value, "", rId, data.oldRid);
                 
                 if(data.opt == 0){
-                  var comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
+                  comment = `<!-- ${data.value} -->\n<div ${data.style} nlp="${data.value}" rid="${rId}">\n</div>`;
                 }
                 else if(data.opt == 1){
-                  var comment = `<div ${data.style} nlp="${data.value}" rid="${rId}">\n<!-- ${data.value} -->\n</div>`;
+                  comment = `<div ${data.style} nlp="${data.value}" rid="${rId}">\n<!-- ${data.value} -->\n</div>`;
                 }
                 else if(data.opt == 2){
-                  var comment = data.code.replace("rid-placeholder", rId);
+                  comment = data.code.replace("rid-placeholder", rId);
                 }
               }
-              
               if(data.remaining){
                 for(let i = 0; i < data.remaining.length; i++){
                   let rId = getNonce();
