@@ -447,7 +447,6 @@ class CodePanel {
         const cursorIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "cursor.png"));
         const groupIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "group.webp"));
         const selectIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "selectw.png"));
-        const inlineIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "inlineIcon.png"));
         const dragIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "move.png"));
         const showIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "text.png"));
         const resizeIcon = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media/icons", "resize.png"));
@@ -485,12 +484,10 @@ class CodePanel {
         <img class="icon" id="icon-drag" title="drag elements"  src="${dragIcon}"/>
         <img class="icon" id="icon-resize" title="resize elements" src="${resizeIcon}"/>
         
-        <!--<img class="icon" id="icon-edit" title="edit attributes" style="display:none;" src="${showIcon}"/>-->
         &nbsp; 
         <img class="icon" id="icon-history" title="history viewer" src="${historyIcon}"/>
         &nbsp; 
         <img class="icon" id="icon-delete" title="delete tool" src="${deleteIcon}"/>
-        <!--<img class="icon" id="icon-script" title="add nlp to scripts" src="${jsIcon}"/>-->
         </div>
         
         <button class="openbtn" id="openbtn">&#9776;</button>

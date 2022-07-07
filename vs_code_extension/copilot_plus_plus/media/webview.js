@@ -2,45 +2,41 @@ const vscode = acquireVsCodeApi();
 const URL = "http://127.0.0.1:5000";
 
 // TODO: Write comments, split up the code / modularize it
-
+const SidePanel = document.getElementById("sidePanelLog");
 //---------------------------tool bar functions---------------------------------//
 const iconDic = {
   "icon-save": 0,
   "icon-drag": 1,
   "icon-insert": 2,
-  //"icon-edit": 3,
   "icon-resize": 4,
   "icon-delete": 5,
   "icon-js": 6,
   "icon-history": 7,
   "icon-group": 8,
-  "icon-none": 9,
-  //"icon-script": 10
+  "icon-none": 9
 };
 
 const iconIds = Object.keys(iconDic);
+let mode = iconDic["icon-none"];
 
 const icons = document.getElementsByClassName("icon");
-
-let mode = iconDic["icon-none"];
 document.getElementById("icon-none").classList.add("selected");
 
-for (var i = 0; i < icons.length; i++) {
+for (let i = 0; i < icons.length; i++) {
   icons[i].addEventListener("click", handleSelectedIcon);
 }
 
 // set tool bar icon handler
 function handleSelectedIcon(event) {
-  var icon = event.target;
+  let icon = event.target;
 
   if (iconIds.includes(icon.id)) {
     mode = iconDic[icon.id];
     toggleSelectedIcon(icon.id);
     if (mode == iconDic["icon-history"]) {
-      var sidePanel = document.getElementById("sidePanelLog");
-      if (sidePanel) {
-        removeAllChildNodes(sidePanel);
-        sidePanel.appendChild(
+      if (SidePanel) {
+        removeAllChildNodes(SidePanel);
+        SidePanel.appendChild(
           document.createTextNode("Click on an element to see its history.")
         );
       }
@@ -49,7 +45,7 @@ function handleSelectedIcon(event) {
     } else if (mode == iconDic["icon-js"]) {
       let scripts = document.getElementsByTagName("script");
       scripts = Array.prototype.slice.call(scripts);
-      scriptsCleaned = [];
+      let scriptsCleaned = [];
       scripts.forEach(function (script) {
         if (
           !script.classList.contains("ignore") &&
@@ -206,7 +202,6 @@ function addScriptToGroupBySid() {
 
 function createGroupSelector(ele) {
   console.log("createGroupSelector");
-  let sidePanel = document.getElementById("sidePanel");
   if (groupStart == 0) {
     let members = document.getElementsByClassName("group-border");
     for (let i = 0; i < members.length; i++) {
@@ -228,8 +223,7 @@ function createGroupSelector(ele) {
       <br/><br/><br/>
       <button id='edit-group'>Confirm</button><button id='back-group'>Back</button>
       </div>`;
-      let sidePanelLog = document.getElementById("sidePanelLog");
-      sidePanelLog.insertBefore(createBtn, sidePanelLog.firstChild);
+      SidePanel.insertBefore(createBtn, SidePanel.firstChild);
 
       let back = document.getElementById("back-group");
       back.addEventListener("click", function () {
@@ -272,8 +266,7 @@ function createGroupSelector(ele) {
         <br/><br/><br/>
         <input type='text' id='inputbox-group' placeholder="Group Label"/><button id='submit-group'>Create</button>
         </div>`;
-        let sidePanelLog = document.getElementById("sidePanelLog");
-        sidePanelLog.insertBefore(createBtn, sidePanelLog.firstChild);
+        SidePanel.insertBefore(createBtn, SidePanel.firstChild);
 
         addScriptToGroupBySid();
         submitGrouping(createBtn);
@@ -430,7 +423,7 @@ var rectX, rectY;
 
 //---------------------------click handler---------------------------------//
 function findAncestor(el, cls) {
-  var temp = el;
+  let temp = el;
   while (temp && temp.id !== cls) {
     temp = temp.parentElement;
   }
@@ -468,7 +461,7 @@ document.addEventListener("click", function (event) {
       event.target.tagName !== "BODY"
     ) {
       closeBorder(oldElmnt);
-      var target = event.target;
+      let target = event.target;
       oldElmnt = getElement(target).outerHTML;
       target.classList.add("border");
       target.style.border = "2px dashed #ccc";
@@ -677,34 +670,30 @@ function closeGroupBox() {
       boxes[0].removeAttribute("class");
     }
   }
-  memberRId = [];
-  memberLabel = [];
-  memberIndex = 0;
 }
 
 function emptySidePanel() {
-  var sidePanel = document.getElementById("sidePanelLog");
-  if (sidePanel) {
-    removeAllChildNodes(sidePanel);
+  if (SidePanel) {
+    removeAllChildNodes(SidePanel);
   }
 }
 
 function reloadSidePanel() {
-  document.getElementById("sidePanelLog").innerHTML = "";
-  showLoading(document.getElementById("sidePanelLog"));
+  SidePanel.innerHTML = "";
+  showLoading(SidePanel);
   getLog(USERID).then((data) => {
-    removeLoading(document.getElementById("sidePanelLog"));
+    removeLoading(SidePanel);
     console.log("Loaded");
-    console.log(document.getElementById("sidePanelLog").innerHTML);
+    console.log(SidePanel.innerHTML);
     createHistoryPanel(data, false);
   });
 }
 
 function reloadGroupPanel() {
-  document.getElementById("sidePanelLog").innerHTML = "";
-  showLoading(document.getElementById("sidePanelLog"));
+  SidePanel.innerHTML = "";
+  showLoading(SidePanel);
   getGroupLog(USERID).then((data) => {
-    removeLoading(document.getElementById("sidePanelLog"));
+    removeLoading(SidePanel);
     clearGroupBorders();
     createGroupPanel(data);
   });
@@ -736,10 +725,9 @@ function createInputBox(x, y, style) {
   submit.addEventListener("click", function () {
     let text = document.getElementById("inputbox-input");
     if (text.value) {
-      showLoading(document.getElementById("sidePanelLog"));
+      showLoading(SidePanel);
       getLogByNLP(USERID, text.value).then((data) => {
-        let sidePanel = document.getElementById("sidePanelLog");
-        removeLoading(sidePanel);
+        removeLoading(SidePanel);
         InsertState = 1;
         if (data.success) {
           let length = Math.min(4, data.all.length);
@@ -755,7 +743,7 @@ function createInputBox(x, y, style) {
         let declineBtn = document.createElement("button");
         declineBtn.innerHTML = "Create New";
         declineBtn.style.marginLeft = "10px";
-        sidePanel.appendChild(declineBtn);
+        SidePanel.appendChild(declineBtn);
         declineBtn.addEventListener("click", function () {
           let insertOpt = {
             type: "onInsert",
@@ -770,7 +758,7 @@ function createInputBox(x, y, style) {
         let copilotbtn = document.createElement("button");
         copilotbtn.innerHTML = "Create New Using Copilot";
         copilotbtn.style.marginLeft = "10px";
-        sidePanel.appendChild(copilotbtn);
+        SidePanel.appendChild(copilotbtn);
         copilotbtn.addEventListener("click", function () {
           let insertOpt = {
             type: "onInsert",
@@ -805,9 +793,9 @@ function giveGroupSuggestions(insertedLabel, insertOpts) {
     }
   }
 
-  showLoading(document.getElementById("sidePanelLog"));
+  showLoading(SidePanel);
   getSuggestedGroups(USERID, insertedLabel, all).then((data) => {
-    removeLoading(document.getElementById("sidePanelLog"));
+    removeLoading(SidePanel);
     //display to sidepanel
     if (data.length > 0) {
       createSidePanelForSuggestedGroups(data, insertOpts);
@@ -987,7 +975,7 @@ function createInputBoxJs(x, y, element) {
 }
 
 //---------------------------chatbot tool---------------------------------//
-var chatBotSelector = true;
+/*var chatBotSelector = true;
 function createChatBox() {
   let outer = document.createElement("div");
   outer.id = "chatBotOuter";
@@ -1029,7 +1017,7 @@ function createChatBox() {
     },
   };
   ChatBot.init(config);
-}
+}*/
 
 //---------------------------attribute editor tool---------------------------------//
 function createInputBoxAttr(x, y, element) {
@@ -1053,7 +1041,7 @@ function createInputBoxAttr(x, y, element) {
       let newEle = document.createElement(element.tagName);
       newEle.innerHTML = element.innerHTML;
       let attrs = JSON.parse(text.value);
-      for (var key in attrs) {
+      for (let key in attrs) {
         newEle.setAttribute(key, attrs[key]);
       }
 
@@ -1118,7 +1106,7 @@ function createInputBoxAttr(x, y, element) {
 }
 
 function defineSelector(element) {
-  var selector = getElement(element).outerHTML;
+  let selector = getElement(element).outerHTML;
   return selector;
 }
 
@@ -1143,7 +1131,7 @@ function dragStart(e) {
 
     let transformValue = window.getComputedStyle(div).transform;
     if (transformValue) {
-      var matrix = new WebKitCSSMatrix(transformValue);
+      let matrix = new WebKitCSSMatrix(transformValue);
       translateX = matrix.m41;
       translateY = matrix.m42;
     }
@@ -1208,22 +1196,19 @@ function dragEnd(e) {
  * @param {string} memberRid the rid of the member
  */
 function createHistoryPanel(logData, remain, memberRid) {
-    let sidePanel = document.getElementById("sidePanelLog");
-  
-    if (sidePanel == null) {
+    if (SidePanel == null) {
       return;
     }
   
     if (!remain) {
-      removeAllChildNodes(sidePanel);
+      removeAllChildNodes(SidePanel);
     }
   
     logData.forEach((element, index) => {
   
       // Make a history block
-      let hstBlock = makeHstBlock(sidePanel);
+      let hstBlock = createElement("div", SidePanel, "hstBlock");
       hstBlock.setAttribute("index", index);
-      hstBlock.classList.add("hstBlock");
   
       if (memberRid) {
         hstBlock.classList.add("hstBlock-" + memberRid);
@@ -1257,9 +1242,7 @@ function createHistoryPanel(logData, remain, memberRid) {
  * @param {Array} logData array of templates
  */
 function createGroupPanel(logData) {
-  let sidePanel = document.getElementById("sidePanelLog");
-
-  if (sidePanel == null) {
+  if (SidePanel == null) {
     return;
   }
 
@@ -1270,7 +1253,7 @@ function createGroupPanel(logData) {
     
     // Make a history block
     // TODO: Use normal class names, 'hstBlock' -> 'history-block'
-    let historyBlock = createElement("div", sidePanel, "hstBlock");
+    let historyBlock = createElement("div", SidePanel, "hstBlock");
     historyBlock.setAttribute("index", index);
 
       editSidePanelTitle("Groups");
@@ -1346,13 +1329,12 @@ function clearGroupBorders(){
 }
 
 function createSidePanelForScripts(logData) {
-  let sidePanel = document.getElementById("sidePanelLog");
-  if (sidePanel) {
-    removeAllChildNodes(sidePanel);
+  if (SidePanel) {
+    removeAllChildNodes(SidePanel);
     editSidePanelTitle("Scripts");
 
     logData.forEach((element, index) => {
-      let hstBlock = makeHstBlock(sidePanel);
+      let hstBlock = createElement("div", SidePanel, "hstBlock");
       if (element.hasAttribute("sid")) {
         //hstBlock.innerText = element.outerHTML;
         getLogByRID(USERID, element.getAttribute("sid")).then((data) => {
@@ -1415,14 +1397,6 @@ function createSidePanelForScripts(logData) {
   return;
 }
 
-function makeHstBlock(sidePanel) {
-  let hstBlock = document.createElement("div");
-  hstBlock.classList.add("hstBlock");
-
-  sidePanel.appendChild(hstBlock);
-  return hstBlock;
-}
-
 function focusHstBlock(hstBlock) {
   let hstBlocks = document.getElementsByClassName("hstBlock");
   for (let i = 0; i < hstBlocks.length; i++) {
@@ -1431,21 +1405,19 @@ function focusHstBlock(hstBlock) {
   hstBlock.classList.add("selected");
 }
 function createSidePanelForInsert(logData, groupData, nlp, style) {
-  let sidePanel = document.getElementById("sidePanelLog");
-  let data = [...logData, ...groupData];
-  if (sidePanel) {
-    removeAllChildNodes(sidePanel);
+  if (SidePanel) {
+    removeAllChildNodes(SidePanel);
     editSidePanelTitle("Insert Options");
 
     if (logData.length > 0) {
       let h2 = document.createElement("h2");
       h2.innerText = "Individual Elements";
-      sidePanel.appendChild(h2);
-      sidePanel.appendChild(document.createElement("br"));
+      SidePanel.appendChild(h2);
+      SidePanel.appendChild(document.createElement("br"));
     }
 
     logData.forEach((element, index) => {
-      let hstBlock = makeHstBlock(sidePanel);
+      let hstBlock = createElement("div", SidePanel, "hstBlock");
       hstBlock.setAttribute("index", index);
       hstBlock.innerHTML = `
       <table>
@@ -1467,12 +1439,12 @@ function createSidePanelForInsert(logData, groupData, nlp, style) {
     if (groupData.length > 0) {
       let h2 = document.createElement("h2");
       h2.innerText = "Groups";
-      sidePanel.appendChild(h2);
-      sidePanel.appendChild(document.createElement("br"));
+      SidePanel.appendChild(h2);
+      SidePanel.appendChild(document.createElement("br"));
     }
 
     groupData.forEach((element, index) => {
-      let hstBlock = makeHstBlock(sidePanel);
+      let hstBlock = createElement("div", SidePanel, "hstBlock");
       let elementLabels = Object.values(element.member);
       //make a string with , seperated
       let labels = elementLabels.join(", <br/> ");
@@ -1530,17 +1502,8 @@ function hstBlockEventListnerForInsert(hstBlock, element, nlp, style) {
       targetHst = targetHst.parentElement;
     }
     focusHstBlock(targetHst);
-    let slides = document.getElementsByClassName("confirmation");
-    for (let j = 0; j < slides.length; j++) {
-      slides[j].parentNode.style.position = "null";
-      slides[j].parentNode.removeChild(slides[j]);
-    }
-    let confirmation = document.createElement("div");
-    confirmation.classList.add("confirmation");
-    confirmation.innerHTML =
-      "<button class='confirmBtn' style='position: absolute; top: 0; right: 0;'>Confirm</button>";
-    targetHst.style.position = "relative";
-    targetHst.appendChild(confirmation);
+    let innerHTML = "<button class='confirmBtn' style='position: absolute; top: 0; right: 0;'>Confirm</button>";
+    let confirmation = createConfirmationForHstBlocks(targetHst, innerHTML);
     confirmation.addEventListener("click", function () {
       let wrapper = document.createElement("div");
       wrapper.innerHTML = element.code;
@@ -1572,6 +1535,20 @@ function hstBlockEventListnerForInsert(hstBlock, element, nlp, style) {
   });
 }
 
+function createConfirmationForHstBlocks(targetHst, innerHTML){
+  let slides = document.getElementsByClassName("confirmation");
+  for (let j = 0; j < slides.length; j++) {
+    slides[j].parentNode.style.position = "null";
+    slides[j].parentNode.removeChild(slides[j]);
+  }
+  let confirmation = document.createElement("div");
+  confirmation.classList.add("confirmation");
+  confirmation.innerHTML = innerHTML;
+  targetHst.style.position = "relative";
+  targetHst.appendChild(confirmation);
+  return confirmation;
+}
+
 function hstBlockEventListnerForInsertGroup(hstBlock, element) {
   hstBlock.addEventListener("click", function (e) {
     let targetHst = e.target;
@@ -1579,16 +1556,8 @@ function hstBlockEventListnerForInsertGroup(hstBlock, element) {
       targetHst = targetHst.parentElement;
     }
     focusHstBlock(targetHst);
-    let slides = document.getElementsByClassName("confirmation");
-    for (let j = 0; j < slides.length; j++) {
-      slides[j].parentNode.style.position = "null";
-      slides[j].parentNode.removeChild(slides[j]);
-    }
-    let confirmation = document.createElement("div");
-    confirmation.classList.add("confirmation");
-    confirmation.innerHTML = `<button class='confirmBtn' style='position: absolute; top: 0; right: 0;'>Confirm</button>`;
-    targetHst.style.position = "relative";
-    targetHst.appendChild(confirmation);
+    let innerHTML = `<button class='confirmBtn' style='position: absolute; top: 0; right: 0;'>Confirm</button>`;
+    let confirmation = createConfirmationForHstBlocks(targetHst, innerHTML);
     confirmation.addEventListener("click", function () {
       let remaining = [];
       for (let i = 0; i < Object.keys(element.member).length; i++) {
@@ -1611,9 +1580,8 @@ function hstBlockEventListnerForInsertGroup(hstBlock, element) {
 }
 
 function createSidePanelForSuggestedGroups(logData, insertOpt) {
-  let sidePanel = document.getElementById("sidePanelLog");
-  if (sidePanel) {
-    removeAllChildNodes(sidePanel);
+  if (SidePanel) {
+    removeAllChildNodes(SidePanel);
     editSidePanelTitle("Suggested Groups");
 
     logData.forEach((element, index) => {
@@ -1625,7 +1593,7 @@ function createSidePanelForSuggestedGroups(logData, insertOpt) {
       hstBlock.style.backgroundColor = "#ededed";
       hstBlock.style.radius = "5px";
 
-      sidePanel.appendChild(hstBlock);
+      SidePanel.appendChild(hstBlock);
       hstBlock.addEventListener("mouseover", function () {
         hstBlock.style.backgroundColor = "#e6e6e6";
       });
@@ -1684,24 +1652,24 @@ function createSidePanelForSuggestedGroups(logData, insertOpt) {
       InsertState = 0;
       reloadSidePanel();
     });
-    sidePanel.appendChild(rejectButton);
+    SidePanel.appendChild(rejectButton);
     return;
   }
 }
 
 //---------------------------Log element history tool--------------------------//
 function logElementHistory(ele) {
-  var origin = getElement(ele).outerHTML;
+  let origin = getElement(ele).outerHTML;
   emptySidePanel();
-  var elmntRid = getRID(ele);
+  let elmntRid = getRID(ele);
   if (elmntRid) {
-    showLoading(document.getElementById("sidePanelLog"));
+    showLoading(SidePanel);
     getLogByRID(USERID, elmntRid).then((data) => {
-      removeLoading(document.getElementById("sidePanelLog"));
+      removeLoading(SidePanel);
       if (data.length > 0) {
         createHistoryPanel(data, false);
         let hstBlocks = document.getElementsByClassName("hstBlock");
-        for (var i = 0; i < hstBlocks.length; i++) {
+        for (let i = 0; i < hstBlocks.length; i++) {
           let hstBlock = hstBlocks[i];
           hstBlock.addEventListener("click", function (e) {
             let targetHst = e.target;
@@ -1749,8 +1717,8 @@ function logElementHistory(ele) {
               document
                 .getElementById("resetBtn")
                 .addEventListener("click", function () {
-                  var idList = [];
-                  var i = 0;
+                  let idList = [];
+                  let i = 0;
                   while (data[i]._id != resetId) {
                     if (data[i]._id != element._id) {
                       idList.push(data[i]._id);
@@ -1768,8 +1736,8 @@ function logElementHistory(ele) {
               document
                 .getElementById("undoBtn")
                 .addEventListener("click", function () {
-                  var idList = [];
-                  var i = 0;
+                  let idList = [];
+                  let i = 0;
                   while (data[i]._id != oldId) {
                     idList.push(data[i]._id);
                     i++;
@@ -1787,17 +1755,15 @@ function logElementHistory(ele) {
           });
         }
       } else {
-        var sidePanel = document.getElementById("sidePanelLog");
-        var tip = document.createElement("p");
+        let tip = document.createElement("p");
         tip.innerHTML = "No history found";
-        sidePanel.appendChild(tip);
+        SidePanel.appendChild(tip);
       }
     });
   } else {
-    var sidePanel = document.getElementById("sidePanelLog");
-    var tip = document.createElement("p");
+    let tip = document.createElement("p");
     tip.innerHTML = "No history found";
-    sidePanel.appendChild(tip);
+    SidePanel.appendChild(tip);
   }
 }
 
@@ -1825,9 +1791,9 @@ var EVENTS = [
 ];
 
 function autocomplete(inp, arr) {
-  var currentFocus;
+  let currentFocus;
   inp.addEventListener("input", function (e) {
-    var a,
+    let a,
       b,
       i,
       val = this.value;
@@ -1867,7 +1833,7 @@ function autocomplete(inp, arr) {
   });
   /*execute a function presses a key on the keyboard:*/
   inp.addEventListener("keydown", function (e) {
-    var x = document.getElementById(this.id + "autocomplete-list");
+    let x = document.getElementById(this.id + "autocomplete-list");
     if (x) x = x.getElementsByTagName("div");
     if (e.keyCode == 40) {
       /*If the arrow DOWN key is pressed,
@@ -1903,15 +1869,15 @@ function autocomplete(inp, arr) {
   }
   function removeActive(x) {
     /*a function to remove the "active" class from all autocomplete items:*/
-    for (var i = 0; i < x.length; i++) {
+    for (let i = 0; i < x.length; i++) {
       x[i].classList.remove("autocomplete-active");
     }
   }
   function closeAllLists(elmnt) {
     /*close all autocomplete lists in the document,
     except the one passed as an argument:*/
-    var x = document.getElementsByClassName("autocomplete-items");
-    for (var i = 0; i < x.length; i++) {
+    let x = document.getElementsByClassName("autocomplete-items");
+    for (let i = 0; i < x.length; i++) {
       if (elmnt != x[i] && elmnt != inp) {
         x[i].parentNode.removeChild(x[i]);
       }
@@ -2072,13 +2038,13 @@ function removeAllChildNodes(parent) {
 }
 
 function handleTextReplace(insertStyle, replaceStyle) {
-  var remainder = ["position", "top", "left", "width", "height", "transform"];
-  var d = {};
+  let remainder = ["position", "top", "left", "width", "height", "transform"];
+  let d = {};
 
-  var middle = insertStyle.split(";");
+  let middle = insertStyle.split(";");
 
-  for (var i in middle) {
-    var a = middle[i].split(":");
+  for (let i in middle) {
+    let a = middle[i].split(":");
     if (
       remainder.includes(a[0].replace(/\s/g, "")) &&
       a[0].replace(/\s/g, "") !== ""
@@ -2087,13 +2053,13 @@ function handleTextReplace(insertStyle, replaceStyle) {
     }
   }
 
-  var styleStart = replaceStyle.lastIndexOf("style=") + "style=".length;
-  var styleNext = replaceStyle.slice(styleStart).indexOf('"') + styleStart + 1;
-  var styleEnd =
+  let styleStart = replaceStyle.lastIndexOf("style=") + "style=".length;
+  let styleNext = replaceStyle.slice(styleStart).indexOf('"') + styleStart + 1;
+  let styleEnd =
     replaceStyle.slice(styleStart).split('"', 2).join('"').length + styleStart;
   middle = replaceStyle.slice(styleNext, styleEnd).split(";");
-  for (var i in middle) {
-    var a = middle[i].split(":");
+  for (let i in middle) {
+    let a = middle[i].split(":");
     if (
       !remainder.includes(a[0].replace(/\s/g, "")) &&
       a[0].replace(/\s/g, "") !== ""
@@ -2102,7 +2068,7 @@ function handleTextReplace(insertStyle, replaceStyle) {
     }
   }
 
-  var innerText = "";
+  let innerText = "";
   for (const [key, value] of Object.entries(d)) {
     if (key && value) {
       innerText += key + ":" + value + ";";
