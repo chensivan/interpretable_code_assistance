@@ -94,7 +94,9 @@ class CodePanel {
               if (!data.new || !data.old) {
                 return;
               }
-              this._replaceInEditor(data.new, data.old);
+              //this._replaceInEditor(data.new, data.old);
+              console.log("_replaceElementInEditorByRID");
+              this._replaceElementInEditorByRID(data.rid, data.new);
               if (data.nlp){
                 this.log(CodePanel.userId, "drag", `Drag element with label [${data.nlp}], ${data.transform}`, data.nlp, data.new, data.rid);
               }
@@ -104,7 +106,8 @@ class CodePanel {
               if (!data.new || !data.old) {
                 return;
               }
-              this._replaceInEditor(data.new, data.old);
+              //this._replaceInEditor(data.new, data.old);
+              this._replaceElementInEditorByRID(data.rid, data.new);
               if (data.nlp){
                 this.log(CodePanel.userId, "resize", `Resize element with label [${data.nlp}] to ${data.size}`, data.nlp, data.new, data.rid);
               }
@@ -173,10 +176,11 @@ class CodePanel {
               break;
             }
             case "onUpdate":{
-              if (!data.rId){
+              if (!data.rId){ //on insert new element
                 let rId = getNonce();
                 let comment = `<div nlp="${data.nlp}" rid="${rId}">\n${data.code}\n</div>`;
-                this._replaceInEditor(comment, data.code);
+                this._replaceInEditor(comment, data.code); //If this has problems, can't really do anything about it
+                //this._replaceElementInEditorByRID(data.rid, data.new);
                 this.log(CodePanel.userId, "insert", "", data.nlp, data.code, rId);
               }
               break;
@@ -192,7 +196,7 @@ class CodePanel {
             case "onUpdateCode": {
               this.updateCode(CodePanel.userId, "update code", "update code in editor", data.code, data.rid); //don't change nlp for now
             }
-            case "changeAttr": {
+            /*case "changeAttr": {
               if (!data.old || !data.new) {
                 return;
               }
@@ -213,19 +217,20 @@ class CodePanel {
                 data.nlp, data.newHTML, data.rid);
               }
               break;
-            }
+            }*/
             case "delete":{
               if (!data.value) {
                 return;
               }
-              this._replaceInEditor(" ",data.value);
+              //this._replaceInEditor(" ",data.value);
+              this._deleteElementInEditorByRID(data.rid);
               break;
             }
             case "insertScript":{
               let sId = getNonce();
               let comment = data.new.replace("sid-placeholder", sId);
               console.log(comment);
-              this._replaceInEditor(comment, data.old);
+              this._replaceInEditor(comment, data.old); //if this have problems, nothing can be done about it
               this.log(CodePanel.userId, "insert", "insert js script to db", "[JSScript] "+data.nlp, "", sId);
             }
             case "createjs":{
@@ -234,11 +239,9 @@ class CodePanel {
               }
               let sId = getNonce();
               if(data.script){
-                this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
+                //this._replaceInEditor(data.new, data.old, "function "+data.name+"{\n //"+data.script+"\n}",sId);
+                this._replaceElementInEditorByRID(data.rid, data.new, "function "+data.name+"{\n //"+data.script+"\n}",sId);
                 this.log(CodePanel.userId, "insert", "insert js with name: "+data.name+" and function: "+data.script, "[JSScript] "+data.script, "", sId);
-              }
-              else{
-                this._replaceInEditor(data.new, data.old);
               }
               if(data.nlp && data.script){
                 console.log("append");
@@ -258,7 +261,8 @@ class CodePanel {
               if (!data.new) {
                 return;
               }
-              this._replaceInEditor(data.new, data.old);
+              //this._replaceInEditor(data.new, data.old);
+              this._replaceElementInEditorByRID(data.rid, data.new);
               this.log(CodePanel.userId, "reset", `Reset element with label [${data.nlp}] back by ${data.step} step(s); from #${data.oldId}# to #${data.newId}#`, data.nlp, data.new, data.rid);
               break;
             }
@@ -267,7 +271,8 @@ class CodePanel {
                 return;
               }
               if (data.opt === 0){
-                this._replaceInEditor(data.new, data.old);
+                //this._replaceInEditor(data.new, data.old);
+                this._replaceElementInEditorByRID(data.rid, data.new);
                 this.deleteLog(data.id);
               }
               var ids = data.id;
@@ -434,6 +439,75 @@ class CodePanel {
           });
         }
       }
+
+      _replaceElementInEditorByRID(rid, newText, script, sId){
+        var openPath = vscode.Uri.file(CodePanel.filePath);
+        if(openPath){
+          vscode.workspace.openTextDocument(openPath).then(doc => {
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
+              var text = editor.document.getText();
+              const dom = new jsdom.JSDOM(text);
+              console.log(rid)
+              let allElements = dom.window.document.querySelectorAll("*");
+              for(let i = 0; i<allElements.length; i++){
+                if(allElements[i].getAttribute("rid") === rid){
+                  allElements[i].outerHTML = newText;
+                  console.log(newText);
+                }
+              }
+              let newDoc = dom.window.document.querySelector("html").outerHTML;
+              
+              console.log(newDoc)
+              
+              var firstLine = editor.document.lineAt(0);
+              var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+              var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+              
+              //var range = new vscode.Range(pos, pos);
+              editor.edit(editBuilder => {
+                editBuilder.replace(textRange, newDoc);
+              });
+
+              if(script){
+                this._printCommentToEditor(script, sId)
+              }
+            });
+          });
+        }
+      }
+
+      _deleteElementInEditorByRID(rid)
+      {var openPath = vscode.Uri.file(CodePanel.filePath);
+        if(openPath){
+          vscode.workspace.openTextDocument(openPath).then(doc => {
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One).then(editor => {          
+              var text = editor.document.getText();
+              const dom = new jsdom.JSDOM(text);
+              console.log(rid)
+              let allElements = dom.window.document.querySelectorAll("*");
+              for(let i = 0; i<allElements.length; i++){
+                if(allElements[i].getAttribute("rid") === rid){
+                  allElements[i].parentNode.removeChild(allElements[i]);
+                }
+              }
+              let newDoc = dom.window.document.querySelector("html").outerHTML;
+              
+              console.log(newDoc)
+              
+              var firstLine = editor.document.lineAt(0);
+              var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+              var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+              
+              //var range = new vscode.Range(pos, pos);
+              editor.edit(editBuilder => {
+                editBuilder.replace(textRange, newDoc);
+              });
+            });
+          });
+        }
+      }
+
+
       
       _getHtmlForWebview(webview) {
         //icons
