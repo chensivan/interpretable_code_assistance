@@ -1,15 +1,22 @@
 # import numpy as np
 from sqlite3 import Timestamp
-from turtle import clone
+from tracemalloc import start
+from turtle import clone, ht
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 import json
+from matplotlib.pyplot import text
 import nlpcloud
 import pymongo
 from bson.objectid import ObjectId
 import json
 import datetime
 from txtai.embeddings import Embeddings
+try:
+    from BeautifulSoup import BeautifulSoup
+except ImportError:
+    from bs4 import BeautifulSoup
+from html.parser import HTMLParser
 
 # Create embeddings model, backed by sentence-transformers & transformers
 embeddings = Embeddings({"path": "sentence-transformers/nli-mpnet-base-v2"})
@@ -429,6 +436,233 @@ def editGroupLog():
             }
         }, upsert=False)
     return str(count)
+
+
+@flask_app.route("/db/parseHTML", methods=["POST"])
+def parseHTMLTest():
+    htmlString = request.json["html"]
+    return json.dumps(parseHTML(htmlString))
+
+
+def parseHTML(htmlString):
+    results = []
+    soup = BeautifulSoup(htmlString, "html.parser")
+    print(soup.prettify())
+    htmlString = soup.prettify()
+
+    class MyHTMLParser(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            print("Encountered a start tag:", tag)
+            results.append(
+                {"event": "start tag", "tag": tag, "attrs": parseAttrs(attrs)})
+
+        def handle_endtag(self, tag):
+            print("Encountered an end tag :", tag)
+            results.append({"event": "end tag", "tag": tag})
+
+        def handle_data(self, data):
+            print("Encountered some data  :", data)
+            results.append({"event": "innerText", "text": data})
+
+        def handle_startendtag(self, tag, attrs):
+            print("Encountered start end tag  :", tag, attrs)
+            results.append(
+                {"event": "startend tag", "tag": tag, "attrs": parseAttrs(attrs)})
+
+    parser = MyHTMLParser()
+    parser.feed(htmlString)
+
+    return results
+
+# Assume <></>
+
+
+def parseAttrs(attrs):
+    formatedAttrs = attrs[:]
+    formatedAttrs = [{"attr": x[0], "value": x[1], "isStyle": False}
+                     for x in formatedAttrs if x[0].lower() != "style"]
+    # print(formatedAttrs)
+    # get the attrs with [0] = 'style'
+    style = [attr for attr in attrs if attr[0].lower() == 'style'][0]
+    # print("style ", style)
+    if style:
+        # split style on ;
+        allStyles = style[1].split(';')
+        print("allStyles ", allStyles)
+        for allStyle in allStyles:
+            # split on :
+            if allStyle.strip() == "":
+                continue
+            # print(allStyle.split(':'))
+            splitStyle = allStyle.split(':')
+            # remove whitespace
+            styleName = splitStyle[0].strip()
+            styleValue = splitStyle[1].strip()
+            # add to attrs
+            formatedAttrs.append(
+                {"attr": styleName, "value": styleValue, "isStyle": True})
+    return formatedAttrs
+
+
+@flask_app.route("/db/parseHTMLs", methods=["POST"])
+def compareHTMLTest():
+    htmlStrings = request.json["htmls"]
+    return json.dumps(compareHTML(htmlStrings))
+
+
+def compareHTML(htmlStrings):
+    parsed = []
+    count = {}
+    ignore = ['width', 'height', 'transform']
+    for htmlString in htmlStrings:
+        # ret = parseHTML(htmlString["html"])[2:4]
+        # ret[0]['innerText'] = ret[1]['text']
+        # recordToCount(count, 'tag', ret[0]['tag'])
+        # recordToCount(count, 'innerText', ret[0]['innerText'])
+
+        # for attr in ret[0]['attrs']:
+        #     if attr['attr'] not in ignore:
+        #         recordToCount(count, attr['attr'], attr['value'])
+        # parsed.append(ret[0])
+        ret = parseHTML(htmlString["html"])
+        for r in ret:
+            print(r)
+        print("result ", recordElementToCount(ret, count))
+    print("------------------------------")
+    print(count)
+    print("------------------------------")
+    # get keys in count
+    # keys = list(count.keys())
+    # validOptions = {}
+    # for key in keys:
+    #     keys2 = list(count[key].keys())
+    #     for key2 in keys2:
+    #         if count[key][key2] >= len(htmlStrings)*0.3:
+    #             if key not in validOptions:
+    #                 validOptions[key] = {}
+    #             validOptions[key][key2] = count[key][key2]/len(htmlStrings)
+    # print(validOptions)
+
+    # return validOptions
+    validOptions = getValidOptionsFromCount(count, len(htmlStrings))
+    return validOptions
+
+# count tag:{value:#}, attr: {value: #}, child: [firstchild, secondchild, ...]
+# firstchild: {tag: #, attr: {value: #}, child: [firstchild, secondchild, ...]}, basically another "count"
+
+
+def getValidOptionsFromCount(count, total):
+    keys = list(count.keys())
+    validOptions = {}
+    for key in keys:
+        # check if count[key] is a list
+        if isinstance(count[key], list):
+            #loop and recursion
+            validOptions[key] = []
+            for item in count[key]:
+                if item != {}:
+                    validOptions[key].append(
+                        getValidOptionsFromCount(item, total))
+        else:
+            keys2 = list(count[key].keys())
+            for key2 in keys2:
+                if count[key][key2] >= total*0.3:
+                    if key not in validOptions:
+                        validOptions[key] = {}
+                    validOptions[key][key2] = count[key][key2]/total
+    print(validOptions)
+    return validOptions
+
+
+IGNORE_ATTRS = ['width', 'height', 'transform',
+                "nlp", "rid", "position", "top", "left"]
+
+
+def recordElementToCount(parsedHTML, count):
+    # assume the first element in parsedHTML is always "event": "start tag"
+    start = parsedHTML[0]
+    # count is going to be the count dic for this element
+    if count == None:
+        count = {}
+    # record the element's tag to count
+    recordToCount(count, 'tag', start['tag'])
+    # if the element has attributes, record them to count
+    for attr in start['attrs']:
+        if attr['attr'] not in IGNORE_ATTRS:
+            recordToCount(count, attr['attr'], attr['value'])
+
+    numChild = 0  # child count
+    i = 1  # log count
+    if "element_childrens" not in count:
+        count["element_childrens"] = []
+    print("starting with tag, ", start['tag'])
+    print("inital count: ", count)
+
+    # loop over all the elements in parsedHTML
+    while i < len(parsedHTML):
+        element = parsedHTML[i]
+
+        # if the element is "event": "end tag"
+        if element['event'] == 'end tag':
+            print(element["event"]+" "+element["tag"])
+            return i+2  # The number of records this element takes up
+
+        # probably should make a working version first then a clean version, but whatever
+        child_count = {}
+        if numChild+1 > len(count["element_childrens"]):
+            count["element_childrens"].append(child_count)
+        else:
+            child_count = count["element_childrens"][numChild]
+
+        # if the element is "event": "innerText"
+        if element['event'] == 'innerText':
+            print(element["event"])
+            # questionable, but assume innerText is a tag
+            textEdited = element['text'].translate(
+                {ord(c): None for c in ' \n\t'})
+            if textEdited != "":
+                recordToCount(child_count, 'tag', "innerText")
+                recordToCount(child_count, 'innerText_text', element['text'])
+            # print(count["element_childrens"])
+
+        # if the element is "event": "startend tag"
+        if element['event'] == 'startend tag':
+            print(element["event"]+" "+element["tag"])
+            # record tag and attrs, no child
+            recordToCount(child_count, 'tag', element['tag'])
+
+            for attr in element['attrs']:
+                if attr['attr'] not in IGNORE_ATTRS:
+                    recordToCount(child_count, attr['attr'], attr['value'])
+
+        # if the element is "event": "start tag" :(
+        if element['event'] == 'start tag':
+            print(element["event"]+" "+element["tag"])
+            # recursion
+            # I really doubt this will work, but whatever...
+            index = parsedHTML.index(element)
+            print("index: ", index)
+            splicedParsedHTML = parsedHTML[index:]
+            #print("child parsedHTML: ", splicedParsedHTML)
+            print("i: ", i)
+            print(splicedParsedHTML)
+            i += recordElementToCount(splicedParsedHTML, child_count) - 2
+
+        numChild += 1
+        i += 1
+    return "yeah this means there is a bug or the user's html is wrong"
+
+
+def recordToCount(count, key, value):
+    if key in count:
+        valueEdited = value.translate({ord(c): None for c in ' \n\t'})
+        valueStripped = value.strip().strip('\n')
+        if valueStripped in count[key] and valueEdited != "":
+            count[key][valueStripped] += 1
+        else:
+            count[key][valueStripped] = 1
+    else:
+        count[key] = {value: 1}
 
 
 if __name__ == "__main__":

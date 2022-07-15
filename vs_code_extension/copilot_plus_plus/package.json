@@ -1,7 +1,8 @@
 {
-	"name": "helloworld",
+	"name": "copilot_plus_plus",
 	"displayName": "copilot_plus_plus",
 	"description": "",
+	"publisher": "copilot_plus_plus_team",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.67.0"
@@ -11,7 +12,8 @@
 		"Snippets"
 	],
 	"activationEvents": [
-		"onCommand:visual.openVisual"
+		"onCommand:visual.openVisual",
+		"*"
 	],
 	"main": "./extension.js",
 	"contributes": {
