@@ -530,7 +530,7 @@ def getProbabilities():
             newest = {}
             for log in cursor:
                 rId = log["rId"]
-                if rId not in newest or newest[rId]["createDate"] < log["createDate"] and "done" not in log or log["done"]:
+                if rId not in newest or newest[rId]["createDate"] < log["createDate"] and ("done" not in log or log["done"]):
                     newest[rId] = log
             for log in newest.values():
                 if "code" in log and log["code"].strip() != "":
