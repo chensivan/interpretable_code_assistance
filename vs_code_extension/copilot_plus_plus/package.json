@@ -13,6 +13,7 @@
 	],
 	"activationEvents": [
 		"onCommand:visual.openVisual",
+		"onCommand:cpp.saveData",
 		"*"
 	],
 	"main": "./extension.js",
@@ -25,8 +26,20 @@
 					"dark": "./media/icons/view.png",
 					"light": "./media/icons/icon.png"
 				}
+			},
+			{
+				"command": "cpp.saveData",
+				"title": "Save Data"
 			}
+
 		],
+		"keybindings": [
+            {
+                "command": "cpp.saveData",
+                "key": "ctrl+s",
+                "mac": "cmd+s"
+            }
+        ],
 		"menus": {
 			"editor/title": [
 				{

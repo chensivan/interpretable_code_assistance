@@ -483,8 +483,10 @@ def parseAttrs(attrs):
                      for x in formatedAttrs if x[0].lower() != "style"]
     # print(formatedAttrs)
     # get the attrs with [0] = 'style'
-    style = [attr for attr in attrs if attr[0].lower() == 'style'][0]
+    style = [attr for attr in attrs if attr[0].lower() == 'style']
     # print("style ", style)
+    if len(style) > 0:
+        style = style[0]
     if style:
         # split style on ;
         allStyles = style[1].split(';')
@@ -508,6 +510,36 @@ def parseAttrs(attrs):
 def compareHTMLTest():
     htmlStrings = request.json["htmls"]
     return json.dumps(compareHTML(htmlStrings))
+
+
+@flask_app.route("/db/getProbabilities", methods=["POST"])
+def getProbabilities():
+    nlp = request.json["nlp"]
+    body = request.json
+    logCol = db["log"]
+    success, similarities, allLabels = similarity(request.json["userId"], nlp)
+    if not success:
+        return json.dumps({"success": False, "labels": allLabels})
+    htmlCodes = []
+    for i in range(len(similarities)):
+        if similarities[i][1] > 0.5:
+            label = allLabels[similarities[i][0]]
+
+            cursor = logCol.find(
+                {"userId": body["userId"], "label": allLabels[similarities[i][0]]})
+            newest = {}
+            for log in cursor:
+                rId = log["rId"]
+                if rId not in newest or newest[rId]["createDate"] < log["createDate"] and "done" not in log or log["done"]:
+                    newest[rId] = log
+            for log in newest.values():
+                if "code" in log and log["code"].strip() != "":
+                    htmlCodes.append({"html": log["code"]})
+        else:
+            break
+    print(htmlCodes)
+
+    return json.dumps(compareHTML(htmlCodes))
 
 
 def compareHTML(htmlStrings):
@@ -561,8 +593,9 @@ def getValidOptionsFromCount(count, total):
             validOptions[key] = []
             for item in count[key]:
                 if item != {}:
-                    validOptions[key].append(
-                        getValidOptionsFromCount(item, total))
+                    childOptions = getValidOptionsFromCount(item, total)
+                    if childOptions != {}:
+                        validOptions[key].append(childOptions)
         else:
             keys2 = list(count[key].keys())
             for key2 in keys2:

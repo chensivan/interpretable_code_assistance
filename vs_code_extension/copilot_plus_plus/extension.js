@@ -2,14 +2,17 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const CodePanel = require('./CodePanel');
+const fs = require('fs');
+const path = require('path');
+const fetch = require('node-fetch');
+const URL = "http://127.0.0.1:5000";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
 var active = -1;
-var parsedData = `{"tag": {"div": 1.0}, "element_childrens": [{"tag": {"innerText": 0.8}, "innerText_text": {"text1": 0.6}}, {"tag":
-{"h1": 0.8}, "color": {"blue": 0.6}, "element_childrens": [{"tag": {"innerText": 0.8}, "innerText_text": {"Header":
-0.4}}]}, {"tag": {"innerText": 0.8}, "innerText_text": {"text2": 0.6}}]}`
+var parsedData = `{"tag": {"div": 1.0}, "element_childrens": [{"tag": {"innerText": 0.8}, "innerText_text": {"Input": 0.6}}, {"tag":
+{"input": 0.8}, "type": {"text": 0.6}, "color": {"blue": 0.6, "black": 0.4}}]}`
 parsedData = JSON.parse(parsedData);
 
 /**
@@ -30,6 +33,21 @@ function activate(context) {
 	);
 	
 	context.subscriptions.push(openVisual);
+
+
+	let saveData = vscode.commands.registerCommand('cpp.saveData', function () {
+		console.log("saveData");
+		//execute command
+		vscode.commands.executeCommand('workbench.action.files.save');
+		let results = saveDataInFile(vscode.window.activeTextEditor.document.fileName);
+		console.log(results);
+		// The code you place here will be executed every time your command is executed
+		//CodePanel.createOrShow(context.extensionUri, vscode.window.activeTextEditor.document.fileName);
+		//vscode.window.showInformationMessage('Hello World from copilot_plus_plus!');
+	}
+	);
+	
+	context.subscriptions.push(saveData);
 
 	/*const provider2 = vscode.languages.registerCompletionItemProvider(
 		'plaintext',
@@ -86,6 +104,40 @@ function activate(context) {
 	//context.subscriptions.push(provider2);
 }
 
+
+function saveDataInFile(fileName){
+	const filePath = path.resolve(fileName);
+	const fileContent = fs.readFileSync(filePath, 'utf8');
+	//console.log(fileContent);
+	//Find all "<--rid[stuff]-->" in file
+	const regex = /<!--\s*rid[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]*\s*-->/g;
+	const matches = fileContent.match(regex);
+	let results = {};
+	if (!matches){
+		return "nothing to save";
+	}
+
+	//loop over matches
+	for (let i = 0; i < matches.length; i++) {
+		//get rid of <!--rid and -->
+		const rid = matches[i].substr(7, matches[i].length - 10);
+		//console.log(rid);
+		//find <--/ridrid--> in file
+		const regex2 = new RegExp("<!--/rid\s*" + rid + "\s*-->", "g");
+		const matches2 = fileContent.match(regex2);
+		//console.log(matches2);
+		//check if there are matches
+		if (matches2 != null) {
+			//get all text between matches[i] and matches2[0]
+			const text = fileContent.substr(fileContent.indexOf(matches[i])+matches[i].length, 
+			fileContent.indexOf(matches2[0]) - fileContent.indexOf(matches[i])-matches2[0].length + 1);
+			//console.log(text);
+			results[rid] = text
+		}
+	}
+	return results;
+}
+
 //detects the nlp the user provides, send data to backend 
 class MyCompletionProvider{
     provideCompletionItems(document, position, token, context){
@@ -100,19 +152,19 @@ class MyCompletionProvider{
 					//parse result call function to get list of completion items and return
 					//whatever just take the childrens and instert one by one now
 					//record the state and use
-					const myHTMLCompletionItem = new vscode.CompletionItem('\n'+lineContent, vscode.CompletionItemKind.Snippet);
+					/*const myHTMLCompletionItem = new vscode.CompletionItem('\n'+lineContent, vscode.CompletionItemKind.Snippet);
 					myHTMLCompletionItem.command = {
 						title: '',
 						command: 'doTheThing',
 						arguments: [{value: lineContent}],
-					};
-					active = 0;
-					return [
-						/*new vscode.CompletionItem('\nexample 1>', vscode.CompletionItemKind.Snippet),
-						new vscode.CompletionItem('\nexample 2>', vscode.CompletionItemKind.Snippet),
-						new vscode.CompletionItem('\n<!--example 3-->', vscode.CompletionItemKind.Snippet),
-						myHTMLCompletionItem,*/
-					];
+					};*/
+					getProbabilities("user1", lineContent).then(function(result){
+						console.log(result);
+						active = 0;
+						console.log("active ", active);
+						parsedData = result;
+					});
+					return [];
 				}
 
         return new vscode.CompletionList([]);
@@ -124,8 +176,6 @@ class SubCompletionProvider{
 		if(active >= 0){
 		console.log("SubCompletionProvider");
 		console.log(active);
-		console.log(parsedData["element_childrens"][0]);
-		console.log(parsedData["element_childrens"][active]);
 		let list = getCompletionList(parsedData["element_childrens"][active])
 		console.log(list);
         return new vscode.CompletionList(list);
@@ -138,6 +188,7 @@ function getCompletionList(data){
 {"h1": 0.8}, "color": {"blue": 0.6}, "element_childrens": [{"tag": {"innerText": 0.8}, "innerText_text": {"Header":
 0.4}}]}, {"tag": {"innerText": 0.8}, "innerText_text": {"text2": 0.6}}]}`*/
 	let options = [];
+	console.log(data);
 	if(data.tag.innerText){
 		console.log("?");
 		//get keys of innerText
@@ -156,34 +207,79 @@ function getCompletionList(data){
 		}
 	}
 	else{
-	let attrs = Object.keys(data);
-	let attrsTxt = "";
-	for(let i = 0; i < attrs.length; i++){
+		console.log("other");
+		let attrs = Object.keys(data);
+		let attrsTxt = [];
+		let tempTxt = [];
+		console.log("attrs ", attrs);
+		for(let i = 0; i < attrs.length; i++){
 		let attr = attrs[i];
 		if(attr != "tag" && attr != "innerText_text" && attr != "element_childrens"){
 			//
-			let best = Object.keys(data[attr])[0];
-			attrsTxt += attr+" "+best+", ";
+			let results = Object.keys(data[attr]);
+			for(let j = 0; j < results.length; j++){
+				let best = results[j];
+				//let best = results[j];
+				/*attrsTxt[j] += attr+" "+best+", ";
+				console.log(attrsTxt[j]);*/
+				if(attrsTxt.length <= 0){
+					tempTxt.push(attr+" "+best+", ");
+				}
+				else{
+				
+				for(let k = 0; k < attrsTxt.length; k++){
+					tempTxt.push(attrsTxt[k]+attr+" "+best+", ");
+				}
+				
+			}
+			}
+			//clone tmpTxt
+			attrsTxt = tempTxt.slice(0);
+			tempTxt = [];
+			console.log(attrsTxt);
 		}
 	}
-	attrsTxt = attrsTxt ? " with "+attrsTxt.substring(0, attrsTxt.length-2) : attrsTxt;
+	console.log(attrsTxt);
+	for(let i = 0; i < attrsTxt.length; i++){
+		attrsTxt[i] = attrsTxt[i] ? " with "+attrsTxt[i].substring(0, attrsTxt[i].length-2) : attrsTxt[i];
+	}
+	//attrsTxt = attrsTxt ? " with "+attrsTxt.substring(0, attrsTxt.length-2) : attrsTxt;
 	console.log("attrsTxt", attrsTxt);
 	let keys = Object.keys(data.tag);
 	for(let i = 0; i < keys.length; i++){
 		let key = keys[i];
 		console.log(key);
 		console.log(key);
-		let completionItem = new vscode.CompletionItem("\n<!-- "+key+attrsTxt+"-->", vscode.CompletionItemKind.Snippet);
+		for(let a = 0; a < attrsTxt.length; a++){
+		let completionItem = new vscode.CompletionItem("\n<!-- "+key+attrsTxt[a]+"-->", vscode.CompletionItemKind.Snippet);
 		completionItem.command = {
 			title: '',
 			command: 'subClicked',
-			arguments: [{value: key+attrsTxt}],
+			arguments: [{value: key+attrsTxt[a]}],
 		};
 		options.push(completionItem);
+	}
 	}
 }
 	console.log(options);
 		return options;
+	}
+
+	function getProbabilities(userId, nlp) {
+		return new Promise((resolve, reject) => {
+		  fetch(URL + "/db/getProbabilities", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ userId: userId, nlp: nlp }),
+		  })
+			.then((res) => res.json())
+			.then((data) => {
+			  return resolve(data);
+			})
+			.catch((err) => {
+			  return reject(err);
+			});
+		});
 	}
 
 // this method is called when your extension is deactivated

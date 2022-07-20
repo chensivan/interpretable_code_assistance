@@ -5,6 +5,11 @@ html {
     position: relative;
     width: 100%;
     height: 100%;
+ 
+  }
+
+  body {
+    margin: 10px;
   }
 
   body.vscode-light {
