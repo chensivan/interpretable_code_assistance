@@ -13,7 +13,12 @@
 	],
 	"activationEvents": [
 		"onCommand:visual.openVisual",
+		"onCommand:visual.openSuggestions",
 		"onCommand:cpp.saveData",
+		"onCommand:cpp.pasteSuggestion",
+		"onCommand:cpp.insertElement",
+		"onCommand:visual.openGroups",
+		"onCommand:visual.openCommandPanel",
 		"*"
 	],
 	"main": "./extension.js",
@@ -28,8 +33,28 @@
 				}
 			},
 			{
+				"command": "visual.openSuggestions",
+				"title": "Open Suggestions"
+			},
+			{
 				"command": "cpp.saveData",
 				"title": "Save Data"
+			},
+			{
+				"command": "visual.openGroups",
+				"title": "Open Groups"
+			},
+			{
+				"command": "visual.pasteSuggestion",
+				"title": "Paste Suggestion"
+			},
+			{
+				"command": "visual.insertElement",
+				"title": "Insert Element"
+			},
+			{
+				"command": "visual.openCommandPanel",
+				"title": "Open Command Panel"
 			}
 
 		],
@@ -38,7 +63,27 @@
                 "command": "cpp.saveData",
                 "key": "ctrl+s",
                 "mac": "cmd+s"
-            }
+            },
+			{
+                "command": "visual.openSuggestions",
+                "key": "ctrl+shift+alt+o",
+                "mac": "cmd+shift+option+o"
+            },
+			{
+				"command": "visual.pasteSuggestion",
+				"key": "ctrl+shift+alt+p",
+				"mac": "cmd+shift+option+p"
+			},
+			{
+                "command": "visual.openGroups",
+                "key": "ctrl+shift+alt+g",
+                "mac": "cmd+shift+option+g"
+            },
+			{
+				"command": "visual.insertElement",
+				"key": "ctrl+shift+alt+i",
+				"mac": "cmd+shift+option+i"
+			}
         ],
 		"menus": {
 			"editor/title": [

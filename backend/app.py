@@ -17,6 +17,8 @@ try:
 except ImportError:
     from bs4 import BeautifulSoup
 from html.parser import HTMLParser
+import spacy
+nlp = spacy.load('en_core_web_sm')
 
 # Create embeddings model, backed by sentence-transformers & transformers
 embeddings = Embeddings({"path": "sentence-transformers/nli-mpnet-base-v2"})
@@ -44,7 +46,10 @@ def insertLog():
         "createDate": datetime.datetime.now()  # timestamp
     }
     if body["event"] == "insert":
-        log["done"] = False
+        if "code" not in body or body["code"] == "":
+            log["done"] = False
+        else:
+            log["code"] = body["code"]
         log["rId"] = body["rid"]
         log["scripts"] = []
         if body["madeFrom"] != "":
@@ -80,6 +85,24 @@ def updateCode():
     return str(result.inserted_id)
 
 
+@flask_app.route("/db/updateCodes", methods=["POST"])
+def updateCodes():
+    logCol = db["log"]
+    body = request.json
+
+    for rid in body["elements"]:
+        # update code in db
+        logCol.update_one({
+            'rId': rid
+        }, {
+            '$set': {
+                'code': body["elements"][rid]
+            }
+        }, upsert=False)
+
+    return str("Completed")
+
+
 @flask_app.route("/db/insertGroup", methods=["POST"])
 def insertGroup():
     logCol = db["template"]
@@ -96,7 +119,22 @@ def insertGroup():
     }
 
     result = logCol.insert_one(log)
-    return str(result.inserted_id)  # return the id of the inserted document
+    return json.dumps({"sucess": True})
+
+# get all groups for a user
+
+
+@flask_app.route("/db/getGroupsByUser", methods=["POST"])
+def getGroupsByUser():
+    body = request.json
+    key = {'userId': body["userId"]}
+
+    logCol = db["template"]
+    cursor = logCol.find(key)
+    results = []
+    for result in cursor:
+        results.append(result)
+    return json.dumps(results)
 
 
 @flask_app.route("/db/completeLog", methods=["POST"])
@@ -197,7 +235,7 @@ def similarity(userId, txt):
     if len(data) > 0:
         results = embeddings.similarity(txt, data)
         return True, results, data  # json.dumps(uid, default=str),
-    print("...")
+    # print("...")
     return False, False, False
 
 
@@ -264,6 +302,7 @@ def getLogByRID():
 def getLogByNLP():
     logCol = db["log"]
     body = request.json
+    print(body)
 
     cursor = logCol.find({"userId": body["userId"], "nlp": body["nlp"]})
     success, similarities, allLabels = similarity(body["userId"], body["nlp"])
@@ -344,7 +383,7 @@ def getSuggestedGroups():
         allLabels = body["all"].copy()
         allLabels.insert(0, body["inserted"])
         for i in range(len(allLabels)):
-            print(allLabels[i])
+            # print(allLabels[i])
             similarity = embeddings.similarity(allLabels[i], labels)[0]
             if similarity[1] > 0.5:
                 oldLabel = labels[similarity[0]]
@@ -356,7 +395,7 @@ def getSuggestedGroups():
 
             if len(labels) == 0:
                 break
-        print(repeated)
+        # print(repeated)
 
         if len(repeated) > 0:
             remaining = []
@@ -418,6 +457,25 @@ def getGroupLogs():
     return json.dumps(newList, default=str)
 
 
+@flask_app.route("/db/getGroupLogsWithCode", methods=["GET"])
+@cross_origin()
+def getGroupLogsWithCode():
+    logCol = db["template"]
+    userId = request.args.get('userId')
+
+    cursor = logCol.find({"userId": userId})
+    results = []
+    for result in cursor:
+        codes = {}
+        for member in result["member"]:
+            memberLog = getNewestLogByRID(userId, member)
+            codes[member] = memberLog["code"]
+        result["codes"] = codes
+        results.append(result)
+    newList = sorted(results, key=lambda k: k['createDate'], reverse=True)
+    return json.dumps(newList, default=str)
+
+
 @flask_app.route("/db/editGroupLog", methods=["POST"])
 @cross_origin()
 def editGroupLog():
@@ -447,25 +505,25 @@ def parseHTMLTest():
 def parseHTML(htmlString):
     results = []
     soup = BeautifulSoup(htmlString, "html.parser")
-    print(soup.prettify())
+    # print(soup.prettify())
     htmlString = soup.prettify()
 
     class MyHTMLParser(HTMLParser):
         def handle_starttag(self, tag, attrs):
-            print("Encountered a start tag:", tag)
+            #print("Encountered a start tag:", tag)
             results.append(
                 {"event": "start tag", "tag": tag, "attrs": parseAttrs(attrs)})
 
         def handle_endtag(self, tag):
-            print("Encountered an end tag :", tag)
+            #print("Encountered an end tag :", tag)
             results.append({"event": "end tag", "tag": tag})
 
         def handle_data(self, data):
-            print("Encountered some data  :", data)
+            #print("Encountered some data  :", data)
             results.append({"event": "innerText", "text": data})
 
         def handle_startendtag(self, tag, attrs):
-            print("Encountered start end tag  :", tag, attrs)
+            #print("Encountered start end tag  :", tag, attrs)
             results.append(
                 {"event": "startend tag", "tag": tag, "attrs": parseAttrs(attrs)})
 
@@ -490,7 +548,7 @@ def parseAttrs(attrs):
     if style:
         # split style on ;
         allStyles = style[1].split(';')
-        print("allStyles ", allStyles)
+        #print("allStyles ", allStyles)
         for allStyle in allStyles:
             # split on :
             if allStyle.strip() == "":
@@ -513,9 +571,13 @@ def compareHTMLTest():
 
 
 @flask_app.route("/db/getProbabilities", methods=["POST"])
-def getProbabilities():
+def getProbabilitiesPost():
     nlp = request.json["nlp"]
     body = request.json
+    return json.dumps(getProbabilities(nlp, body["userId"]))
+
+
+def getProbabilities(nlp, userId):
     logCol = db["log"]
     success, similarities, allLabels = similarity(request.json["userId"], nlp)
     if not success:
@@ -526,7 +588,7 @@ def getProbabilities():
             label = allLabels[similarities[i][0]]
 
             cursor = logCol.find(
-                {"userId": body["userId"], "label": allLabels[similarities[i][0]]})
+                {"userId": userId, "label": allLabels[similarities[i][0]]})
             newest = {}
             for log in cursor:
                 rId = log["rId"]
@@ -537,14 +599,14 @@ def getProbabilities():
                     htmlCodes.append({"html": log["code"]})
         else:
             break
-    print(htmlCodes)
+    # print(htmlCodes)
 
-    return json.dumps(compareHTML(htmlCodes))
+    return compareHTML(htmlCodes)
 
 
 def compareHTML(htmlStrings):
     parsed = []
-    count = {}
+    count = []
     ignore = ['width', 'height', 'transform']
     for htmlString in htmlStrings:
         # ret = parseHTML(htmlString["html"])[2:4]
@@ -557,12 +619,13 @@ def compareHTML(htmlStrings):
         #         recordToCount(count, attr['attr'], attr['value'])
         # parsed.append(ret[0])
         ret = parseHTML(htmlString["html"])
+
         for r in ret:
             print(r)
         print("result ", recordElementToCount(ret, count))
-    print("------------------------------")
-    print(count)
-    print("------------------------------")
+    # print("------------------------------")
+    # print(count)
+    # print("------------------------------")
     # get keys in count
     # keys = list(count.keys())
     # validOptions = {}
@@ -577,6 +640,7 @@ def compareHTML(htmlStrings):
 
     # return validOptions
     validOptions = getValidOptionsFromCount(count, len(htmlStrings))
+    print(validOptions)
     return validOptions
 
 # count tag:{value:#}, attr: {value: #}, child: [firstchild, secondchild, ...]
@@ -584,72 +648,69 @@ def compareHTML(htmlStrings):
 
 
 def getValidOptionsFromCount(count, total):
-    keys = list(count.keys())
-    validOptions = {}
-    for key in keys:
-        # check if count[key] is a list
-        if isinstance(count[key], list):
-            #loop and recursion
-            validOptions[key] = []
-            for item in count[key]:
-                if item != {}:
-                    childOptions = getValidOptionsFromCount(item, total)
-                    if childOptions != {}:
-                        validOptions[key].append(childOptions)
-        else:
-            keys2 = list(count[key].keys())
-            for key2 in keys2:
-                if count[key][key2] >= total*0.3:
-                    if key not in validOptions:
-                        validOptions[key] = {}
-                    validOptions[key][key2] = count[key][key2]/total
-    print(validOptions)
+    validOptions = []
+    for element in count:
+        print(element)
+        keys = list(element.keys())
+        validOptionsSub = {}
+        for key in keys:  # stuff like tag, attr, child
+            # check if count[key] is a list
+            print("element key")
+            print(element[key])
+            if isinstance(element[key], list):
+                # loop and recursion
+                validOptionsSub[key] = []
+                # for item in element[key]:
+                #   if item != {}:
+                # print(item)
+                childOptions = getValidOptionsFromCount(element[key], total)
+                if childOptions != {}:
+                    validOptionsSub[key].append(childOptions)
+            else:
+                keys2 = list(element[key].keys())
+                for key2 in keys2:
+                    if element[key][key2] >= total*0.3:
+                        if key not in validOptionsSub:
+                            validOptionsSub[key] = {}
+                        validOptionsSub[key][key2] = element[key][key2]/total
+        if validOptionsSub != {}:
+            validOptions.append(validOptionsSub)
+    # print(validOptions)
     return validOptions
 
 
 IGNORE_ATTRS = ['width', 'height', 'transform',
                 "nlp", "rid", "position", "top", "left"]
 
+# Just ignore child element & innerText for now...
+
 
 def recordElementToCount(parsedHTML, count):
-    # assume the first element in parsedHTML is always "event": "start tag"
-    start = parsedHTML[0]
-    # count is going to be the count dic for this element
     if count == None:
-        count = {}
-    # record the element's tag to count
-    recordToCount(count, 'tag', start['tag'])
-    # if the element has attributes, record them to count
-    for attr in start['attrs']:
-        if attr['attr'] not in IGNORE_ATTRS:
-            recordToCount(count, attr['attr'], attr['value'])
+        count = []
 
     numChild = 0  # child count
     i = 1  # log count
-    if "element_childrens" not in count:
-        count["element_childrens"] = []
-    print("starting with tag, ", start['tag'])
-    print("inital count: ", count)
-
-    # loop over all the elements in parsedHTML
     while i < len(parsedHTML):
         element = parsedHTML[i]
 
         # if the element is "event": "end tag"
         if element['event'] == 'end tag':
-            print(element["event"]+" "+element["tag"])
-            return i+2  # The number of records this element takes up
+            #print(element["event"]+" "+element["tag"])
+            return i  # The number of records this element takes up
 
         # probably should make a working version first then a clean version, but whatever
         child_count = {}
-        if numChild+1 > len(count["element_childrens"]):
-            count["element_childrens"].append(child_count)
+        if numChild+1 > len(count):
+            count.append(child_count)
         else:
-            child_count = count["element_childrens"][numChild]
+            print(numChild)
+            print(count)
+            child_count = count[numChild]
 
         # if the element is "event": "innerText"
         if element['event'] == 'innerText':
-            print(element["event"])
+            # print(element["event"])
             # questionable, but assume innerText is a tag
             textEdited = element['text'].translate(
                 {ord(c): None for c in ' \n\t'})
@@ -660,7 +721,7 @@ def recordElementToCount(parsedHTML, count):
 
         # if the element is "event": "startend tag"
         if element['event'] == 'startend tag':
-            print(element["event"]+" "+element["tag"])
+            #print(element["event"]+" "+element["tag"])
             # record tag and attrs, no child
             recordToCount(child_count, 'tag', element['tag'])
 
@@ -670,20 +731,101 @@ def recordElementToCount(parsedHTML, count):
 
         # if the element is "event": "start tag" :(
         if element['event'] == 'start tag':
-            print(element["event"]+" "+element["tag"])
-            # recursion
-            # I really doubt this will work, but whatever...
+            #print(element["event"]+" "+element["tag"])
             index = parsedHTML.index(element)
-            print("index: ", index)
+           # print("index: ", index)
             splicedParsedHTML = parsedHTML[index:]
-            #print("child parsedHTML: ", splicedParsedHTML)
-            print("i: ", i)
-            print(splicedParsedHTML)
-            i += recordElementToCount(splicedParsedHTML, child_count) - 2
+            print("splicedParsedHTML: ", splicedParsedHTML)
+            start = splicedParsedHTML[0]
+            recordToCount(child_count, 'tag', start['tag'])
+            for attr in start['attrs']:
+                if attr['attr'] not in IGNORE_ATTRS:
+                    recordToCount(child_count, attr['attr'], attr['value'])
+
+            if "element_childrens" not in child_count:
+                child_count["element_childrens"] = []
+
+            i += recordElementToCount(splicedParsedHTML,
+                                      child_count["element_childrens"])
 
         numChild += 1
         i += 1
-    return "yeah this means there is a bug or the user's html is wrong"
+    print(count)
+    return i
+
+# def recordElementToCount(parsedHTML, count):
+#     # assume the first element in parsedHTML is always "event": "start tag"
+#     start = parsedHTML[0]
+#     # count is going to be the count dic for this element
+#     if count == None:
+#         count = {}
+#     # record the element's tag to count
+#     recordToCount(count, 'tag', start['tag'])
+#     # if the element has attributes, record them to count
+#     for attr in start['attrs']:
+#         if attr['attr'] not in IGNORE_ATTRS:
+#             recordToCount(count, attr['attr'], attr['value'])
+
+#     numChild = 0  # child count
+#     i = 1  # log count
+#     if "element_childrens" not in count:
+#         count["element_childrens"] = []
+#     #print("starting with tag, ", start['tag'])
+#     #print("inital count: ", count)
+
+#     # loop over all the elements in parsedHTML
+#     while i < len(parsedHTML):
+#         element = parsedHTML[i]
+
+#         # if the element is "event": "end tag"
+#         if element['event'] == 'end tag':
+#             #print(element["event"]+" "+element["tag"])
+#             return i+2  # The number of records this element takes up
+
+#         # probably should make a working version first then a clean version, but whatever
+#         child_count = {}
+#         if numChild+1 > len(count["element_childrens"]):
+#             count["element_childrens"].append(child_count)
+#         else:
+#             child_count = count["element_childrens"][numChild]
+
+#         # if the element is "event": "innerText"
+#         if element['event'] == 'innerText':
+#             # print(element["event"])
+#             # questionable, but assume innerText is a tag
+#             textEdited = element['text'].translate(
+#                 {ord(c): None for c in ' \n\t'})
+#             if textEdited != "":
+#                 recordToCount(child_count, 'tag', "innerText")
+#                 recordToCount(child_count, 'innerText_text', element['text'])
+#             # print(count["element_childrens"])
+
+#         # if the element is "event": "startend tag"
+#         if element['event'] == 'startend tag':
+#             #print(element["event"]+" "+element["tag"])
+#             # record tag and attrs, no child
+#             recordToCount(child_count, 'tag', element['tag'])
+
+#             for attr in element['attrs']:
+#                 if attr['attr'] not in IGNORE_ATTRS:
+#                     recordToCount(child_count, attr['attr'], attr['value'])
+
+#         # if the element is "event": "start tag" :(
+#         if element['event'] == 'start tag':
+#             #print(element["event"]+" "+element["tag"])
+#             # recursion
+#             # I really doubt this will work, but whatever...
+#             index = parsedHTML.index(element)
+#            # print("index: ", index)
+#             splicedParsedHTML = parsedHTML[index:]
+#             # print("child parsedHTML: ", splicedParsedHTML)
+#            # print("i: ", i)
+#            # print(splicedParsedHTML)
+#             i += recordElementToCount(splicedParsedHTML, child_count) - 2
+
+#         numChild += 1
+#         i += 1
+#     return "yeah this means there is a bug or the user's html is wrong"
 
 
 def recordToCount(count, key, value):
@@ -696,6 +838,28 @@ def recordToCount(count, key, value):
             count[key][valueStripped] = 1
     else:
         count[key] = {value: 1}
+
+
+@flask_app.route('/split_text', methods=['POST'])
+@cross_origin()
+def split_text():
+    body = request.json
+    text = body["text"]
+    PRONOUNS = ["i", "me", "my", "mine", "you", "he", "she", "it",
+                "they", "them", "we", "us", "our", "ours"
+                "her", "his", "hers", "its",
+                "their", "yours", "theirs", "your"]
+
+    result = []
+    for sentence in text:
+        doc = nlp(sentence)
+        parsed = []
+        for chunk in doc.noun_chunks:
+            if chunk.text.lower() not in PRONOUNS:
+                parsed.append(
+                    {"chunk": chunk.text, "probabilities": getProbabilities(chunk.text, body["userId"])})
+        result.append(parsed)
+    return json.dumps({"text": text, "result": result})
 
 
 if __name__ == "__main__":
