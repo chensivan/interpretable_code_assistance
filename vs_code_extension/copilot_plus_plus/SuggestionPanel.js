@@ -119,7 +119,7 @@ class SuggestionPanel {
     
     async  _getHtmlForWebview(webview) {
       //icons
-      const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
+      const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "suggestionpanel.css"));
       
       const nonce = getNonce();
       
@@ -128,37 +128,84 @@ class SuggestionPanel {
       //"A todolist with a title and checkboxes with delete button, an add button."
       console.log("Generating webview for " + SuggestionPanel.text);
       let result = await SplitText([SuggestionPanel.text]);
-      //console.log(result);
+      console.log(result);
+      let text = "";
+      if(result.result[0].length > 0){
+     
       //loop over result.result
-      let text = SuggestionPanel.text+"<br/>";
+      text = "<table class='table' ><thead><tr>";//SuggestionPanel.text+"<br/>";
+      let fulltext = SuggestionPanel.text;
+      let tablestrings = [];
+      let prefix = fulltext.substring(0, fulltext.indexOf(result.result[0][0].chunk));
+      if(prefix.length > 0){
+        tablestrings.push({label: prefix, data: null});
+        text += "<th class='normal-th' scope='col'>" + prefix + "</th>";
+      }
+      console.log("prefix: "+prefix);
+      fulltext = fulltext.substring(prefix.length);
+      console.log("fulltext: "+fulltext);
       for(let i = 0; i < result.result[0].length; i++){
-        let item = result.result[0][i];
-        console.log(item);
-        text += `<h2><input type="checkbox"/>${item.chunk}</h2>`;
-        text += `<div style="margin-left: 10px;" item="${item.chunk}" onclick="clickSuggestion(this, '<!--${item.chunk}-->')">${item.chunk}</div><br/>`;
-        if(item.probabilities){
-          for(let j = 0; j < item.probabilities.length; j++){
-            console.log("item.probabilities");
-            console.log(item.probabilities[j]);
-            let subItem = item.probabilities[j];
-            let options = getOptions(subItem);
-            //console.log(options);
-            /* options.forEach(option => {
-              text += `<input type="checkbox"/>${option}`;
-            });*/
-            if(options){
-              
-              for(let k = 0; k < options.length; k++){
-                console.log(options[k]);
-                text += `<div style="margin-left: 10px;" item="${item.chunk}" onclick="clickSuggestion(this, '<!--${item.chunk}-->&space<!--${options[k]}-->')">${options[k]}</div><br/>`;
-                //text += `<div style="margin-left: 10px;" onclick="clickSuggestion(this, '<!--${options[k]}-->')>${options[k]}</div><br/>`;
-                //console.log(`<div style="margin-left: 10px;" onclick="clickSuggestion(this, '<!--${item.chunk}-->\n<!--${options[k]}-->')>${item.chunk}<br/>${options[k]}</div><br/>`);
-              }
-            }
-          }
-          
+        text += "<th scope='col'>"+result.result[0][i].chunk+"</th>";
+        tablestrings.push({label: result.result[0][i].chunk, data: result.result[0][i]});
+        fulltext = fulltext.substring(result.result[0][i].chunk.length);
+
+        let suffix = fulltext.substring(fulltext.indexOf(result.result[0][i].chunk));
+        if(i < result.result[0].length-1){
+          suffix = fulltext.substring(fulltext.indexOf(result.result[0][i].chunk), fulltext.indexOf(result.result[0][i+1].chunk));
+        }
+        if(suffix){
+          tablestrings.push({label: suffix, data:null});
+          text += "<th class='normal-th' scope='col'>"+suffix+"</th>";
+          fulltext = fulltext.substring(suffix.length);
         }
       }
+      text += "</tr></thead>  <tbody><tr>";
+      for(let i = 0; i < tablestrings.length; i++){
+        let item = tablestrings[i];
+        if(item.data){
+          console.log(item.data);
+          text += `<td>
+          <ul class="list-group">
+          <li class="list-group-item">
+          <div style="margin-left: 10px;" item="${item.label}" onclick="clickSuggestion(this, '<!-- ${item.label} -->')">${item.label}</div>
+          </li>`;
+          if(item.data.probabilities){
+            console.log(item.data.probabilities);
+            let probabilities = item.data.probabilities;
+            let tags = Object.keys(probabilities);
+            for(let j = 0; j < tags.length; j++){
+              console.log("tags: "+tags[j]);
+              console.log(probabilities[tags[j]]);
+              let tagProbability = probabilities[tags[j]];
+              let options = getOptions(tagProbability, tags[j]);
+              console.log(options);
+              /* options.forEach(option => {
+                text += `<input type="checkbox"/>${option}`;
+              });*/
+              if(options){
+                
+                for(let k = 0; k < options.length; k++){
+                  console.log(options[k]);
+                  //<!-- ${item.label} -->&space
+                  text += `
+                  <li class="list-group-item">
+                  <div style="margin-left: 10px;" item="${item.label}" onclick="clickSuggestion(this, '<!-- ${options[k]} -->')">${options[k]}</div>
+                  </li>
+                  `;
+                 }
+             }
+            }
+            
+          }
+          text += "</ul></td>";
+        }
+        else{
+          text += `<td></td>`;
+        }
+      }
+      text += "</tr></tbody></table>";
+    }
+    
       
       var html;
       html = 
@@ -167,6 +214,9 @@ class SuggestionPanel {
       <meta charset="UTF-8">
       <script class="ignore" src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
       </head>
+      <link href="${stylesResetUri}" rel="stylesheet">
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+      
       <body>
       <script>
       const vscode = acquireVsCodeApi();
@@ -174,14 +224,11 @@ class SuggestionPanel {
         console.log("onClick");
         console.log(text);
         let item = element.getAttribute("item");
-        let allDivs = document.getElementsByTagName("div");
-        for(let i = 0; i < allDivs.length; i++){
-          let div = allDivs[i];
-          if(div.getAttribute("item") == item){
-            div.style.backgroundColor = "";
-          }
-        }
-        element.style.backgroundColor = "black";
+        element.parentElement.style.background = "#b7bcc9";
+        console.log(element);
+        setTimeout(function(){
+          element.parentElement.style.background = "";
+        }, 500);
         vscode.postMessage({
           type: "onClick",
           message: text
@@ -199,75 +246,47 @@ class SuggestionPanel {
   }
   module.exports = SuggestionPanel;
   
-  function getOptions(data){
+  function getOptions(data, tag){
     let options = [];
     console.log(data);
-    if(data.tag && data.tag.innerText && data.innerText_text){
-      //get keys of innerText
-      let keys = Object.keys(data.innerText_text);
-      for(let i = 0; i < keys.length; i++){
-        let key = keys[i];
-        options.push(key);
-      }
-    }
-    else{
-      let attrs = Object.keys(data);
-      let attrsTxt = [];
-      let tempTxt = [];
+    let attrs = Object.keys(data);
+    let attrsTxt = [];
+    let tempTxt = [];
       for(let i = 0; i < attrs.length; i++){
         let attr = attrs[i];
-        if(attr != "tag" && attr != "innerText_text" && attr != "element_childrens"){
-          let results = Object.keys(data[attr]);
+        if(attr != "tag"){
+          let values = Object.keys(data[attr]);
           let total = 0;
-          for(let j = 0; j < results.length; j++){
-            let best = results[j];
-            console.log(data[attr][best]);
-            total += data[attr][best];
+          for(let j = 0; j < values.length; j++){
+            let value = values[j];
+            console.log(data[attr][value]);
+            total += data[attr][value];
             if(attrsTxt.length <= 0){
-              tempTxt.push(attr+" "+best+", ");
+              tempTxt.push(attr+" "+value+", ");
             }
             else{
               
               for(let k = 0; k < attrsTxt.length; k++){
-                tempTxt.push(attrsTxt[k]+attr+" "+best+", ");
+                tempTxt.push(attrsTxt[k]+attr+" "+value+", ");
               }
               
             }
           }
-          // if(total <= 0.7){
-          //   if(attrsTxt.length <= 0){
-          //     tempTxt.push(", ");
-          //   }
-          //   else{
-          
-          //     for(let k = 0; k < attrsTxt.length; k++){
-          //       tempTxt.push(attrsTxt[k]+", ");
-          //     }
-          
-          //   }
-          // }
           attrsTxt = tempTxt.slice(0);
           tempTxt = [];
-          //console.log(attrsTxt);
         }
       }
-      //console.log(attrsTxt);
       for(let i = 0; i < attrsTxt.length; i++){
         attrsTxt[i] = attrsTxt[i] ? " with "+attrsTxt[i].substring(0, attrsTxt[i].length-2) : attrsTxt[i];
+        options.push(tag+attrsTxt[i]);
       }
-      //attrsTxt = attrsTxt ? " with "+attrsTxt.substring(0, attrsTxt.length-2) : attrsTxt;
-      //console.log("attrsTxt", attrsTxt);
-      let keys = Object.keys(data.tag);
-      for(let i = 0; i < keys.length; i++){
-        let key = keys[i];
-        //console.log(key);
-        //console.log(key);
-        for(let a = 0; a < attrsTxt.length; a++){
-          options.push(key+attrsTxt[a]);
-        }
-      }
-    }
-    //console.log(options);
+      // let keys = Object.keys(data.tag);
+      // for(let i = 0; i < keys.length; i++){
+      //   let key = keys[i];
+      //   for(let a = 0; a < attrsTxt.length; a++){
+      //     options.push(key+attrsTxt[a]);
+      //   }
+      // }
     return options;
   }
   

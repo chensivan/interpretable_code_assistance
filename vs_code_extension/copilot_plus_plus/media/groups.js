@@ -161,10 +161,12 @@ function setupAddGroup(){
 }
 
 function addCanvas(parent, code, key){
-    let newElement = document.createElement("div");
+    let newElement = document.createElement("span");
     newElement.innerHTML = code;
     newElement.id = key;
     newElement.style.display = "none";
+    newElement.style.background = "transparent";
+    newElement.style.padding = "15px 10px";
     document.body.appendChild(newElement);
     
     html2canvas(document.getElementById(key), {
@@ -175,8 +177,10 @@ function addCanvas(parent, code, key){
         },
     })
     .then((canvas) => {
-        //   canvas.style.height = "auto";
-        //   canvas.style.width = "50px";
+        //canvas.style.height = "50px";
+        canvas.style.maxHeight = "100px";
+        canvas.style.width = "auto";
+        canvas.style.border = "1px solid black";
         parent.appendChild(canvas);
         document.body.removeChild(document.getElementById(key));
     })
@@ -189,99 +193,121 @@ function addCanvas(parent, code, key){
 function setupViewGroups(data){
     clearAllChild(GROUPSPANEL);
     let h2 = document.createElement("h2");
-    h2.innerText = "View Groups";
+    h2.innerHTML = "View Groups";
     GROUPSPANEL.appendChild(h2);
     console.log(data);
     for(let i = 0; i < data.length; i++){
         let curData = data[i];
-        let div = document.createElement("div");
+        let div = document.createElement("li");
+        div.classList.add("list-group-item", "group");
         let h3 = document.createElement("h3");
-        h3.innerText = curData.label;
+        h3.innerText = curData.label + " ⏷";
         div.appendChild(h3);
         // div.innerText = curData.label;
         div.setAttribute("rid", curData.rId);
         div.setAttribute("label", curData.label);
-        div.className = "group";
-        div.addEventListener("click", () => {
-            //get the keys in data.member
-            if(CURRENTGROUP && CURRENTGROUP.getAttribute("rid") !== div.getAttribute("rid")){
-                //find child with className "element"
-                console.log(CURRENTGROUP);
-                //remove all child of CURRENTGROUP except for text node
-                clearAllChild(CURRENTGROUP);
-                let h3 = document.createElement("h3");
-                h3.innerText = CURRENTGROUP.getAttribute("label");
-                CURRENTGROUP.appendChild(h3);
-                //CURRENTGROUP.appendChild(document.createTextNode(CURRENTGROUP.getAttribute("label")));
-            }
-            else if(CURRENTGROUP){
-                return;
-            }
-            CURRENTGROUP = div;
-            
-            let add = document.createElement("button");
-            add.innerHTML = "Add Element";
-            div.appendChild(add);
-            add.addEventListener("click", () => {
-                vscode.postMessage({
-                    type: "findElement"
-                });
-            });
-            let save = document.createElement("button");
-            save.innerHTML = "Save";
-            div.appendChild(save);
-            save.addEventListener("click", () => {
-                let members = CURRENTGROUP.getElementsByClassName("element");
-                let membersArr = {};
-                for(let i = 0; i < members.length; i++){
-                    membersArr[members[i].getAttribute("rid")] = members[i].getAttribute("label");
-                }
-                console.log(membersArr);
-                console.log(CURRENTGROUP);
-                vscode.postMessage({
-                    type: "saveGroup",
-                    member: membersArr,
-                    rid: CURRENTGROUP.getAttribute("rid")
-                })
-                clearAllChild(CURRENTGROUP);
-                let h3 = document.createElement("h3");
-                h3.innerText = CURRENTGROUP.getAttribute("label");
-                CURRENTGROUP.appendChild(h3);
-                // CURRENTGROUP.appendChild(document.createTextNode(CURRENTGROUP.getAttribute("label")));
-                // CURRENTGROUP = null;
-                
-            });
-            
-            let keys = Object.keys(curData.member);
-            for(let j = 0; j < keys.length; j++){
-                let key = keys[j]
-                let element = document.createElement("div");
-                element.innerText = curData.member[key];
-                element.setAttribute("rid", key);
-                element.setAttribute("label", curData.member[key]);
-                element.className = "element";
-                let rmbtn = document.createElement("button");
-                rmbtn.innerText = "Remove";
-                rmbtn.addEventListener("click", () => {
-                    console.log("Remove");
-                    element.parentElement.removeChild(element);
-                });
-                element.appendChild(rmbtn);
-                addCanvas(element, curData.codes[key], key);
-                div.appendChild(element);
-            }
-            
-            
-            
-            // vscode.postMessage({
-            //     type: "viewGroup",
-            //     rid: curData.rid,
-            //     label: curData.label,
-            // });
-        } );
+        //div.className = "group";
+        let allcode = "";
+        let keys = Object.keys(curData.member);
+        for(let j = 0; j < keys.length; j++){
+            allcode += curData.codes[keys[j]];
+        }
+        addCanvas(div, allcode, "group" + i);
+        div.addEventListener("click", () => {showDetailGroup(div, curData, data);} );
         GROUPSPANEL.appendChild(div);
     }
     
+}
+
+function showDetailGroup(div, curData, data){
+    {
+        //get the keys in data.member
+        if(CURRENTGROUP && CURRENTGROUP.getAttribute("rid") !== div.getAttribute("rid")){
+            //find child with className "element"
+            console.log(CURRENTGROUP);
+            //remove all child of CURRENTGROUP except for text node
+            clearAllChild(CURRENTGROUP);
+            let h3 = document.createElement("h3");
+            h3.innerText = CURRENTGROUP.getAttribute("label") + " ⏷";;
+            CURRENTGROUP.appendChild(h3);
+            let allcode = "";
+            let oldData = data.find((e) => {return e.rId == CURRENTGROUP.getAttribute("rid")});
+            let keys = Object.keys(oldData.member);
+            for(let j = 0; j < keys.length; j++){
+                allcode += oldData.codes[keys[j]];
+            }
+            addCanvas(CURRENTGROUP, allcode, "oldgroup" );
+            //setupViewGroups(data);
+            //CURRENTGROUP.appendChild(document.createTextNode(CURRENTGROUP.getAttribute("label")));
+        }
+        else if(CURRENTGROUP){
+            return;
+        }
+        CURRENTGROUP = div;
+        
+        let add = document.createElement("button");
+        add.innerText = "Add Element";
+        div.appendChild(add);
+        add.addEventListener("click", () => {
+            vscode.postMessage({
+                type: "findElement"
+            });
+        });
+        let save = document.createElement("button");
+        save.innerHTML = "Save";
+        div.appendChild(save);
+        save.addEventListener("click", () => {
+            let members = CURRENTGROUP.getElementsByClassName("element");
+            let membersArr = {};
+            for(let i = 0; i < members.length; i++){
+                membersArr[members[i].getAttribute("rid")] = members[i].getAttribute("label");
+            }
+            console.log(membersArr);
+            console.log(CURRENTGROUP);
+            vscode.postMessage({
+                type: "saveGroup",
+                member: membersArr,
+                rid: CURRENTGROUP.getAttribute("rid")
+            })
+            clearAllChild(CURRENTGROUP);
+            let h3 = document.createElement("h3");
+            h3.innerText = CURRENTGROUP.getAttribute("label");
+            CURRENTGROUP.appendChild(h3);
+            // CURRENTGROUP.appendChild(document.createTextNode(CURRENTGROUP.getAttribute("label")));
+            // CURRENTGROUP = null;
+            
+        });
+        
+        let keys = Object.keys(curData.member);
+        //let allcode = "";
+        for(let j = 0; j < keys.length; j++){
+            let key = keys[j]
+            let element = document.createElement("div");
+            element.innerText = curData.member[key];
+            element.setAttribute("rid", key);
+            element.setAttribute("label", curData.member[key]);
+            element.className = "element";
+            let rmbtn = document.createElement("button");
+            rmbtn.innerText = "Remove";
+            rmbtn.addEventListener("click", () => {
+                console.log("Remove");
+                element.parentElement.removeChild(element);
+            });
+            element.appendChild(rmbtn);
+            addCanvas(element, curData.codes[key], key);
+            //allcode += curData.codes[key];
+            div.appendChild(element);
+        }
+        //addCanvas(div, allcode, "group" + i);
+        
+        
+        
+        // vscode.postMessage({
+        //     type: "viewGroup",
+        //     rid: curData.rid,
+        //     label: curData.label,
+        // });
+    }
 }
 let ALLDATA = null;
 function displaySearchQuery(query, data){

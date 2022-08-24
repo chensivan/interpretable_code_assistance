@@ -61,6 +61,13 @@ function activate(context) {
 			vscode.window.showInformationMessage('Please start selection with a natural language prompt');
 			return;
 		}
+
+		let regex = /<!--\s*rid[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]*\s*-->/g;
+        let matches = highlighted.match(regex);
+        if (matches) {
+            vscode.window.showErrorMessage("Part of the group is already inserted. Have to insert as a group.");
+			return;
+        }
 		
 		//SuggestionPanel.text = highlighted;	
 		let nonce = getNonce();
@@ -92,7 +99,13 @@ function activate(context) {
 		console.log("Open Suggestions");
 		if (selection && !selection.isEmpty) {
 			const selectionRange = new vscode.Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
-			const highlighted = editor.document.getText(selectionRange);
+			let highlighted = editor.document.getText(selectionRange);
+			if(highlighted.includes("<!--")){
+				highlighted = highlighted.replace("<!--", "");
+			  }
+			  if(highlighted.includes("-->")){
+				highlighted = highlighted.replace("-->", "");
+			  }
 			SuggestionPanel.text = highlighted;	
 			SuggestionPanel.filePath = vscode.window.activeTextEditor.document.fileName;
 			SuggestionPanel.createOrShow(context.extensionUri, highlighted);

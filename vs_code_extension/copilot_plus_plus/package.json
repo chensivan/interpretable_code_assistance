@@ -92,7 +92,27 @@
 					"command": "visual.openVisual",
 					"group": "navigation"
 				}
-			]
+			],
+			"editor/context": [{
+					"when": "resourceExtname == .html",
+					"command": "visual.insertElement",
+					"group": "navigation"
+			  },
+			  {
+				"when": "resourceExtname == .html",
+				"command": "visual.openSuggestions",
+				"group": "navigation"
+		  },
+		  {
+			"when": "resourceExtname == .html",
+			"command": "visual.openGroups",
+			"group": "navigation"
+	  },
+	  {
+		"when": "resourceExtname == .html",
+		"command": "visual.openCommandPanel",
+		"group": "navigation"
+  }]
 		},
 		"snippets": [
 			{

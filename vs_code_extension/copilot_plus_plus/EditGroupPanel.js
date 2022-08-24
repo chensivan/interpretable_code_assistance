@@ -233,7 +233,7 @@ class GroupPanel {
       
       async  _getHtmlForWebview(webview) {
         //icons
-        const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
+        const stylesResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "group.css"));
         // const file = fs.readFileSync(CodePanel.filePath, "utf8");
         const jsFile = fs.readFileSync(path.join(__dirname, "media","groups.js"), "utf8");
         
@@ -248,18 +248,29 @@ class GroupPanel {
         //let result = await getLogByNLP(GroupPanel.text);
         // console.log(result);
         var html;
+
+        //<link href="${stylesResetUri}" rel="stylesheet">
+        //<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+        
         html = 
         `
         <head>
         <meta charset="UTF-8">
         <script class="ignore" src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
         </head>
+
+        <link href="${stylesResetUri}" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+        
+        
         <body>
         <div id="group-panel">
         <h1>Groups</h1>
         <button id="view-btn">View</button><button id="add-btn">Add</button><button id="search-btn">Search</button>
-        <div id="groups">
-        </div>
+        <!--<div id="groups">
+        </div>-->
+        <ul class="list-group list-group-flush" id="groups">
+        </ul>
         </div>
         <script class="ignore" src="${html2canvas}"></script>
         <script class="ignore" nonce="${nonce}">
@@ -273,63 +284,6 @@ class GroupPanel {
       }
     }
     module.exports = GroupPanel;
-    
-    function getOptions(data){
-      let options = [];
-      //console.log(data);
-      if(data.tag.innerText && data.innerText_text){
-        //get keys of innerText
-        let keys = Object.keys(data.innerText_text);
-        for(let i = 0; i < keys.length; i++){
-          let key = keys[i];
-          options.push(key);
-        }
-      }
-      else{
-        let attrs = Object.keys(data);
-        let attrsTxt = [];
-        let tempTxt = [];
-        for(let i = 0; i < attrs.length; i++){
-          let attr = attrs[i];
-          if(attr != "tag" && attr != "innerText_text" && attr != "element_childrens"){
-            let results = Object.keys(data[attr]);
-            for(let j = 0; j < results.length; j++){
-              let best = results[j];
-              if(attrsTxt.length <= 0){
-                tempTxt.push(attr+" "+best+", ");
-              }
-              else{
-                
-                for(let k = 0; k < attrsTxt.length; k++){
-                  tempTxt.push(attrsTxt[k]+attr+" "+best+", ");
-                }
-                
-              }
-            }
-            attrsTxt = tempTxt.slice(0);
-            tempTxt = [];
-            //console.log(attrsTxt);
-          }
-        }
-        //console.log(attrsTxt);
-        for(let i = 0; i < attrsTxt.length; i++){
-          attrsTxt[i] = attrsTxt[i] ? " with "+attrsTxt[i].substring(0, attrsTxt[i].length-2) : attrsTxt[i];
-        }
-        //attrsTxt = attrsTxt ? " with "+attrsTxt.substring(0, attrsTxt.length-2) : attrsTxt;
-        //console.log("attrsTxt", attrsTxt);
-        let keys = Object.keys(data.tag);
-        for(let i = 0; i < keys.length; i++){
-          let key = keys[i];
-          //console.log(key);
-          //console.log(key);
-          for(let a = 0; a < attrsTxt.length; a++){
-            options.push(key+attrsTxt[a]);
-          }
-        }
-      }
-      //console.log(options);
-      return options;
-    }
     
     function getLogByNLP(nlp) {
       return new Promise((resolve, reject) => {

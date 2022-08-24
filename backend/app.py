@@ -510,20 +510,20 @@ def parseHTML(htmlString):
 
     class MyHTMLParser(HTMLParser):
         def handle_starttag(self, tag, attrs):
-            #print("Encountered a start tag:", tag)
+            # print("Encountered a start tag:", tag)
             results.append(
                 {"event": "start tag", "tag": tag, "attrs": parseAttrs(attrs)})
 
-        def handle_endtag(self, tag):
-            #print("Encountered an end tag :", tag)
-            results.append({"event": "end tag", "tag": tag})
+        # def handle_endtag(self, tag):
+        #     #print("Encountered an end tag :", tag)
+        #     results.append({"event": "end tag", "tag": tag})
 
-        def handle_data(self, data):
-            #print("Encountered some data  :", data)
-            results.append({"event": "innerText", "text": data})
+        # def handle_data(self, data):
+        #     #print("Encountered some data  :", data)
+        #     results.append({"event": "innerText", "text": data})
 
         def handle_startendtag(self, tag, attrs):
-            #print("Encountered start end tag  :", tag, attrs)
+            # print("Encountered start end tag  :", tag, attrs)
             results.append(
                 {"event": "startend tag", "tag": tag, "attrs": parseAttrs(attrs)})
 
@@ -548,7 +548,7 @@ def parseAttrs(attrs):
     if style:
         # split style on ;
         allStyles = style[1].split(';')
-        #print("allStyles ", allStyles)
+        # print("allStyles ", allStyles)
         for allStyle in allStyles:
             # split on :
             if allStyle.strip() == "":
@@ -606,7 +606,7 @@ def getProbabilities(nlp, userId):
 
 def compareHTML(htmlStrings):
     parsed = []
-    count = []
+    count = {}
     ignore = ['width', 'height', 'transform']
     for htmlString in htmlStrings:
         # ret = parseHTML(htmlString["html"])[2:4]
@@ -647,111 +647,169 @@ def compareHTML(htmlStrings):
 # firstchild: {tag: #, attr: {value: #}, child: [firstchild, secondchild, ...]}, basically another "count"
 
 
+# def getValidOptionsFromCount(count, total):
+#     validOptions = []
+#     for element in count:
+#         print(element)
+#         keys = list(element.keys())
+#         validOptionsSub = {}
+#         for key in keys:  # stuff like tag, attr, child
+#             # check if count[key] is a list
+#             print("element key")
+#             print(element[key])
+#             if isinstance(element[key], list) and len(element[key]) > 0:
+#                 # loop and recursion
+#                 print("key of list")
+#                 print(key)
+#                 print(element[key])
+#                 validOptionsSub[key] = []
+#                 # for item in element[key]:
+#                 #   if item != {}:
+#                 # print(item)
+#                 childOptions = getValidOptionsFromCount(element[key], total)
+#                 if childOptions != {} and childOptions != []:
+#                     print("child options key")
+#                     print(childOptions)
+#                     validOptionsSub[key].append(childOptions)
+#             elif not isinstance(element[key], list):
+#                 keys2 = list(element[key].keys())
+#                 for key2 in keys2:
+#                     if element[key][key2] >= total*0.3:
+#                         if key not in validOptionsSub:
+#                             validOptionsSub[key] = {}
+#                         validOptionsSub[key][key2] = element[key][key2]/total
+#         if validOptionsSub != {} and validOptionsSub != {'element_childrens': []}:
+#             print("validOptionsSub")
+#             print(validOptionsSub)
+#             validOptions.append(validOptionsSub)
+#     # print(validOptions)
+#     return validOptions
+
+# dictionary of {tag: {attr: {value: #}}} to {tag: {attr: {most popular values: #}}}
 def getValidOptionsFromCount(count, total):
-    validOptions = []
-    for element in count:
-        print(element)
-        keys = list(element.keys())
-        validOptionsSub = {}
-        for key in keys:  # stuff like tag, attr, child
-            # check if count[key] is a list
-            print("element key")
-            print(element[key])
-            if isinstance(element[key], list):
-                # loop and recursion
-                validOptionsSub[key] = []
-                # for item in element[key]:
-                #   if item != {}:
-                # print(item)
-                childOptions = getValidOptionsFromCount(element[key], total)
-                if childOptions != {}:
-                    validOptionsSub[key].append(childOptions)
+    validOptions = {}
+    for tag in count:
+        print(tag)
+        attrs = list(count[tag].keys())
+        validOptions[tag] = {}
+        for attr in attrs:
+            print("attrs key")
+            print(count[tag][attr])
+
+            values = list(count[tag][attr].keys())
+            allValuesCount = list(count[tag][attr].values())
+            allValuesCount.sort(reverse=True)
+            theshold = 0
+            sumCount = 0
+            if len(allValuesCount) == 1:
+                theshold = allValuesCount[0]
+            elif len(allValuesCount) == 2:
+                theshold = allValuesCount[1]
             else:
-                keys2 = list(element[key].keys())
-                for key2 in keys2:
-                    if element[key][key2] >= total*0.3:
-                        if key not in validOptionsSub:
-                            validOptionsSub[key] = {}
-                        validOptionsSub[key][key2] = element[key][key2]/total
-        if validOptionsSub != {}:
-            validOptions.append(validOptionsSub)
-    # print(validOptions)
+                theshold = allValuesCount[2]
+            for value in values:
+                sumCount += count[tag][attr][value]
+                if count[tag][attr][value] >= theshold and count[tag][attr][value] >= total*0.1:
+                    if attr not in validOptions[tag]:
+                        validOptions[tag][attr] = {}
+                    validOptions[tag][attr][value] = count[tag][attr][value]/total
+            # if total - sumCount > total*0.3:
+            #     validOptions[tag][attr]["default"] = (total - sumCount)/total
     return validOptions
 
 
-IGNORE_ATTRS = ['width', 'height', 'transform',
-                "nlp", "rid", "position", "top", "left"]
+# ['width', 'height', 'transform', "nlp", "rid", "position", "top", "left"]
+IGNORE_ATTRS = []
 
 # Just ignore child element & innerText for now...
+
+# dictionary of {tag: {attr: {value: #}}}
 
 
 def recordElementToCount(parsedHTML, count):
     if count == None:
-        count = []
-
-    numChild = 0  # child count
+        count = {}
     i = 1  # log count
     while i < len(parsedHTML):
         element = parsedHTML[i]
+        if element["tag"] not in count:
+            count[element["tag"]] = {}
 
-        # if the element is "event": "end tag"
-        if element['event'] == 'end tag':
-            #print(element["event"]+" "+element["tag"])
-            return i  # The number of records this element takes up
+        for attr in element['attrs']:
+            recordToCount(count[element["tag"]],
+                          attr['attr'], attr['value'])
 
-        # probably should make a working version first then a clean version, but whatever
-        child_count = {}
-        if numChild+1 > len(count):
-            count.append(child_count)
-        else:
-            print(numChild)
-            print(count)
-            child_count = count[numChild]
-
-        # if the element is "event": "innerText"
-        if element['event'] == 'innerText':
-            # print(element["event"])
-            # questionable, but assume innerText is a tag
-            textEdited = element['text'].translate(
-                {ord(c): None for c in ' \n\t'})
-            if textEdited != "":
-                recordToCount(child_count, 'tag', "innerText")
-                recordToCount(child_count, 'innerText_text', element['text'])
-            # print(count["element_childrens"])
-
-        # if the element is "event": "startend tag"
-        if element['event'] == 'startend tag':
-            #print(element["event"]+" "+element["tag"])
-            # record tag and attrs, no child
-            recordToCount(child_count, 'tag', element['tag'])
-
-            for attr in element['attrs']:
-                if attr['attr'] not in IGNORE_ATTRS:
-                    recordToCount(child_count, attr['attr'], attr['value'])
-
-        # if the element is "event": "start tag" :(
-        if element['event'] == 'start tag':
-            #print(element["event"]+" "+element["tag"])
-            index = parsedHTML.index(element)
-           # print("index: ", index)
-            splicedParsedHTML = parsedHTML[index:]
-            print("splicedParsedHTML: ", splicedParsedHTML)
-            start = splicedParsedHTML[0]
-            recordToCount(child_count, 'tag', start['tag'])
-            for attr in start['attrs']:
-                if attr['attr'] not in IGNORE_ATTRS:
-                    recordToCount(child_count, attr['attr'], attr['value'])
-
-            if "element_childrens" not in child_count:
-                child_count["element_childrens"] = []
-
-            i += recordElementToCount(splicedParsedHTML,
-                                      child_count["element_childrens"])
-
-        numChild += 1
         i += 1
     print(count)
-    return i
+    return count
+
+# def recordElementToCount(parsedHTML, count):
+#     if count == None:
+#         count = []
+
+#     numChild = 0  # child count
+#     i = 1  # log count
+#     while i < len(parsedHTML):
+#         element = parsedHTML[i]
+
+#         # # if the element is "event": "end tag"
+#         # if element['event'] == 'end tag':
+#         #     #print(element["event"]+" "+element["tag"])
+#         #     return i  # The number of records this element takes up
+
+#         # # probably should make a working version first then a clean version, but whatever
+#         # child_count = {}
+#         # if numChild+1 > len(count):
+#         #     count.append(child_count)
+#         # else:
+#         #     print(numChild)
+#         #     print(count)
+#         #     child_count = count[numChild]
+
+#         # # if the element is "event": "innerText"
+#         # if element['event'] == 'innerText':
+#         #     # print(element["event"])
+#         #     # questionable, but assume innerText is a tag
+#         #     textEdited = element['text'].translate(
+#         #         {ord(c): None for c in ' \n\t'})
+#         #     if textEdited != "":
+#         #         recordToCount(child_count, 'tag', "innerText")
+#         #         recordToCount(child_count, 'innerText_text', element['text'])
+#         #     # print(count["element_childrens"])
+
+#         # if the element is "event": "startend tag"
+#         if element['event'] == 'startend tag':
+#             #print(element["event"]+" "+element["tag"])
+#             # record tag and attrs, no child
+#             recordToCount(child_count, 'tag', element['tag'])
+
+#             for attr in element['attrs']:
+#                 if attr['attr'] not in IGNORE_ATTRS:
+#                     recordToCount(child_count, attr['attr'], attr['value'])
+
+#         # if the element is "event": "start tag" :(
+#         if element['event'] == 'start tag':
+#             #print(element["event"]+" "+element["tag"])
+#             index = parsedHTML.index(element)
+#            # print("index: ", index)
+#             splicedParsedHTML = parsedHTML[index:]
+#             print("splicedParsedHTML: ", splicedParsedHTML)
+#             start = splicedParsedHTML[0]
+#             recordToCount(child_count, 'tag', start['tag'])
+#             for attr in start['attrs']:
+#                 if attr['attr'] not in IGNORE_ATTRS:
+#                     recordToCount(child_count, attr['attr'], attr['value'])
+
+#             if "element_childrens" not in child_count:
+#                 child_count["element_childrens"] = []
+
+#             i += recordElementToCount(splicedParsedHTML,
+#                                       child_count["element_childrens"])
+
+#         numChild += 1
+#         i += 1
+#     print(count)
+#     return i
 
 # def recordElementToCount(parsedHTML, count):
 #     # assume the first element in parsedHTML is always "event": "start tag"
