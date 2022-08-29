@@ -251,7 +251,7 @@ class GroupPanel {
 
         //<link href="${stylesResetUri}" rel="stylesheet">
         //<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-        
+        //    <button id="view-btn">View</button><button id="add-btn">Add</button><button id="search-btn">Search</button>
         html = 
         `
         <head>
@@ -266,7 +266,18 @@ class GroupPanel {
         <body>
         <div id="group-panel">
         <h1>Groups</h1>
-        <button id="view-btn">View</button><button id="add-btn">Add</button><button id="search-btn">Search</button>
+    
+        <ul class="nav nav-tabs">
+  <li class="nav-item" >
+    <a class="nav-link active" id="view-btn" aria-current="page" href="#">View Groups</a>
+  </li>
+  <li class="nav-item" >
+    <a class="nav-link" aria-current="page" id="add-btn" href="#">Add Group</a>
+  </li>
+  <li class="nav-item" >
+    <a class="nav-link" aria-current="page" id="search-btn" href="#">Search Groups</a>
+  </li>
+</ul>
         <!--<div id="groups">
         </div>-->
         <ul class="list-group list-group-flush" id="groups">
